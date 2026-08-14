@@ -17,6 +17,13 @@
 4. python main.py
 
 ## Variáveis necessárias
-URL_BACKEND=
-UNIDADE_ID=
-CHAVE_API=
+
+Crie um arquivo `.env` dentro da pasta `camera` com:
+
+```env
+URL_BACKEND=http://localhost:8080
+UNIDADE_ID=1
+CHAVE_API=sua-chave-aqui
+```
+
+Use o arquivo `camera/.env.example` como referência.
