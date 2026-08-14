@@ -1,0 +1,13 @@
+# Câmera
+CAMERA_INDEX = 0
+
+LARGURA_CAMERA = 1280
+ALTURA_CAMERA = 720
+
+# YOLO
+CONFIANCA_MINIMA = 0.50
+
+# Medição
+INTERVALO_MEDICAO = 180  # 3 minutos
+
+ARQUIVO_LOG = "hospeasy_camera.log"
