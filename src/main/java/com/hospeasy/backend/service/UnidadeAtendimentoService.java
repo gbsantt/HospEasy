@@ -160,29 +160,23 @@ public class UnidadeAtendimentoService {
         TendenciaOcupacao tendencia = calcularTendencia(unidadeId);
 
         return new SituacaoUnidadeResponseDTO(
-
                 unidadeAtendimento.getId(),
-
                 unidadeAtendimento.getNome(),
 
+                unidadeAtendimento.getLatitude(),
+                unidadeAtendimento.getLongitude(),
+
                 unidadeAtendimento.getCapacidadeAreaMonitorada(),
-
                 unidadeAtendimento.getOcupacaoAtual(),
-
                 percentual,
-
                 calcularNivelOcupacao(percentual),
-
                 media,
-
                 tendencia,
-
                 unidadeAtendimento.getUltimaAtualizacao(),
-
                 verificarStatusMedicao(unidadeId),
-
                 dispositivoCameraService.buscarStatusPorUnidade(unidadeId),
-                calcularRitmoOcupacao(unidadeId));
+                calcularRitmoOcupacao(unidadeId)
+        );
     }
 
     public StatusMedicao verificarStatusMedicao(Long unidadeId) {

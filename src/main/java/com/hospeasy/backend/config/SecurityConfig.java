@@ -2,17 +2,25 @@ package com.hospeasy.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -22,7 +30,11 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
+
+                .csrf(csrf ->
+                        csrf.disable()
+                )
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
@@ -32,45 +44,49 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Login continua público
+                        // Login público
                         .requestMatchers(
-                                org.springframework.http.HttpMethod.POST,
+                                HttpMethod.POST,
                                 "/usuarios/login"
                         ).permitAll()
 
-                        // Consultar hospitais e histórico é público
+                        // Consulta das unidades é pública
                         .requestMatchers(
-                                org.springframework.http.HttpMethod.GET,
+                                HttpMethod.GET,
                                 "/unidades",
                                 "/unidades/**"
                         ).permitAll()
 
-                        // Somente ADMIN pode cadastrar usuários
+                        // Medição enviada pela câmera
                         .requestMatchers(
-                                org.springframework.http.HttpMethod.POST,
-                                "/usuarios"
-                        ).hasRole("ADMIN")
-
-                        // ADMIN e FUNCIONARIO podem atualizar ocupação
-                        .requestMatchers(
-                                org.springframework.http.HttpMethod.PATCH,
-                                "/unidades/*/ocupacao"
-                        ).hasAnyRole("ADMIN", "FUNCIONARIO")
-
-                        // Somente ADMIN pode cadastrar hospitais
-                        .requestMatchers(
-                                org.springframework.http.HttpMethod.POST,
-                                "/unidades"
-                        ).hasRole("ADMIN")
-
-
-                        .requestMatchers(
-                                org.springframework.http.HttpMethod.POST,
+                                HttpMethod.POST,
                                 "/unidades/*/medicoes"
                         ).permitAll()
 
-                        // Qualquer outra rota precisa estar autenticada
-                        .anyRequest().authenticated()
+                        // Somente ADMIN cadastra usuários
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuarios"
+                        ).hasRole("ADMIN")
+
+                        // Somente ADMIN cadastra unidades
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/unidades"
+                        ).hasRole("ADMIN")
+
+                        // ADMIN e FUNCIONARIO atualizam ocupação
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/unidades/*/ocupacao"
+                        ).hasAnyRole(
+                                "ADMIN",
+                                "FUNCIONARIO"
+                        )
+
+                        // Demais rotas exigem autenticação
+                        .anyRequest()
+                        .authenticated()
                 )
 
                 .addFilterBefore(
@@ -79,5 +95,48 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration =
+                new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of(
+                        "http://localhost:8081"
+                )
+        );
+
+        configuration.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PATCH",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS"
+                )
+        );
+
+        configuration.setAllowedHeaders(
+                List.of("*")
+        );
+
+        configuration.setAllowCredentials(
+                true
+        );
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
+
+        return source;
     }
 }

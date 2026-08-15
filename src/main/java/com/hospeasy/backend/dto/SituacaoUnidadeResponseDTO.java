@@ -1,15 +1,20 @@
 package com.hospeasy.backend.dto;
 
-import com.hospeasy.backend.entity.TendenciaOcupacao;
-import com.hospeasy.backend.entity.StatusMedicao;
-import java.time.LocalDateTime;
-import com.hospeasy.backend.entity.StatusCamera;
 import com.hospeasy.backend.entity.RitmoOcupacao;
+import com.hospeasy.backend.entity.StatusCamera;
+import com.hospeasy.backend.entity.StatusMedicao;
+import com.hospeasy.backend.entity.TendenciaOcupacao;
+
+import java.time.LocalDateTime;
 
 public record SituacaoUnidadeResponseDTO(
 
         Long unidadeId,
         String nome,
+
+        Double latitude,
+        Double longitude,
+
         Integer capacidadeAreaMonitorada,
         Integer ocupacaoAtual,
         Double percentualOcupacao,
