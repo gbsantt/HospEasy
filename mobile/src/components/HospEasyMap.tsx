@@ -6,11 +6,15 @@ import {
 } from "react-native";
 
 import { Unidade } from "../types/Unidade";
+import { colors } from "../theme/colors";
 
 
 type Props = {
     unidades: Unidade[];
-    onSelecionarUnidade: (unidade: Unidade) => void;
+
+    onSelecionarUnidade: (
+        unidade: Unidade
+    ) => void;
 };
 
 
@@ -27,22 +31,22 @@ export default function HospEasyMap({
             unidade.statusCamera === "DESATIVADA" ||
             unidade.statusMedicao !== "ATUALIZADA"
         ) {
-            return "#7A7A7A";
+            return colors.offline;
         }
 
         if (
             unidade.percentualOcupacao >= 80
         ) {
-            return "#E74C5B";
+            return colors.danger;
         }
 
         if (
             unidade.percentualOcupacao >= 50
         ) {
-            return "#F2BE4B";
+            return colors.warning;
         }
 
-        return "#47C98B";
+        return colors.primary;
     }
 
 
@@ -67,7 +71,9 @@ export default function HospEasyMap({
             return "Desatualizado";
         }
 
-        return `${unidade.percentualOcupacao.toFixed(0)}%`;
+        return `${unidade.percentualOcupacao.toFixed(
+            0
+        )}%`;
     }
 
 
@@ -98,30 +104,37 @@ export default function HospEasyMap({
             </Text>
 
             <View
-                style={styles.streetHorizontal}
+                style={
+                    styles.streetHorizontal
+                }
             />
 
             <View
-                style={styles.streetVertical}
+                style={
+                    styles.streetVertical
+                }
             />
-
 
             {unidades.map(
                 (unidade, index) => {
-
                     const posicao =
                         posicoes[
-                        index % posicoes.length
+                        index %
+                        posicoes.length
                             ];
 
                     return (
                         <View
-                            key={unidade.unidadeId}
+                            key={
+                                unidade.unidadeId
+                            }
                             style={[
                                 styles.markerWrapper,
                                 {
-                                    top: posicao.top,
-                                    left: posicao.left,
+                                    top:
+                                    posicao.top,
+                                    left:
+                                    posicao.left,
                                 },
                             ]}
                         >
@@ -130,7 +143,9 @@ export default function HospEasyMap({
                                     styles.marker,
                                     {
                                         backgroundColor:
-                                            corMarcador(unidade),
+                                            corMarcador(
+                                                unidade
+                                            ),
                                     },
                                 ]}
                                 onPress={() =>
@@ -147,19 +162,29 @@ export default function HospEasyMap({
                             </Pressable>
 
                             <View
-                                style={styles.markerLabel}
+                                style={
+                                    styles.markerLabel
+                                }
                             >
                                 <Text
-                                    style={styles.markerName}
+                                    style={
+                                        styles.markerName
+                                    }
                                     numberOfLines={1}
                                 >
                                     {unidade.nome}
                                 </Text>
 
                                 <Text
-                                    style={styles.markerStatus}
+                                    style={
+                                        styles.markerStatus
+                                    }
                                 >
-                                    {textoStatus(unidade)}
+                                    {
+                                        textoStatus(
+                                            unidade
+                                        )
+                                    }
                                 </Text>
                             </View>
                         </View>
@@ -167,247 +192,260 @@ export default function HospEasyMap({
                 }
             )}
 
+            <View
+                style={styles.legend}
+            >
+                <Legend
+                    color={colors.primary}
+                    texto="Baixa"
+                />
 
-            <View style={styles.legend}>
-                <View style={styles.legendItem}>
-                    <View
-                        style={[
-                            styles.legendDot,
-                            {
-                                backgroundColor:
-                                    "#47C98B",
-                            },
-                        ]}
-                    />
+                <Legend
+                    color={colors.warning}
+                    texto="Moderada"
+                />
 
-                    <Text style={styles.legendText}>
-                        Baixa
-                    </Text>
-                </View>
+                <Legend
+                    color={colors.danger}
+                    texto="Alta"
+                />
 
-                <View style={styles.legendItem}>
-                    <View
-                        style={[
-                            styles.legendDot,
-                            {
-                                backgroundColor:
-                                    "#F2BE4B",
-                            },
-                        ]}
-                    />
-
-                    <Text style={styles.legendText}>
-                        Moderada
-                    </Text>
-                </View>
-
-                <View style={styles.legendItem}>
-                    <View
-                        style={[
-                            styles.legendDot,
-                            {
-                                backgroundColor:
-                                    "#E74C5B",
-                            },
-                        ]}
-                    />
-
-                    <Text style={styles.legendText}>
-                        Alta
-                    </Text>
-                </View>
-
-                <View style={styles.legendItem}>
-                    <View
-                        style={[
-                            styles.legendDot,
-                            {
-                                backgroundColor:
-                                    "#7A7A7A",
-                            },
-                        ]}
-                    />
-
-                    <Text style={styles.legendText}>
-                        Sem dados atuais
-                    </Text>
-                </View>
+                <Legend
+                    color={colors.offline}
+                    texto="Sem dados atuais"
+                />
             </View>
         </View>
     );
 }
 
 
-const styles = StyleSheet.create({
-    map: {
-        flex: 1,
+function Legend({
+                    color,
+                    texto,
+                }: {
+    color: string;
+    texto: string;
+}) {
+    return (
+        <View
+            style={
+                styles.legendItem
+            }
+        >
+            <View
+                style={[
+                    styles.legendDot,
+                    {
+                        backgroundColor:
+                        color,
+                    },
+                ]}
+            />
 
-        backgroundColor: "#DDE3E1",
+            <Text
+                style={
+                    styles.legendText
+                }
+            >
+                {texto}
+            </Text>
+        </View>
+    );
+}
 
-        overflow: "hidden",
-    },
 
-    mapText: {
-        position: "absolute",
+const styles =
+    StyleSheet.create({
+        map: {
+            flex: 1,
 
-        top: 48,
+            backgroundColor:
+                "#E7ECE5",
 
-        alignSelf: "center",
-
-        fontSize: 14,
-        fontWeight: "700",
-
-        color: "#707776",
-
-        opacity: 0.7,
-    },
-
-    streetHorizontal: {
-        position: "absolute",
-
-        top: "43%",
-        left: "-10%",
-
-        width: "120%",
-        height: 58,
-
-        backgroundColor: "#F6F6F6",
-
-        transform: [
-            {
-                rotate: "-8deg",
-            },
-        ],
-    },
-
-    streetVertical: {
-        position: "absolute",
-
-        top: "-10%",
-        left: "49%",
-
-        width: 52,
-        height: "120%",
-
-        backgroundColor: "#F6F6F6",
-
-        transform: [
-            {
-                rotate: "10deg",
-            },
-        ],
-    },
-
-    markerWrapper: {
-        position: "absolute",
-
-        alignItems: "center",
-    },
-
-    marker: {
-        width: 38,
-        height: 38,
-
-        borderRadius: 19,
-
-        borderWidth: 4,
-        borderColor: "#FFFFFF",
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        shadowColor: "#000000",
-        shadowOpacity: 0.22,
-        shadowRadius: 6,
-
-        shadowOffset: {
-            width: 0,
-            height: 3,
+            overflow:
+                "hidden",
         },
 
-        elevation: 6,
-    },
+        mapText: {
+            position:
+                "absolute",
 
-    markerCenter: {
-        width: 9,
-        height: 9,
+            top: 48,
 
-        borderRadius: 5,
+            alignSelf:
+                "center",
 
-        backgroundColor: "#FFFFFF",
-    },
+            fontSize: 14,
+            fontWeight:
+                "700",
 
-    markerLabel: {
-        marginTop: 6,
+            color:
+            colors.textSecondary,
+        },
 
-        minWidth: 90,
-        maxWidth: 130,
+        streetHorizontal: {
+            position:
+                "absolute",
 
-        paddingHorizontal: 8,
-        paddingVertical: 5,
+            top: "43%",
+            left: "-10%",
 
-        borderRadius: 10,
+            width: "120%",
+            height: 58,
 
-        backgroundColor: "#FFFFFF",
+            backgroundColor:
+                "#FFFFFF",
 
-        alignItems: "center",
+            transform: [
+                {
+                    rotate:
+                        "-8deg",
+                },
+            ],
+        },
 
-        shadowColor: "#000000",
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-    },
+        streetVertical: {
+            position:
+                "absolute",
 
-    markerName: {
-        maxWidth: 110,
+            top: "-10%",
+            left: "49%",
 
-        fontSize: 11,
-        fontWeight: "700",
+            width: 52,
+            height: "120%",
 
-        color: "#222222",
-    },
+            backgroundColor:
+                "#FFFFFF",
 
-    markerStatus: {
-        marginTop: 2,
+            transform: [
+                {
+                    rotate:
+                        "10deg",
+                },
+            ],
+        },
 
-        fontSize: 10,
-        fontWeight: "600",
+        markerWrapper: {
+            position:
+                "absolute",
 
-        color: "#666666",
-    },
+            alignItems:
+                "center",
+        },
 
-    legend: {
-        position: "absolute",
+        marker: {
+            width: 38,
+            height: 38,
 
-        top: 80,
-        left: 16,
+            borderRadius:
+                19,
 
-        padding: 10,
+            borderWidth: 4,
 
-        borderRadius: 14,
+            borderColor:
+                "#FFFFFF",
 
-        backgroundColor:
-            "rgba(255,255,255,0.9)",
-    },
+            alignItems:
+                "center",
 
-    legendItem: {
-        flexDirection: "row",
-        alignItems: "center",
+            justifyContent:
+                "center",
 
-        marginVertical: 2,
-    },
+            elevation: 6,
+        },
 
-    legendDot: {
-        width: 9,
-        height: 9,
+        markerCenter: {
+            width: 9,
+            height: 9,
 
-        borderRadius: 5,
+            borderRadius: 5,
 
-        marginRight: 7,
-    },
+            backgroundColor:
+                "#FFFFFF",
+        },
 
-    legendText: {
-        fontSize: 10,
+        markerLabel: {
+            minWidth: 90,
+            maxWidth: 130,
 
-        color: "#444444",
-    },
-});
+            marginTop: 6,
+
+            paddingHorizontal:
+                8,
+
+            paddingVertical: 5,
+
+            borderRadius: 10,
+
+            backgroundColor:
+            colors.surface,
+
+            alignItems:
+                "center",
+        },
+
+        markerName: {
+            maxWidth: 110,
+
+            fontSize: 11,
+            fontWeight:
+                "800",
+
+            color:
+            colors.text,
+        },
+
+        markerStatus: {
+            marginTop: 2,
+
+            fontSize: 10,
+            fontWeight:
+                "600",
+
+            color:
+            colors.textSecondary,
+        },
+
+        legend: {
+            position:
+                "absolute",
+
+            top: 80,
+            left: 16,
+
+            padding: 10,
+
+            borderRadius: 14,
+
+            backgroundColor:
+                "rgba(255,255,255,0.94)",
+        },
+
+        legendItem: {
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            marginVertical:
+                2,
+        },
+
+        legendDot: {
+            width: 9,
+            height: 9,
+
+            borderRadius: 5,
+
+            marginRight: 7,
+        },
+
+        legendText: {
+            fontSize: 10,
+
+            color:
+            colors.textSecondary,
+        },
+    });

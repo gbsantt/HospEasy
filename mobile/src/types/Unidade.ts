@@ -2,6 +2,9 @@ export type Unidade = {
     unidadeId: number;
     nome: string;
 
+    endereco: string;
+    telefone: string | null;
+
     latitude: number | null;
     longitude: number | null;
 

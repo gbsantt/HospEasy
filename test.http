@@ -1,0 +1,11 @@
+###
+POST http://localhost:8080/unidades/1/avaliacoes
+Content-Type: application/json
+
+{
+  "nota": 5,
+  "comentario": "Gostei bastante do atendimento."
+}
+
+###
+GET http://localhost:8080/unidades/1/avaliacoes

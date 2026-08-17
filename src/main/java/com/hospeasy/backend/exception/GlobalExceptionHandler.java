@@ -14,9 +14,9 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UnidadeNaoEncontradoException.class)
+    @ExceptionHandler(UnidadeNaoEncontradaException.class)
     public ResponseEntity<Map<String, Object>> tratarUnidadeNaoEncontrado(
-            UnidadeNaoEncontradoException exception
+            UnidadeNaoEncontradaException exception
     ) {
 
         Map<String, Object> erro = new HashMap<>();

@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import {
+    useMemo,
+    useState,
+} from "react";
+
 import {
     Pressable,
     StyleSheet,
@@ -19,437 +23,959 @@ import Animated, {
     withSpring,
 } from "react-native-reanimated";
 
-import { Unidade } from "../types/Unidade";
+import {
+    BlurView,
+} from "expo-blur";
+
+import {
+    Unidade,
+} from "../types/Unidade";
+
+import {
+    colors,
+} from "../theme/colors";
 
 
-const ALTURA_FECHADA = 60;
-const ALTURA_ABERTA = 390;
+const ALTURA_FECHADA = 82;
+const ALTURA_ABERTA = 400;
 
 
 type Props = {
     unidades: Unidade[];
-    onSelecionarUnidade: (unidade: Unidade) => void;
+
+    onAbrirUnidade: (
+        unidade: Unidade
+    ) => void;
 };
 
 
 export default function DynamicIsland({
                                           unidades,
-                                          onSelecionarUnidade,
+                                          onAbrirUnidade,
                                       }: Props) {
-    const [aberta, setAberta] = useState(false);
-    const [busca, setBusca] = useState("");
+    const [
+        aberta,
+        setAberta,
+    ] = useState(false);
 
-    const altura = useSharedValue(ALTURA_FECHADA);
+    const [
+        busca,
+        setBusca,
+    ] = useState("");
 
-    const unidadesFiltradas = useMemo(() => {
-        const texto = busca.trim().toLowerCase();
-
-        if (!texto) {
-            return unidades;
-        }
-
-        return unidades.filter((unidade) =>
-            unidade.nome.toLowerCase().includes(texto)
+    const altura =
+        useSharedValue(
+            ALTURA_FECHADA
         );
-    }, [busca, unidades]);
+
+
+    const unidadesFiltradas =
+        useMemo(() => {
+            const texto =
+                busca
+                    .trim()
+                    .toLowerCase();
+
+            if (!texto) {
+                return unidades;
+            }
+
+            return unidades.filter(
+                (unidade) =>
+                    unidade.nome
+                        .toLowerCase()
+                        .includes(texto)
+            );
+        }, [
+            busca,
+            unidades,
+        ]);
 
 
     function abrir() {
         setAberta(true);
 
-        altura.value = withSpring(
-            ALTURA_ABERTA,
-            {
-                damping: 18,
-                stiffness: 150,
-            }
-        );
+        altura.value =
+            withSpring(
+                ALTURA_ABERTA,
+                {
+                    damping: 18,
+                    stiffness: 150,
+                }
+            );
     }
 
 
     function fechar() {
-        altura.value = withSpring(
-            ALTURA_FECHADA,
-            {
-                damping: 18,
-                stiffness: 150,
-            }
-        );
+        altura.value =
+            withSpring(
+                ALTURA_FECHADA,
+                {
+                    damping: 18,
+                    stiffness: 150,
+                }
+            );
 
         setAberta(false);
     }
 
 
     function alternar() {
-        if (aberta) {
-            fechar();
-        } else {
-            abrir();
-        }
+        aberta
+            ? fechar()
+            : abrir();
     }
 
 
-    function selecionarUnidade(unidade: Unidade) {
-        onSelecionarUnidade(unidade);
-
+    function abrirUnidade(
+        unidade: Unidade
+    ) {
         setBusca("");
 
         fechar();
+
+        onAbrirUnidade(
+            unidade
+        );
     }
 
 
-    const gesto = Gesture.Pan()
-        .onUpdate((evento) => {
-            const base = aberta
-                ? ALTURA_ABERTA
-                : ALTURA_FECHADA;
+    const gesto =
+        Gesture.Pan()
+            .onUpdate(
+                (evento) => {
+                    const base =
+                        aberta
+                            ? ALTURA_ABERTA
+                            : ALTURA_FECHADA;
 
-            let novaAltura =
-                base - evento.translationY;
+                    let novaAltura =
+                        base -
+                        evento.translationY;
 
-            if (novaAltura < ALTURA_FECHADA) {
-                novaAltura = ALTURA_FECHADA;
-            }
+                    novaAltura =
+                        Math.max(
+                            ALTURA_FECHADA,
+                            Math.min(
+                                novaAltura,
+                                ALTURA_ABERTA
+                            )
+                        );
 
-            if (novaAltura > ALTURA_ABERTA) {
-                novaAltura = ALTURA_ABERTA;
-            }
+                    altura.value =
+                        novaAltura;
+                }
+            )
 
-            altura.value = novaAltura;
-        })
-        .onEnd((evento) => {
-            if (evento.translationY < -50) {
-                altura.value = withSpring(
-                    ALTURA_ABERTA
-                );
+            .onEnd(
+                (evento) => {
+                    if (
+                        evento.translationY <
+                        -50
+                    ) {
+                        altura.value =
+                            withSpring(
+                                ALTURA_ABERTA
+                            );
 
-                runOnJS(setAberta)(true);
+                        runOnJS(
+                            setAberta
+                        )(true);
 
-                return;
-            }
+                        return;
+                    }
 
-            if (evento.translationY > 50) {
-                altura.value = withSpring(
-                    ALTURA_FECHADA
-                );
+                    if (
+                        evento.translationY >
+                        50
+                    ) {
+                        altura.value =
+                            withSpring(
+                                ALTURA_FECHADA
+                            );
 
-                runOnJS(setAberta)(false);
+                        runOnJS(
+                            setAberta
+                        )(false);
 
-                return;
-            }
+                        return;
+                    }
 
-            if (aberta) {
-                altura.value = withSpring(
-                    ALTURA_ABERTA
-                );
-            } else {
-                altura.value = withSpring(
-                    ALTURA_FECHADA
-                );
-            }
-        });
+                    altura.value =
+                        withSpring(
+                            aberta
+                                ? ALTURA_ABERTA
+                                : ALTURA_FECHADA
+                        );
+                }
+            );
 
 
-    const estiloAnimado = useAnimatedStyle(() => {
-        return {
-            height: altura.value,
-        };
-    });
+    const estiloAnimado =
+        useAnimatedStyle(
+            () => ({
+                height:
+                altura.value,
+            })
+        );
 
 
     return (
-        <GestureDetector gesture={gesto}>
+        <GestureDetector
+            gesture={gesto}
+        >
             <Animated.View
                 style={[
                     styles.container,
                     estiloAnimado,
                 ]}
             >
+
+                <BlurView
+                    intensity={
+                        aberta
+                            ? 55
+                            : 42
+                    }
+                    tint="light"
+                    style={
+                        StyleSheet.absoluteFill
+                    }
+                />
+
+
+                <View
+                    pointerEvents="none"
+                    style={[
+                        StyleSheet.absoluteFill,
+
+                        {
+                            backgroundColor:
+                                aberta
+                                    ? colors.glassGreen
+                                    : colors.glassLight,
+                        },
+                    ]}
+                />
+
+
+                <Pressable
+                    style={
+                        styles.handleArea
+                    }
+                    onPress={
+                        alternar
+                    }
+                >
+                    <View
+                        style={[
+                            styles.handle,
+
+                            aberta
+                                ? styles.handleOpen
+                                : styles.handleClosed,
+                        ]}
+                    />
+                </Pressable>
+
+
                 {aberta ? (
                     <>
-                        <Pressable
-                            style={styles.handleArea}
-                            onPress={alternar}
+                        <View
+                            style={
+                                styles.searchBarOpen
+                            }
                         >
-                            <View style={styles.handle} />
-                        </Pressable>
-
-                        <View style={styles.searchBar}>
-                            <Text style={styles.searchIcon}>
+                            <Text
+                                style={
+                                    styles.searchIcon
+                                }
+                            >
                                 ⌕
                             </Text>
 
                             <TextInput
-                                value={busca}
-                                onChangeText={setBusca}
-                                placeholder="Procurar unidade"
-                                placeholderTextColor="#777"
-                                style={styles.input}
+                                value={
+                                    busca
+                                }
+
+                                onChangeText={
+                                    setBusca
+                                }
+
+                                placeholder="Procurar"
+
+                                placeholderTextColor={
+                                    "#666666"
+                                }
+
+                                style={
+                                    styles.input
+                                }
                             />
                         </View>
 
-                        <Text style={styles.sectionTitle}>
-                            Sugestões
+
+                        <Text
+                            style={
+                                styles.sectionTitle
+                            }
+                        >
+                            Sugestão
                         </Text>
 
-                        <View style={styles.suggestionsContainer}>
-                            {unidadesFiltradas.length > 0 ? (
-                                unidadesFiltradas.map((unidade) => (
-                                    <Pressable
-                                        key={unidade.unidadeId}
-                                        style={styles.suggestion}
-                                        onPress={() =>
-                                            selecionarUnidade(unidade)
-                                        }
-                                    >
-                                        <View>
-                                            <Text style={styles.unitName}>
-                                                {unidade.nome}
-                                            </Text>
 
-                                            <Text style={styles.unitInfo}>
-                                                Movimento: {unidade.tendencia}
-                                            </Text>
-                                        </View>
+                        <View
+                            style={
+                                styles.suggestionsContainer
+                            }
+                        >
+                            {unidadesFiltradas.length >
+                            0 ? (
 
-                                        <Text style={styles.percentage}>
-                                            {unidade.percentualOcupacao.toFixed(1)}%
-                                        </Text>
-                                    </Pressable>
-                                ))
+                                unidadesFiltradas.map(
+                                    (unidade) => (
+                                        <Pressable
+                                            key={
+                                                unidade.unidadeId
+                                            }
+
+                                            style={
+                                                styles.suggestion
+                                            }
+
+                                            onPress={() =>
+                                                abrirUnidade(
+                                                    unidade
+                                                )
+                                            }
+                                        >
+                                            <View
+                                                style={
+                                                    styles.suggestionText
+                                                }
+                                            >
+                                                <Text
+                                                    style={
+                                                        styles.unitName
+                                                    }
+                                                >
+                                                    {
+                                                        unidade.nome
+                                                    }
+                                                </Text>
+
+                                                <Text
+                                                    style={
+                                                        styles.unitInfo
+                                                    }
+                                                >
+                                                    Movimento:{" "}
+                                                    {
+                                                        unidade.tendencia
+                                                    }
+                                                </Text>
+                                            </View>
+
+
+                                            <View
+                                                style={
+                                                    styles.percentageBadge
+                                                }
+                                            >
+                                                <Text
+                                                    style={
+                                                        styles.percentage
+                                                    }
+                                                >
+                                                    {unidade.percentualOcupacao.toFixed(
+                                                        0
+                                                    )}
+                                                    %
+                                                </Text>
+                                            </View>
+                                        </Pressable>
+                                    )
+                                )
+
                             ) : (
-                                <Text style={styles.emptyText}>
+
+                                <Text
+                                    style={
+                                        styles.emptyText
+                                    }
+                                >
                                     Nenhuma unidade encontrada
                                 </Text>
+
                             )}
                         </View>
 
-                        <View style={styles.divider} />
 
-                        <Pressable style={styles.option}>
-                            <Text style={styles.optionText}>
-                                Meu perfil
+                        <Text
+                            style={
+                                styles.sectionTitleBottom
+                            }
+                        >
+                            Meu Perfil
+                        </Text>
+
+
+                        <Pressable
+                            style={
+                                styles.option
+                            }
+                        >
+                            <View
+                                style={
+                                    styles.profileCircle
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.profileCircleText
+                                    }
+                                >
+                                    ●
+                                </Text>
+                            </View>
+
+                            <Text
+                                style={
+                                    styles.optionText
+                                }
+                            >
+                                acessar perfil
                             </Text>
 
-                            <Text style={styles.arrow}>
+                            <Text
+                                style={
+                                    styles.arrow
+                                }
+                            >
                                 ›
                             </Text>
                         </Pressable>
 
-                        <Pressable style={styles.option}>
-                            <Text style={styles.optionText}>
-                                Suporte
-                            </Text>
 
-                            <Text style={styles.arrow}>
-                                ›
+                        <View
+                            style={
+                                styles.spacer
+                            }
+                        />
+
+
+                        <Pressable
+                            style={
+                                styles.supportButton
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.supportText
+                                }
+                            >
+                                Suporte
                             </Text>
                         </Pressable>
                     </>
                 ) : (
                     <Pressable
-                        style={styles.collapsedContent}
-                        onPress={alternar}
+                        style={
+                            styles.closedArea
+                        }
+                        onPress={
+                            abrir
+                        }
                     >
-                        <Text style={styles.searchIcon}>
-                            ⌕
-                        </Text>
+                        <View
+                            style={
+                                styles.searchBarClosed
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.searchIcon
+                                }
+                            >
+                                ⌕
+                            </Text>
 
-                        <Text style={styles.searchText}>
-                            Procurar
-                        </Text>
+                            <Text
+                                style={
+                                    styles.searchText
+                                }
+                            >
+                                Procurar
+                            </Text>
 
-                        <View style={styles.profileButton}>
-                            <Text>●</Text>
+
+                            <View
+                                style={
+                                    styles.searchMiniIcon
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.searchMiniIconText
+                                    }
+                                >
+                                    ⌕
+                                </Text>
+                            </View>
+
+
+                            <View
+                                style={
+                                    styles.profileButton
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.profileIcon
+                                    }
+                                >
+                                    ●
+                                </Text>
+                            </View>
                         </View>
                     </Pressable>
                 )}
+
             </Animated.View>
         </GestureDetector>
     );
 }
 
 
-const styles = StyleSheet.create({
-    container: {
-        position: "absolute",
+const styles =
+    StyleSheet.create({
+        container: {
+            position:
+                "absolute",
 
-        bottom: 22,
-        left: 20,
-        right: 20,
+            bottom: 20,
+            left: 18,
+            right: 18,
 
-        borderRadius: 30,
+            borderRadius: 25,
 
-        backgroundColor: "#FFFFFF",
+            overflow:
+                "hidden",
 
-        overflow: "hidden",
+            borderWidth: 1,
 
-        shadowColor: "#000000",
-        shadowOpacity: 0.18,
-        shadowRadius: 15,
+            borderColor:
+            colors.glassBorder,
 
-        shadowOffset: {
-            width: 0,
-            height: 5,
+            shadowColor:
+                "#000000",
+
+            shadowOpacity:
+                0.16,
+
+            shadowRadius:
+                18,
+
+            shadowOffset: {
+                width: 0,
+                height: 6,
+            },
+
+            elevation: 12,
+
+            zIndex: 50,
         },
 
-        elevation: 10,
 
-        zIndex: 50,
-    },
+        handleArea: {
+            height: 22,
 
-    collapsedContent: {
-        height: ALTURA_FECHADA,
+            alignItems:
+                "center",
 
-        flexDirection: "row",
-        alignItems: "center",
+            justifyContent:
+                "center",
 
-        paddingHorizontal: 18,
-    },
+            zIndex: 20,
+        },
 
-    handleArea: {
-        height: 32,
+        handle: {
+            width: 46,
+            height: 4,
 
-        alignItems: "center",
-        justifyContent: "center",
-    },
+            borderRadius: 4,
+        },
 
-    handle: {
-        width: 45,
-        height: 5,
+        handleClosed: {
+            backgroundColor:
+            colors.primary,
+        },
 
-        borderRadius: 3,
+        handleOpen: {
+            backgroundColor:
+                "rgba(255,255,255,0.85)",
+        },
 
-        backgroundColor: "#D1D1D1",
-    },
 
-    searchBar: {
-        height: 52,
+        closedArea: {
+            flex: 1,
 
-        marginHorizontal: 18,
+            paddingHorizontal:
+                8,
 
-        borderRadius: 26,
+            paddingBottom: 8,
+        },
 
-        backgroundColor: "#F1F1F1",
+        searchBarClosed: {
+            height: 52,
 
-        flexDirection: "row",
-        alignItems: "center",
+            borderRadius: 19,
 
-        paddingHorizontal: 16,
-    },
+            borderWidth: 2,
 
-    searchIcon: {
-        fontSize: 23,
+            borderColor:
+            colors.primary,
 
-        marginRight: 10,
-    },
+            backgroundColor:
+                "rgba(255,255,255,0.82)",
 
-    searchText: {
-        flex: 1,
+            paddingLeft: 14,
+            paddingRight: 6,
 
-        fontSize: 16,
-        fontWeight: "600",
-    },
+            flexDirection:
+                "row",
 
-    input: {
-        flex: 1,
+            alignItems:
+                "center",
+        },
 
-        fontSize: 16,
+        searchIcon: {
+            marginRight: 8,
 
-        color: "#111111",
-    },
+            fontSize: 20,
 
-    profileButton: {
-        width: 38,
-        height: 38,
+            color:
+            colors.primaryDark,
+        },
 
-        borderRadius: 19,
+        searchText: {
+            flex: 1,
 
-        backgroundColor: "#E2E2E2",
+            fontSize: 15,
 
-        alignItems: "center",
-        justifyContent: "center",
-    },
+            fontWeight:
+                "800",
 
-    sectionTitle: {
-        marginTop: 20,
-        marginBottom: 8,
-        marginHorizontal: 20,
+            color:
+            colors.text,
+        },
 
-        fontSize: 13,
-        fontWeight: "700",
+        searchMiniIcon: {
+            width: 30,
+            height: 30,
 
-        opacity: 0.5,
-    },
+            borderRadius: 15,
 
-    suggestionsContainer: {
-        maxHeight: 180,
-    },
+            alignItems:
+                "center",
 
-    suggestion: {
-        minHeight: 62,
+            justifyContent:
+                "center",
+        },
 
-        marginHorizontal: 20,
+        searchMiniIconText: {
+            fontSize: 17,
 
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-    },
+            color:
+            colors.textSecondary,
+        },
 
-    unitName: {
-        fontSize: 16,
-        fontWeight: "700",
-    },
+        profileButton: {
+            width: 38,
+            height: 38,
 
-    unitInfo: {
-        marginTop: 3,
+            borderRadius: 19,
 
-        fontSize: 13,
+            backgroundColor:
+            colors.primary,
 
-        opacity: 0.55,
-    },
+            alignItems:
+                "center",
 
-    percentage: {
-        fontSize: 16,
-        fontWeight: "700",
-    },
+            justifyContent:
+                "center",
+        },
 
-    emptyText: {
-        marginHorizontal: 20,
-        marginVertical: 20,
+        profileIcon: {
+            color:
+                "#FFFFFF",
 
-        fontSize: 14,
+            fontSize: 14,
+        },
 
-        opacity: 0.5,
-    },
 
-    divider: {
-        height: 1,
+        searchBarOpen: {
+            height: 48,
 
-        marginHorizontal: 20,
-        marginVertical: 8,
+            marginHorizontal:
+                14,
 
-        backgroundColor: "#EEEEEE",
-    },
+            paddingHorizontal:
+                14,
 
-    option: {
-        height: 48,
+            borderRadius: 17,
 
-        marginHorizontal: 20,
+            borderWidth: 1.5,
 
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-    },
+            borderColor:
+                "rgba(47,104,7,0.65)",
 
-    optionText: {
-        fontSize: 16,
-        fontWeight: "600",
-    },
+            backgroundColor:
+                "rgba(255,255,255,0.9)",
 
-    arrow: {
-        fontSize: 24,
+            flexDirection:
+                "row",
 
-        opacity: 0.5,
-    },
-});
+            alignItems:
+                "center",
+        },
+
+        input: {
+            flex: 1,
+
+            fontSize: 14,
+
+            color:
+            colors.text,
+        },
+
+        sectionTitle: {
+            marginTop: 14,
+
+            marginBottom: 7,
+
+            marginHorizontal:
+                16,
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+                "#FFFFFF",
+        },
+
+        suggestionsContainer: {
+            maxHeight: 150,
+
+            marginHorizontal:
+                12,
+
+            borderRadius: 16,
+
+            backgroundColor:
+                "rgba(255,255,255,0.86)",
+
+            overflow:
+                "hidden",
+        },
+
+        suggestion: {
+            minHeight: 58,
+
+            paddingHorizontal:
+                13,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "space-between",
+
+            borderBottomWidth: 1,
+
+            borderBottomColor:
+                "rgba(0,0,0,0.05)",
+        },
+
+        suggestionText: {
+            flex: 1,
+
+            paddingRight: 8,
+        },
+
+        unitName: {
+            fontSize: 14,
+
+            fontWeight:
+                "800",
+
+            color:
+            colors.text,
+        },
+
+        unitInfo: {
+            marginTop: 2,
+
+            fontSize: 11,
+
+            color:
+            colors.textSecondary,
+        },
+
+        percentageBadge: {
+            paddingHorizontal:
+                9,
+
+            paddingVertical:
+                5,
+
+            borderRadius: 12,
+
+            backgroundColor:
+            colors.primaryLight,
+        },
+
+        percentage: {
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+        emptyText: {
+            padding: 18,
+
+            textAlign:
+                "center",
+
+            fontSize: 12,
+
+            color:
+            colors.textSecondary,
+        },
+
+        sectionTitleBottom: {
+            marginTop: 15,
+
+            marginHorizontal:
+                16,
+
+            marginBottom: 7,
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+                "#FFFFFF",
+        },
+
+        option: {
+            minHeight: 58,
+
+            marginHorizontal:
+                12,
+
+            paddingHorizontal:
+                10,
+
+            borderRadius: 16,
+
+            backgroundColor:
+                "rgba(255,255,255,0.86)",
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+        },
+
+        profileCircle: {
+            width: 38,
+            height: 38,
+
+            borderRadius: 19,
+
+            marginRight: 9,
+
+            backgroundColor:
+            colors.primaryLight,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+        profileCircleText: {
+            color:
+            colors.primary,
+
+            fontSize: 15,
+        },
+
+        optionText: {
+            flex: 1,
+
+            fontSize: 13,
+
+            fontWeight:
+                "700",
+
+            color:
+            colors.text,
+        },
+
+        arrow: {
+            fontSize: 22,
+
+            color:
+            colors.primary,
+        },
+
+        spacer: {
+            flex: 1,
+        },
+
+        supportButton: {
+            height: 36,
+
+            marginHorizontal:
+                12,
+
+            marginBottom: 12,
+
+            borderRadius: 16,
+
+            backgroundColor:
+                "rgba(255,255,255,0.9)",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+        supportText: {
+            fontSize: 12,
+
+            fontWeight:
+                "800",
+
+            color:
+            colors.text,
+        },
+    });

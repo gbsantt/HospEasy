@@ -8,11 +8,15 @@ import MapView, {
 } from "react-native-maps";
 
 import { Unidade } from "../types/Unidade";
+import { colors } from "../theme/colors";
 
 
 type Props = {
     unidades: Unidade[];
-    onSelecionarUnidade: (unidade: Unidade) => void;
+
+    onSelecionarUnidade: (
+        unidade: Unidade
+    ) => void;
 };
 
 
@@ -21,24 +25,30 @@ export default function HospEasyMap({
                                         onSelecionarUnidade,
                                     }: Props) {
 
-    function corMarcador(unidade: Unidade) {
+    function corMarcador(
+        unidade: Unidade
+    ) {
         if (
             unidade.statusCamera === "OFFLINE" ||
             unidade.statusCamera === "DESATIVADA" ||
             unidade.statusMedicao !== "ATUALIZADA"
         ) {
-            return "#7A7A7A";
+            return colors.offline;
         }
 
-        if (unidade.percentualOcupacao >= 80) {
-            return "#E74C5B";
+        if (
+            unidade.percentualOcupacao >= 80
+        ) {
+            return colors.danger;
         }
 
-        if (unidade.percentualOcupacao >= 50) {
-            return "#F2BE4B";
+        if (
+            unidade.percentualOcupacao >= 50
+        ) {
+            return colors.warning;
         }
 
-        return "#47C98B";
+        return colors.primary;
     }
 
 
@@ -55,34 +65,54 @@ export default function HospEasyMap({
             <MapView
                 style={styles.map}
                 initialRegion={{
-                    latitude: -23.5505,
-                    longitude: -46.6333,
-                    latitudeDelta: 0.15,
-                    longitudeDelta: 0.15,
+                    latitude:
+                        -23.5505,
+
+                    longitude:
+                        -46.6333,
+
+                    latitudeDelta:
+                        0.15,
+
+                    longitudeDelta:
+                        0.15,
                 }}
             >
                 {unidadesComLocalizacao.map(
                     (unidade) => (
                         <Marker
-                            key={unidade.unidadeId}
+                            key={
+                                unidade.unidadeId
+                            }
 
                             coordinate={{
-                                latitude: unidade.latitude!,
-                                longitude: unidade.longitude!,
+                                latitude:
+                                    unidade.latitude!,
+
+                                longitude:
+                                    unidade.longitude!,
                             }}
 
-                            title={unidade.nome}
+                            title={
+                                unidade.nome
+                            }
 
                             description={
-                                `Ocupação: ${unidade.percentualOcupacao.toFixed(1)}%`
+                                `Ocupação: ${unidade.percentualOcupacao.toFixed(
+                                    1
+                                )}%`
                             }
 
                             pinColor={
-                                corMarcador(unidade)
+                                corMarcador(
+                                    unidade
+                                )
                             }
 
                             onPress={() =>
-                                onSelecionarUnidade(unidade)
+                                onSelecionarUnidade(
+                                    unidade
+                                )
                             }
                         />
                     )
@@ -93,13 +123,14 @@ export default function HospEasyMap({
 }
 
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
+const styles =
+    StyleSheet.create({
+        container: {
+            flex: 1,
+        },
 
-    map: {
-        width: "100%",
-        height: "100%",
-    },
-});
+        map: {
+            width: "100%",
+            height: "100%",
+        },
+    });

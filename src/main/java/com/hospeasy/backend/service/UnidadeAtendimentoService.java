@@ -16,7 +16,7 @@ import com.hospeasy.backend.entity.Usuario;
 import com.hospeasy.backend.entity.StatusCamera;
 import com.hospeasy.backend.entity.RitmoOcupacao;
 
-import com.hospeasy.backend.exception.UnidadeNaoEncontradoException;
+import com.hospeasy.backend.exception.UnidadeNaoEncontradaException;
 import com.hospeasy.backend.exception.SemPermissaoException;
 
 import com.hospeasy.backend.repository.HistoricoOcupacaoRepository;
@@ -72,14 +72,14 @@ public class UnidadeAtendimentoService {
 
     public UnidadeAtendimentoResponseDTO buscarPorId(Long id) {
 
-        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(id).orElseThrow(UnidadeNaoEncontradoException::new);
+        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(id).orElseThrow(UnidadeNaoEncontradaException::new);
 
         return converterParaDTO(unidadeAtendimento);
     }
 
     public UnidadeAtendimentoResponseDTO atualizarOcupacao(Long id, AtualizarOcupacaoDTO dto, Usuario usuario) {
 
-        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(id).orElseThrow(UnidadeNaoEncontradoException::new);
+        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(id).orElseThrow(UnidadeNaoEncontradaException::new);
 
         if (usuario.getUnidadeAtendimento() == null) {
 
@@ -127,7 +127,7 @@ public class UnidadeAtendimentoService {
 
         if (!unidadeAtendimentoRepository.existsById(unidadeId)) {
 
-            throw new UnidadeNaoEncontradoException();
+            throw new UnidadeNaoEncontradaException();
         }
 
         return historicoOcupacaoRepository.findByUnidadeAtendimentoIdOrderByRegistradoEmDesc(unidadeId).stream().map(historico -> new HistoricoOcupacaoResponseDTO(
@@ -151,7 +151,7 @@ public class UnidadeAtendimentoService {
 
     public SituacaoUnidadeResponseDTO buscarSituacaoAtual(Long unidadeId) {
 
-        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(unidadeId).orElseThrow(UnidadeNaoEncontradoException::new);
+        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(unidadeId).orElseThrow(UnidadeNaoEncontradaException::new);
 
         double percentual = calcularPercentual(unidadeAtendimento);
 
@@ -162,6 +162,8 @@ public class UnidadeAtendimentoService {
         return new SituacaoUnidadeResponseDTO(
                 unidadeAtendimento.getId(),
                 unidadeAtendimento.getNome(),
+                unidadeAtendimento.getEndereco(),
+                unidadeAtendimento.getTelefone(),
 
                 unidadeAtendimento.getLatitude(),
                 unidadeAtendimento.getLongitude(),
@@ -200,7 +202,7 @@ public class UnidadeAtendimentoService {
 
     public UnidadeAtendimentoResponseDTO registrarMedicaoCamera(Long unidadeId, MedicaoCameraRequestDTO dto) {
 
-        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(unidadeId).orElseThrow(UnidadeNaoEncontradoException::new);
+        UnidadeAtendimento unidadeAtendimento = unidadeAtendimentoRepository.findById(unidadeId).orElseThrow(UnidadeNaoEncontradaException::new);
 
         int quantidade = dto.quantidadePessoas();
 

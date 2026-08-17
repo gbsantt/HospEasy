@@ -2,27 +2,35 @@ package com.hospeasy.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.http.HttpMethod;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter
     ) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtAuthenticationFilter =
+                jwtAuthenticationFilter;
     }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -30,10 +38,14 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
-                .cors(cors -> {})
-
                 .csrf(csrf ->
                         csrf.disable()
+                )
+
+                .cors(cors ->
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
                 )
 
                 .sessionManagement(session ->
@@ -44,38 +56,36 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Login público
+                        // LOGIN PÚBLICO
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/usuarios/login"
                         ).permitAll()
 
-                        // Consulta das unidades é pública
+
+                        // CONSULTAR UNIDADES
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/unidades",
                                 "/unidades/**"
                         ).permitAll()
 
-                        // Medição enviada pela câmera
+
+                        // CRIAR AVALIAÇÃO
                         .requestMatchers(
                                 HttpMethod.POST,
-                                "/unidades/*/medicoes"
+                                "/unidades/*/avaliacoes"
                         ).permitAll()
 
-                        // Somente ADMIN cadastra usuários
+
+                        // CADASTRAR USUÁRIO
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/usuarios"
                         ).hasRole("ADMIN")
 
-                        // Somente ADMIN cadastra unidades
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/unidades"
-                        ).hasRole("ADMIN")
 
-                        // ADMIN e FUNCIONARIO atualizam ocupação
+                        // ATUALIZAR OCUPAÇÃO
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/unidades/*/ocupacao"
@@ -84,7 +94,22 @@ public class SecurityConfig {
                                 "FUNCIONARIO"
                         )
 
-                        // Demais rotas exigem autenticação
+
+                        // CADASTRAR UNIDADE
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/unidades"
+                        ).hasRole("ADMIN")
+
+
+                        // RECEBER MEDIÇÕES
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/unidades/*/medicoes"
+                        ).permitAll()
+
+
+                        // ⚠️ SEMPRE O ÚLTIMO
                         .anyRequest()
                         .authenticated()
                 )
@@ -94,12 +119,14 @@ public class SecurityConfig {
                         UsernamePasswordAuthenticationFilter.class
                 );
 
+
         return http.build();
     }
 
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource
+    corsConfigurationSource() {
 
         CorsConfiguration configuration =
                 new CorsConfiguration();
@@ -128,6 +155,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(
                 true
         );
+
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

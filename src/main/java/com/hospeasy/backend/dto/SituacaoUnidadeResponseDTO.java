@@ -11,6 +11,8 @@ public record SituacaoUnidadeResponseDTO(
 
         Long unidadeId,
         String nome,
+        String endereco,
+        String telefone,
 
         Double latitude,
         Double longitude,

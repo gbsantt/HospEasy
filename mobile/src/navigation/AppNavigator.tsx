@@ -8,6 +8,7 @@ import {
 
 import HomeScreen from "../screens/HomeScreen";
 import UnitScreen from "../screens/UnitScreen";
+import ReviewScreen from "../screens/ReviewScreen";
 
 import { Unidade } from "../types/Unidade";
 
@@ -16,6 +17,10 @@ export type RootStackParamList = {
     Home: undefined;
 
     Unit: {
+        unidade: Unidade;
+    };
+
+    Review: {
         unidade: Unidade;
     };
 };
@@ -43,6 +48,11 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="Unit"
                     component={UnitScreen}
+                />
+
+                <Stack.Screen
+                    name="Review"
+                    component={ReviewScreen}
                 />
             </Stack.Navigator>
         </NavigationContainer>

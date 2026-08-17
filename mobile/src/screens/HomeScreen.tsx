@@ -10,27 +10,35 @@ import {
 } from "react-native";
 
 import {
-    NativeStackNavigationProp,
-} from "@react-navigation/native-stack";
-
-import {
     useNavigation,
 } from "@react-navigation/native";
 
 import {
-    RootStackParamList,
-} from "../navigation/AppNavigator";
+    NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 
 import DynamicIsland from "../components/DynamicIsland";
 import HospEasyMap from "../components/HospEasyMap";
 import UnitMapCard from "../components/UnitMapCard";
 
-import { buscarSituacoesUnidades } from "../service/api";
-import { Unidade } from "../types/Unidade";
+import {
+    buscarSituacoesUnidades,
+} from "../service/api";
+
+import {
+    Unidade,
+} from "../types/Unidade";
+
+import {
+    RootStackParamList,
+} from "../navigation/AppNavigator";
+
+import {
+    colors,
+} from "../theme/colors";
 
 
 export default function HomeScreen() {
-
     const navigation =
         useNavigation<
             NativeStackNavigationProp<
@@ -38,25 +46,33 @@ export default function HomeScreen() {
             >
         >();
 
+
     const [
         unidades,
         setUnidades,
     ] = useState<Unidade[]>([]);
 
+
     const [
         unidadeSelecionada,
         setUnidadeSelecionada,
-    ] = useState<Unidade | null>(null);
+    ] = useState<Unidade | null>(
+        null
+    );
+
 
     const [
         carregando,
         setCarregando,
     ] = useState(true);
 
+
     const [
         erro,
         setErro,
-    ] = useState<string | null>(null);
+    ] = useState<string | null>(
+        null
+    );
 
 
     useEffect(() => {
@@ -66,26 +82,41 @@ export default function HomeScreen() {
 
     async function carregarUnidades() {
         try {
-            setCarregando(true);
-            setErro(null);
+            setCarregando(
+                true
+            );
+
+            setErro(
+                null
+            );
+
 
             const dados =
                 await buscarSituacoesUnidades();
 
-            setUnidades(dados);
+
+            setUnidades(
+                dados
+            );
 
         } catch (erro) {
+
             console.error(
                 "Erro ao carregar unidades:",
                 erro
             );
+
 
             setErro(
                 "Não foi possível carregar as unidades."
             );
 
         } finally {
-            setCarregando(false);
+
+            setCarregando(
+                false
+            );
+
         }
     }
 
@@ -99,11 +130,34 @@ export default function HomeScreen() {
     }
 
 
+    function abrirUnidade(
+        unidade: Unidade
+    ) {
+        setUnidadeSelecionada(
+            null
+        );
+
+        navigation.navigate(
+            "Unit",
+            {
+                unidade,
+            }
+        );
+    }
+
+
     return (
-        <View style={styles.container}>
+        <View
+            style={
+                styles.container
+            }
+        >
 
             <HospEasyMap
-                unidades={unidades}
+                unidades={
+                    unidades
+                }
+
                 onSelecionarUnidade={
                     selecionarUnidade
                 }
@@ -111,8 +165,16 @@ export default function HomeScreen() {
 
 
             {carregando && (
-                <View style={styles.statusContainer}>
-                    <Text style={styles.statusText}>
+                <View
+                    style={
+                        styles.statusContainer
+                    }
+                >
+                    <Text
+                        style={
+                            styles.statusText
+                        }
+                    >
                         Carregando unidades...
                     </Text>
                 </View>
@@ -120,8 +182,16 @@ export default function HomeScreen() {
 
 
             {erro && (
-                <View style={styles.statusContainer}>
-                    <Text style={styles.errorText}>
+                <View
+                    style={
+                        styles.statusContainer
+                    }
+                >
+                    <Text
+                        style={
+                            styles.errorText
+                        }
+                    >
                         {erro}
                     </Text>
                 </View>
@@ -154,27 +224,28 @@ export default function HomeScreen() {
                             .statusCamera
                     }
 
-                    onPress={() => {
-                        navigation.navigate(
-                            "Unit",
-                            {
-                                unidade:
-                                unidadeSelecionada,
-                            }
-                        );
-                    }}
+                    onPress={() =>
+                        abrirUnidade(
+                            unidadeSelecionada
+                        )
+                    }
 
-                    onClose={() => {
-                        setUnidadeSelecionada(null);
-                    }}
+                    onClose={() =>
+                        setUnidadeSelecionada(
+                            null
+                        )
+                    }
                 />
             )}
 
 
             <DynamicIsland
-                unidades={unidades}
-                onSelecionarUnidade={
-                    selecionarUnidade
+                unidades={
+                    unidades
+                }
+
+                onAbrirUnidade={
+                    abrirUnidade
                 }
             />
 
@@ -189,46 +260,67 @@ const styles =
             flex: 1,
 
             backgroundColor:
-                "#F5F5F5",
+            colors.background,
         },
 
+
         statusContainer: {
-            position: "absolute",
+            position:
+                "absolute",
 
             top: 40,
             left: 20,
             right: 20,
 
-            alignItems: "center",
+            alignItems:
+                "center",
 
             zIndex: 100,
         },
 
+
         statusText: {
+            paddingHorizontal:
+                14,
+
+            paddingVertical:
+                8,
+
+            borderRadius:
+                18,
+
             backgroundColor:
-                "#FFFFFF",
-
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-
-            borderRadius: 18,
+            colors.surface,
 
             fontSize: 13,
-            fontWeight: "600",
+
+            fontWeight:
+                "600",
+
+            color:
+            colors.text,
         },
 
+
         errorText: {
+            paddingHorizontal:
+                14,
+
+            paddingVertical:
+                8,
+
+            borderRadius:
+                18,
+
             backgroundColor:
-                "#FFFFFF",
-
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-
-            borderRadius: 18,
-
-            color: "#B00020",
+            colors.surface,
 
             fontSize: 13,
-            fontWeight: "600",
+
+            fontWeight:
+                "600",
+
+            color:
+            colors.danger,
         },
     });

@@ -5,6 +5,8 @@ import {
     View,
 } from "react-native";
 
+import { colors } from "../theme/colors";
+
 
 type Props = {
     nome: string;
@@ -27,10 +29,8 @@ export default function UnitMapCard({
                                         onPress,
                                         onClose,
                                     }: Props) {
-
     return (
         <View style={styles.card}>
-
             <Pressable
                 style={styles.closeButton}
                 onPress={onClose}
@@ -40,11 +40,9 @@ export default function UnitMapCard({
                 </Text>
             </Pressable>
 
-
             <Text style={styles.nome}>
                 {nome}
             </Text>
-
 
             <Text style={styles.info}>
                 Ocupação: {percentual.toFixed(1)}%
@@ -58,11 +56,9 @@ export default function UnitMapCard({
                 Movimento: {tendencia}
             </Text>
 
-
             <Text style={styles.atualizacao}>
                 Câmera: {statusCamera}
             </Text>
-
 
             <Pressable
                 style={styles.button}
@@ -72,7 +68,6 @@ export default function UnitMapCard({
                     Ver detalhes
                 </Text>
             </Pressable>
-
         </View>
     );
 }
@@ -86,12 +81,12 @@ const styles = StyleSheet.create({
         right: 20,
         bottom: 100,
 
-        backgroundColor: "#FFFFFF",
-
-        borderRadius: 20,
-
         padding: 18,
         paddingTop: 20,
+
+        borderRadius: 22,
+
+        backgroundColor: colors.surface,
 
         shadowColor: "#000000",
         shadowOpacity: 0.15,
@@ -126,42 +121,46 @@ const styles = StyleSheet.create({
         fontSize: 26,
         fontWeight: "500",
 
-        color: "#333333",
+        color: colors.textSecondary,
     },
 
     nome: {
-        fontSize: 18,
-        fontWeight: "700",
+        paddingRight: 30,
 
         marginBottom: 8,
 
-        paddingRight: 30,
+        fontSize: 19,
+        fontWeight: "800",
+
+        color: colors.text,
     },
 
     info: {
-        fontSize: 14,
-
         marginBottom: 3,
 
-        color: "#333333",
+        fontSize: 14,
+
+        color: colors.textSecondary,
     },
 
     atualizacao: {
+        marginTop: 5,
+
         fontSize: 12,
 
-        opacity: 0.55,
+        color: colors.textSecondary,
 
-        marginTop: 5,
+        opacity: 0.7,
     },
 
     button: {
-        marginTop: 14,
+        marginTop: 15,
 
-        backgroundColor: "#111111",
+        paddingVertical: 12,
 
-        paddingVertical: 11,
+        borderRadius: 14,
 
-        borderRadius: 12,
+        backgroundColor: colors.primary,
 
         alignItems: "center",
     },
@@ -169,6 +168,6 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#FFFFFF",
 
-        fontWeight: "700",
+        fontWeight: "800",
     },
 });
