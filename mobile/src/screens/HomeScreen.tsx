@@ -37,8 +37,13 @@ import {
     colors,
 } from "../theme/colors";
 
+import {
+    useUserLocation,
+} from "../hooks/useUserLocation";
+
 
 export default function HomeScreen() {
+
     const navigation =
         useNavigation<
             NativeStackNavigationProp<
@@ -75,29 +80,31 @@ export default function HomeScreen() {
     );
 
 
+    // Localização real do usuário
+    const {
+        localizacao,
+        erro: erroLocalizacao,
+    } = useUserLocation();
+
+
     useEffect(() => {
         carregarUnidades();
     }, []);
 
 
     async function carregarUnidades() {
-        try {
-            setCarregando(
-                true
-            );
 
-            setErro(
-                null
-            );
+        try {
+
+            setCarregando(true);
+            setErro(null);
 
 
             const dados =
                 await buscarSituacoesUnidades();
 
 
-            setUnidades(
-                dados
-            );
+            setUnidades(dados);
 
         } catch (erro) {
 
@@ -113,9 +120,7 @@ export default function HomeScreen() {
 
         } finally {
 
-            setCarregando(
-                false
-            );
+            setCarregando(false);
 
         }
     }
@@ -124,6 +129,7 @@ export default function HomeScreen() {
     function selecionarUnidade(
         unidade: Unidade
     ) {
+
         setUnidadeSelecionada(
             unidade
         );
@@ -133,9 +139,11 @@ export default function HomeScreen() {
     function abrirUnidade(
         unidade: Unidade
     ) {
+
         setUnidadeSelecionada(
             null
         );
+
 
         navigation.navigate(
             "Unit",
@@ -147,16 +155,13 @@ export default function HomeScreen() {
 
 
     return (
+
         <View
-            style={
-                styles.container
-            }
+            style={styles.container}
         >
 
             <HospEasyMap
-                unidades={
-                    unidades
-                }
+                unidades={unidades}
 
                 onSelecionarUnidade={
                     selecionarUnidade
@@ -165,11 +170,13 @@ export default function HomeScreen() {
 
 
             {carregando && (
+
                 <View
                     style={
                         styles.statusContainer
                     }
                 >
+
                     <Text
                         style={
                             styles.statusText
@@ -177,16 +184,20 @@ export default function HomeScreen() {
                     >
                         Carregando unidades...
                     </Text>
+
                 </View>
+
             )}
 
 
             {erro && (
+
                 <View
                     style={
                         styles.statusContainer
                     }
                 >
+
                     <Text
                         style={
                             styles.errorText
@@ -194,12 +205,16 @@ export default function HomeScreen() {
                     >
                         {erro}
                     </Text>
+
                 </View>
+
             )}
 
 
             {unidadeSelecionada && (
+
                 <UnitMapCard
+
                     nome={
                         unidadeSelecionada.nome
                     }
@@ -235,18 +250,30 @@ export default function HomeScreen() {
                             null
                         )
                     }
+
                 />
+
             )}
 
 
             <DynamicIsland
+
                 unidades={
                     unidades
+                }
+
+                localizacaoUsuario={
+                    localizacao
+                }
+
+                erroLocalizacao={
+                    erroLocalizacao
                 }
 
                 onAbrirUnidade={
                     abrirUnidade
                 }
+
             />
 
         </View>
@@ -256,7 +283,9 @@ export default function HomeScreen() {
 
 const styles =
     StyleSheet.create({
+
         container: {
+
             flex: 1,
 
             backgroundColor:
@@ -265,11 +294,14 @@ const styles =
 
 
         statusContainer: {
+
             position:
                 "absolute",
 
             top: 40,
+
             left: 20,
+
             right: 20,
 
             alignItems:
@@ -280,6 +312,7 @@ const styles =
 
 
         statusText: {
+
             paddingHorizontal:
                 14,
 
@@ -292,7 +325,8 @@ const styles =
             backgroundColor:
             colors.surface,
 
-            fontSize: 13,
+            fontSize:
+                13,
 
             fontWeight:
                 "600",
@@ -303,6 +337,7 @@ const styles =
 
 
         errorText: {
+
             paddingHorizontal:
                 14,
 
@@ -315,7 +350,8 @@ const styles =
             backgroundColor:
             colors.surface,
 
-            fontSize: 13,
+            fontSize:
+                13,
 
             fontWeight:
                 "600",
@@ -323,4 +359,5 @@ const styles =
             color:
             colors.danger,
         },
+
     });

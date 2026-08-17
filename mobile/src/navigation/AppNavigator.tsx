@@ -9,12 +9,19 @@ import {
 import HomeScreen from "../screens/HomeScreen";
 import UnitScreen from "../screens/UnitScreen";
 import ReviewScreen from "../screens/ReviewScreen";
+import AccessScreen from "../screens/AccessScreen";
+import LoginScreen from "../screens/LoginScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
-import { Unidade } from "../types/Unidade";
+import {
+    Unidade,
+} from "../types/Unidade";
 
 
 export type RootStackParamList = {
-    Home: undefined;
+
+    Home:
+        undefined;
 
     Unit: {
         unidade: Unidade;
@@ -23,6 +30,15 @@ export type RootStackParamList = {
     Review: {
         unidade: Unidade;
     };
+
+    Access:
+        undefined;
+
+    Login:
+        undefined;
+
+    Profile:
+        undefined;
 };
 
 
@@ -33,28 +49,68 @@ const Stack =
 
 
 export default function AppNavigator() {
+
     return (
+
         <NavigationContainer>
+
             <Stack.Navigator
                 screenOptions={{
-                    headerShown: false,
+                    headerShown:
+                        false,
                 }}
             >
+
                 <Stack.Screen
                     name="Home"
-                    component={HomeScreen}
+                    component={
+                        HomeScreen
+                    }
                 />
+
 
                 <Stack.Screen
                     name="Unit"
-                    component={UnitScreen}
+                    component={
+                        UnitScreen
+                    }
                 />
+
 
                 <Stack.Screen
                     name="Review"
-                    component={ReviewScreen}
+                    component={
+                        ReviewScreen
+                    }
                 />
+
+
+                <Stack.Screen
+                    name="Access"
+                    component={
+                        AccessScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="Login"
+                    component={
+                        LoginScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="Profile"
+                    component={
+                        ProfileScreen
+                    }
+                />
+
             </Stack.Navigator>
+
         </NavigationContainer>
+
     );
 }

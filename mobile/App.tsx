@@ -1,43 +1,39 @@
 import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  GestureHandlerRootView,
+    GestureHandlerRootView,
 } from "react-native-gesture-handler";
 
-import SplashScreen from "./src/screens/SplashScreen";
 import AppNavigator from "./src/navigation/AppNavigator";
+
+import {
+    FavoritesProvider,
+} from "./src/context/FavoritesContext";
+
+import {
+    AuthProvider,
+} from "./src/context/AuthContext";
 
 
 export default function App() {
-  const [
-    carregando,
-    setCarregando,
-  ] = useState(true);
 
+    return (
 
-  useEffect(() => {
-    const timer =
-        setTimeout(() => {
-          setCarregando(false);
-        }, 2000);
+        <GestureHandlerRootView
+            style={{
+                flex: 1,
+            }}
+        >
 
-    return () =>
-        clearTimeout(timer);
-  }, []);
+            <AuthProvider>
 
+                <FavoritesProvider>
 
-  return (
-      <GestureHandlerRootView
-          style={{ flex: 1 }}
-      >
-        {carregando ? (
-            <SplashScreen />
-        ) : (
-            <AppNavigator />
-        )}
-      </GestureHandlerRootView>
-  );
+                    <AppNavigator />
+
+                </FavoritesProvider>
+
+            </AuthProvider>
+
+        </GestureHandlerRootView>
+
+    );
 }

@@ -4,6 +4,10 @@ import {
 } from "react";
 
 import {
+    useFavorites,
+} from "../context/FavoritesContext";
+
+import {
     ActivityIndicator,
     Pressable,
     ScrollView,
@@ -45,8 +49,21 @@ export default function UnitScreen({
                                        route,
                                        navigation,
                                    }: Props) {
+
     const { unidade } =
         route.params;
+
+
+    const {
+        alternarFavorito,
+        estaFavoritado,
+    } = useFavorites();
+
+
+    const favoritada =
+        estaFavoritado(
+            unidade.unidadeId
+        );
 
 
     const [
@@ -77,7 +94,9 @@ export default function UnitScreen({
 
 
     async function carregarAvaliacoes() {
+
         try {
+
             setCarregandoAvaliacoes(
                 true
             );
@@ -123,7 +142,10 @@ export default function UnitScreen({
         avaliacoes.length > 0
             ? (
                 avaliacoes.reduce(
-                    (total, avaliacao) =>
+                    (
+                        total,
+                        avaliacao
+                    ) =>
                         total +
                         avaliacao.nota,
                     0
@@ -134,6 +156,7 @@ export default function UnitScreen({
 
 
     function corOcupacao() {
+
         if (
             unidade.statusCamera ===
             "OFFLINE" ||
@@ -142,22 +165,28 @@ export default function UnitScreen({
             unidade.statusMedicao !==
             "ATUALIZADA"
         ) {
+
             return colors.offline;
         }
+
 
         if (
             unidade.percentualOcupacao >=
             80
         ) {
+
             return colors.danger;
         }
+
 
         if (
             unidade.percentualOcupacao >=
             50
         ) {
+
             return colors.warning;
         }
+
 
         return colors.primary;
     }
@@ -166,6 +195,7 @@ export default function UnitScreen({
     function formatarTexto(
         texto: string
     ) {
+
         return texto
             .replaceAll(
                 "_",
@@ -183,9 +213,12 @@ export default function UnitScreen({
     function formatarData(
         data: string | null
     ) {
+
         if (!data) {
+
             return "Sem atualização";
         }
+
 
         return new Date(
             data
@@ -204,6 +237,7 @@ export default function UnitScreen({
     function formatarDataAvaliacao(
         data: string
     ) {
+
         return new Date(
             data
         ).toLocaleDateString(
@@ -220,6 +254,7 @@ export default function UnitScreen({
     function renderizarEstrelas(
         nota: number
     ) {
+
         return [1, 2, 3, 4, 5]
             .map(
                 (estrela) =>
@@ -232,10 +267,15 @@ export default function UnitScreen({
 
 
     return (
+
         <View
-            style={styles.container}
+            style={
+                styles.container
+            }
         >
+
             <ScrollView
+
                 showsVerticalScrollIndicator={
                     false
                 }
@@ -243,14 +283,20 @@ export default function UnitScreen({
                 contentContainerStyle={
                     styles.content
                 }
+
             >
+
 
                 {/* CABEÇALHO */}
 
                 <View
-                    style={styles.header}
+                    style={
+                        styles.header
+                    }
                 >
+
                     <Pressable
+
                         style={
                             styles.backButton
                         }
@@ -258,7 +304,9 @@ export default function UnitScreen({
                         onPress={() =>
                             navigation.goBack()
                         }
+
                     >
+
                         <Text
                             style={
                                 styles.backText
@@ -266,6 +314,7 @@ export default function UnitScreen({
                         >
                             ‹
                         </Text>
+
                     </Pressable>
 
 
@@ -274,6 +323,7 @@ export default function UnitScreen({
                             styles.headerText
                         }
                     >
+
                         <Text
                             style={
                                 styles.title
@@ -282,6 +332,7 @@ export default function UnitScreen({
                             {unidade.nome}
                         </Text>
 
+
                         <Text
                             style={
                                 styles.subtitle
@@ -289,7 +340,46 @@ export default function UnitScreen({
                         >
                             Situação atual da unidade
                         </Text>
+
                     </View>
+
+
+                    <Pressable
+
+                        style={[
+                            styles.favoriteButton,
+
+                            favoritada &&
+                            styles.favoriteButtonActive,
+                        ]}
+
+                        onPress={() =>
+                            alternarFavorito(
+                                unidade
+                            )
+                        }
+
+                    >
+
+                        <Text
+                            style={[
+                                styles.favoriteIcon,
+
+                                favoritada &&
+                                styles.favoriteIconActive,
+                            ]}
+                        >
+
+                            {
+                                favoritada
+                                    ? "♥"
+                                    : "♡"
+                            }
+
+                        </Text>
+
+                    </Pressable>
+
                 </View>
 
 
@@ -300,7 +390,9 @@ export default function UnitScreen({
                         styles.occupancyCard
                     }
                 >
+
                     <View>
+
                         <Text
                             style={
                                 styles.cardLabel
@@ -309,31 +401,41 @@ export default function UnitScreen({
                             OCUPAÇÃO ATUAL
                         </Text>
 
+
                         <Text
                             style={
                                 styles.percentage
                             }
                         >
-                            {unidade.percentualOcupacao.toFixed(
-                                0
-                            )}
+
+                            {
+                                unidade
+                                    .percentualOcupacao
+                                    .toFixed(0)
+                            }
                             %
+
                         </Text>
+
 
                         <Text
                             style={
                                 styles.people
                             }
                         >
+
                             {
                                 unidade.ocupacaoAtual
                             }{" "}
                             de{" "}
                             {
-                                unidade.capacidadeAreaMonitorada
+                                unidade
+                                    .capacidadeAreaMonitorada
                             }{" "}
                             pessoas
+
                         </Text>
+
                     </View>
 
 
@@ -347,16 +449,23 @@ export default function UnitScreen({
                             },
                         ]}
                     >
+
                         <Text
                             style={
                                 styles.statusCircleText
                             }
                         >
-                            {unidade.percentualOcupacao.toFixed(
-                                0
-                            )}
+
+                            {
+                                unidade
+                                    .percentualOcupacao
+                                    .toFixed(0)
+                            }
+
                         </Text>
+
                     </View>
+
                 </View>
 
 
@@ -365,6 +474,7 @@ export default function UnitScreen({
                         styles.progressBackground
                     }
                 >
+
                     <View
                         style={[
                             styles.progress,
@@ -372,7 +482,8 @@ export default function UnitScreen({
                             {
                                 width:
                                     `${Math.min(
-                                        unidade.percentualOcupacao,
+                                        unidade
+                                            .percentualOcupacao,
                                         100
                                     )}%`,
 
@@ -381,6 +492,7 @@ export default function UnitScreen({
                             },
                         ]}
                     />
+
                 </View>
 
 
@@ -389,6 +501,7 @@ export default function UnitScreen({
                         styles.statusRow
                     }
                 >
+
                     <View
                         style={[
                             styles.statusDot,
@@ -400,23 +513,33 @@ export default function UnitScreen({
                         ]}
                     />
 
+
                     <Text
                         style={
                             styles.statusText
                         }
                     >
-                        {formatarTexto(
-                            unidade.nivelOcupacao
-                        )}
+
+                        {
+                            formatarTexto(
+                                unidade
+                                    .nivelOcupacao
+                            )
+                        }
+
                     </Text>
+
                 </View>
 
 
                 {/* INFORMAÇÕES */}
 
                 <View
-                    style={styles.section}
+                    style={
+                        styles.section
+                    }
                 >
+
                     <Text
                         style={
                             styles.sectionTitle
@@ -425,11 +548,13 @@ export default function UnitScreen({
                         Informações
                     </Text>
 
+
                     <View
                         style={
                             styles.infoBlock
                         }
                     >
+
                         <Text
                             style={
                                 styles.infoLabel
@@ -438,15 +563,15 @@ export default function UnitScreen({
                             Endereço
                         </Text>
 
+
                         <Text
                             style={
                                 styles.infoText
                             }
                         >
-                            {
-                                unidade.endereco
-                            }
+                            {unidade.endereco}
                         </Text>
+
                     </View>
 
 
@@ -462,6 +587,7 @@ export default function UnitScreen({
                             styles.infoBlock
                         }
                     >
+
                         <Text
                             style={
                                 styles.infoLabel
@@ -470,23 +596,33 @@ export default function UnitScreen({
                             Telefone
                         </Text>
 
+
                         <Text
                             style={
                                 styles.infoText
                             }
                         >
-                            {unidade.telefone ||
-                                "Não informado"}
+
+                            {
+                                unidade.telefone ||
+                                "Não informado"
+                            }
+
                         </Text>
+
                     </View>
+
                 </View>
 
 
                 {/* FLUXO */}
 
                 <View
-                    style={styles.section}
+                    style={
+                        styles.section
+                    }
                 >
+
                     <Text
                         style={
                             styles.sectionTitle
@@ -497,6 +633,7 @@ export default function UnitScreen({
 
 
                     <InfoRow
+
                         label="Tendência"
 
                         value={
@@ -504,37 +641,47 @@ export default function UnitScreen({
                                 unidade.tendencia
                             )
                         }
+
                     />
 
 
                     <InfoRow
+
                         label="Ritmo"
 
                         value={
                             formatarTexto(
-                                unidade.ritmoOcupacao
+                                unidade
+                                    .ritmoOcupacao
                             )
                         }
+
                     />
 
 
                     <InfoRow
+
                         label="Média nos últimos 30 min"
 
                         value={
-                            unidade.mediaUltimos30Minutos.toFixed(
-                                1
-                            )
+                            unidade
+                                .mediaUltimos30Minutos
+                                .toFixed(1)
                         }
+
                     />
+
                 </View>
 
 
                 {/* MONITORAMENTO */}
 
                 <View
-                    style={styles.section}
+                    style={
+                        styles.section
+                    }
                 >
+
                     <Text
                         style={
                             styles.sectionTitle
@@ -545,50 +692,65 @@ export default function UnitScreen({
 
 
                     <InfoRow
+
                         label="Câmera"
 
                         value={
                             formatarTexto(
-                                unidade.statusCamera
+                                unidade
+                                    .statusCamera
                             )
                         }
+
                     />
 
 
                     <InfoRow
+
                         label="Medição"
 
                         value={
                             formatarTexto(
-                                unidade.statusMedicao
+                                unidade
+                                    .statusMedicao
                             )
                         }
+
                     />
 
 
                     <InfoRow
+
                         label="Última atualização"
 
                         value={
                             formatarData(
-                                unidade.ultimaAtualizacao
+                                unidade
+                                    .ultimaAtualizacao
                             )
                         }
+
                     />
+
                 </View>
 
 
                 {/* AVALIAÇÕES */}
 
                 <View
-                    style={styles.section}
+                    style={
+                        styles.section
+                    }
                 >
+
                     <View
                         style={
                             styles.reviewHeader
                         }
                     >
+
                         <View>
+
                             <Text
                                 style={
                                     styles.sectionTitle
@@ -597,32 +759,46 @@ export default function UnitScreen({
                                 Avaliações
                             </Text>
 
-                            {avaliacoes.length >
+
+                            {
+                                avaliacoes.length >
                                 0 && (
+
                                     <Text
                                         style={
                                             styles.reviewCount
                                         }
                                     >
+
                                         {
                                             avaliacoes.length
                                         }{" "}
-                                        {avaliacoes.length ===
-                                        1
-                                            ? "avaliação"
-                                            : "avaliações"}
+
+                                        {
+                                            avaliacoes.length ===
+                                            1
+                                                ? "avaliação"
+                                                : "avaliações"
+                                        }
+
                                     </Text>
-                                )}
+
+                                )
+                            }
+
                         </View>
 
 
-                        {avaliacoes.length >
+                        {
+                            avaliacoes.length >
                             0 && (
+
                                 <View
                                     style={
                                         styles.averageContainer
                                     }
                                 >
+
                                     <Text
                                         style={
                                             styles.averageStar
@@ -631,164 +807,202 @@ export default function UnitScreen({
                                         ★
                                     </Text>
 
+
                                     <Text
                                         style={
                                             styles.averageText
                                         }
                                     >
-                                        {mediaAvaliacoes.toFixed(
-                                            1
-                                        )}
+
+                                        {
+                                            mediaAvaliacoes
+                                                .toFixed(1)
+                                        }
+
                                     </Text>
+
                                 </View>
-                            )}
+
+                            )
+                        }
+
                     </View>
 
 
-                    {carregandoAvaliacoes ? (
-
-                        <View
-                            style={
-                                styles.loadingReviews
-                            }
-                        >
-                            <ActivityIndicator
-                                color={
-                                    colors.primary
-                                }
-                            />
-
-                            <Text
-                                style={
-                                    styles.loadingReviewsText
-                                }
-                            >
-                                Carregando avaliações...
-                            </Text>
-                        </View>
-
-                    ) : erroAvaliacoes ? (
-
-                        <Text
-                            style={
-                                styles.reviewError
-                            }
-                        >
-                            {
-                                erroAvaliacoes
-                            }
-                        </Text>
-
-                    ) : avaliacoes.length ===
-                    0 ? (
-
-                        <View
-                            style={
-                                styles.emptyReviews
-                            }
-                        >
-                            <Text
-                                style={
-                                    styles.emptyStar
-                                }
-                            >
-                                ☆
-                            </Text>
-
-                            <Text
-                                style={
-                                    styles.emptyReviewsText
-                                }
-                            >
-                                Esta unidade ainda não
-                                possui avaliações.
-                            </Text>
-                        </View>
-
-                    ) : (
-
-                        avaliacoes.map(
-                            (avaliacao) => (
+                    {
+                        carregandoAvaliacoes
+                            ? (
 
                                 <View
-                                    key={
-                                        avaliacao.id
-                                    }
-
                                     style={
-                                        styles.reviewCard
+                                        styles.loadingReviews
                                     }
                                 >
 
-                                    <View
+                                    <ActivityIndicator
+                                        color={
+                                            colors.primary
+                                        }
+                                    />
+
+
+                                    <Text
                                         style={
-                                            styles.reviewTop
+                                            styles.loadingReviewsText
                                         }
                                     >
-                                        <Text
+                                        Carregando avaliações...
+                                    </Text>
+
+                                </View>
+
+                            )
+                            : erroAvaliacoes
+                                ? (
+
+                                    <Text
+                                        style={
+                                            styles.reviewError
+                                        }
+                                    >
+                                        {erroAvaliacoes}
+                                    </Text>
+
+                                )
+                                : avaliacoes.length ===
+                                0
+                                    ? (
+
+                                        <View
                                             style={
-                                                styles.reviewStars
+                                                styles.emptyReviews
                                             }
                                         >
-                                            {
-                                                renderizarEstrelas(
-                                                    avaliacao.nota
-                                                )
-                                            }
-                                        </Text>
-
-                                        <Text
-                                            style={
-                                                styles.reviewDate
-                                            }
-                                        >
-                                            {
-                                                formatarDataAvaliacao(
-                                                    avaliacao.criadoEm
-                                                )
-                                            }
-                                        </Text>
-                                    </View>
-
-
-                                    {avaliacao.usuarioNome && (
-
-                                        <Text
-                                            style={
-                                                styles.reviewUser
-                                            }
-                                        >
-                                            {
-                                                avaliacao.usuarioNome
-                                            }
-                                        </Text>
-
-                                    )}
-
-
-                                    {avaliacao.comentario &&
-                                        avaliacao.comentario
-                                            .trim()
-                                            .length >
-                                        0 && (
 
                                             <Text
                                                 style={
-                                                    styles.reviewComment
+                                                    styles.emptyStar
                                                 }
                                             >
-                                                {
-                                                    avaliacao.comentario
-                                                }
+                                                ☆
                                             </Text>
 
-                                        )}
 
-                                </View>
-                            )
-                        )
+                                            <Text
+                                                style={
+                                                    styles.emptyReviewsText
+                                                }
+                                            >
+                                                Esta unidade ainda não possui avaliações.
+                                            </Text>
 
-                    )}
+                                        </View>
+
+                                    )
+                                    : (
+
+                                        avaliacoes.map(
+                                            (
+                                                avaliacao
+                                            ) => (
+
+                                                <View
+
+                                                    key={
+                                                        avaliacao.id
+                                                    }
+
+                                                    style={
+                                                        styles.reviewCard
+                                                    }
+
+                                                >
+
+                                                    <View
+                                                        style={
+                                                            styles.reviewTop
+                                                        }
+                                                    >
+
+                                                        <Text
+                                                            style={
+                                                                styles.reviewStars
+                                                            }
+                                                        >
+
+                                                            {
+                                                                renderizarEstrelas(
+                                                                    avaliacao.nota
+                                                                )
+                                                            }
+
+                                                        </Text>
+
+
+                                                        <Text
+                                                            style={
+                                                                styles.reviewDate
+                                                            }
+                                                        >
+
+                                                            {
+                                                                formatarDataAvaliacao(
+                                                                    avaliacao.criadoEm
+                                                                )
+                                                            }
+
+                                                        </Text>
+
+                                                    </View>
+
+
+                                                    {
+                                                        avaliacao
+                                                            .usuarioNome && (
+
+                                                            <Text
+                                                                style={
+                                                                    styles.reviewUser
+                                                                }
+                                                            >
+                                                                {
+                                                                    avaliacao
+                                                                        .usuarioNome
+                                                                }
+                                                            </Text>
+
+                                                        )
+                                                    }
+
+
+                                                    {
+                                                        avaliacao.comentario &&
+                                                        avaliacao.comentario
+                                                            .trim()
+                                                            .length >
+                                                        0 && (
+
+                                                            <Text
+                                                                style={
+                                                                    styles.reviewComment
+                                                                }
+                                                            >
+                                                                {
+                                                                    avaliacao
+                                                                        .comentario
+                                                                }
+                                                            </Text>
+
+                                                        )
+                                                    }
+
+                                                </View>
+
+                                            )
+                                        )
+
+                                    )
+                    }
 
                 </View>
 
@@ -796,6 +1010,7 @@ export default function UnitScreen({
                 {/* BOTÃO AVALIAR */}
 
                 <Pressable
+
                     style={
                         styles.reviewButton
                     }
@@ -808,7 +1023,9 @@ export default function UnitScreen({
                             }
                         )
                     }
+
                 >
+
                     <Text
                         style={
                             styles.reviewText
@@ -816,10 +1033,13 @@ export default function UnitScreen({
                     >
                         AVALIAR
                     </Text>
+
                 </Pressable>
 
             </ScrollView>
+
         </View>
+
     );
 }
 
@@ -831,12 +1051,15 @@ function InfoRow({
     label: string;
     value: string;
 }) {
+
     return (
+
         <View
             style={
                 styles.infoRow
             }
         >
+
             <Text
                 style={
                     styles.infoLabel
@@ -845,6 +1068,7 @@ function InfoRow({
                 {label}
             </Text>
 
+
             <Text
                 style={
                     styles.infoValue
@@ -852,7 +1076,9 @@ function InfoRow({
             >
                 {value}
             </Text>
+
         </View>
+
     );
 }
 
@@ -861,6 +1087,7 @@ const styles =
     StyleSheet.create({
 
         container: {
+
             flex: 1,
 
             backgroundColor:
@@ -869,6 +1096,7 @@ const styles =
 
 
         content: {
+
             padding: 20,
 
             paddingTop: 28,
@@ -878,19 +1106,25 @@ const styles =
 
 
         header: {
-            flexDirection: "row",
 
-            alignItems: "center",
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
         },
 
 
         headerText: {
+
             flex: 1,
         },
 
 
         backButton: {
+
             width: 44,
+
             height: 44,
 
             marginRight: 14,
@@ -900,13 +1134,16 @@ const styles =
             backgroundColor:
             colors.primaryLight,
 
-            alignItems: "center",
+            alignItems:
+                "center",
 
-            justifyContent: "center",
+            justifyContent:
+                "center",
         },
 
 
         backText: {
+
             fontSize: 34,
 
             lineHeight: 36,
@@ -917,9 +1154,11 @@ const styles =
 
 
         title: {
+
             fontSize: 26,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             color:
             colors.text,
@@ -927,6 +1166,7 @@ const styles =
 
 
         subtitle: {
+
             marginTop: 3,
 
             fontSize: 13,
@@ -936,7 +1176,52 @@ const styles =
         },
 
 
+        favoriteButton: {
+
+            width: 44,
+
+            height: 44,
+
+            marginLeft: 8,
+
+            borderRadius: 22,
+
+            backgroundColor:
+            colors.primaryLight,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        favoriteButtonActive: {
+
+            backgroundColor:
+            colors.primary,
+        },
+
+
+        favoriteIcon: {
+
+            fontSize: 25,
+
+            color:
+            colors.primary,
+        },
+
+
+        favoriteIconActive: {
+
+            color:
+                "#FFFFFF",
+        },
+
+
         occupancyCard: {
+
             marginTop: 28,
 
             padding: 22,
@@ -946,9 +1231,11 @@ const styles =
             backgroundColor:
             colors.surface,
 
-            flexDirection: "row",
+            flexDirection:
+                "row",
 
-            alignItems: "center",
+            alignItems:
+                "center",
 
             justifyContent:
                 "space-between",
@@ -956,11 +1243,14 @@ const styles =
 
 
         cardLabel: {
+
             fontSize: 11,
 
-            fontWeight: "800",
+            fontWeight:
+                "800",
 
-            letterSpacing: 0.8,
+            letterSpacing:
+                0.8,
 
             color:
             colors.primaryDark,
@@ -968,11 +1258,13 @@ const styles =
 
 
         percentage: {
+
             marginTop: 6,
 
             fontSize: 44,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             color:
             colors.text,
@@ -980,6 +1272,7 @@ const styles =
 
 
         people: {
+
             marginTop: 2,
 
             fontSize: 13,
@@ -990,27 +1283,35 @@ const styles =
 
 
         statusCircle: {
+
             width: 58,
+
             height: 58,
 
             borderRadius: 29,
 
-            alignItems: "center",
+            alignItems:
+                "center",
 
-            justifyContent: "center",
+            justifyContent:
+                "center",
         },
 
 
         statusCircleText: {
-            color: "#FFFFFF",
+
+            color:
+                "#FFFFFF",
 
             fontSize: 17,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
         },
 
 
         progressBackground: {
+
             height: 7,
 
             marginTop: 14,
@@ -1020,30 +1321,39 @@ const styles =
             backgroundColor:
             colors.border,
 
-            overflow: "hidden",
+            overflow:
+                "hidden",
         },
 
 
         progress: {
-            height: "100%",
 
-            borderRadius: 10,
+            height:
+                "100%",
+
+            borderRadius:
+                10,
         },
 
 
         statusRow: {
+
             marginTop: 9,
 
             marginLeft: 4,
 
-            flexDirection: "row",
+            flexDirection:
+                "row",
 
-            alignItems: "center",
+            alignItems:
+                "center",
         },
 
 
         statusDot: {
+
             width: 8,
+
             height: 8,
 
             borderRadius: 4,
@@ -1053,9 +1363,11 @@ const styles =
 
 
         statusText: {
+
             fontSize: 12,
 
-            fontWeight: "700",
+            fontWeight:
+                "700",
 
             color:
             colors.textSecondary,
@@ -1063,6 +1375,7 @@ const styles =
 
 
         section: {
+
             marginTop: 18,
 
             padding: 18,
@@ -1075,11 +1388,13 @@ const styles =
 
 
         sectionTitle: {
+
             marginBottom: 12,
 
             fontSize: 17,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             color:
             colors.primaryDark,
@@ -1087,11 +1402,14 @@ const styles =
 
 
         infoBlock: {
-            paddingVertical: 3,
+
+            paddingVertical:
+                3,
         },
 
 
         infoLabel: {
+
             fontSize: 13,
 
             color:
@@ -1100,11 +1418,13 @@ const styles =
 
 
         infoText: {
+
             marginTop: 5,
 
             fontSize: 15,
 
-            fontWeight: "600",
+            fontWeight:
+                "600",
 
             color:
             colors.text,
@@ -1112,9 +1432,11 @@ const styles =
 
 
         separator: {
+
             height: 1,
 
-            marginVertical: 14,
+            marginVertical:
+                14,
 
             backgroundColor:
             colors.border,
@@ -1122,11 +1444,14 @@ const styles =
 
 
         infoRow: {
+
             minHeight: 38,
 
-            flexDirection: "row",
+            flexDirection:
+                "row",
 
-            alignItems: "center",
+            alignItems:
+                "center",
 
             justifyContent:
                 "space-between",
@@ -1134,13 +1459,17 @@ const styles =
 
 
         infoValue: {
-            maxWidth: "55%",
+
+            maxWidth:
+                "55%",
 
             fontSize: 13,
 
-            fontWeight: "700",
+            fontWeight:
+                "700",
 
-            textAlign: "right",
+            textAlign:
+                "right",
 
             color:
             colors.text,
@@ -1148,16 +1477,20 @@ const styles =
 
 
         reviewHeader: {
-            flexDirection: "row",
+
+            flexDirection:
+                "row",
 
             justifyContent:
                 "space-between",
 
-            alignItems: "center",
+            alignItems:
+                "center",
         },
 
 
         reviewCount: {
+
             marginTop: -7,
 
             fontSize: 12,
@@ -1168,15 +1501,21 @@ const styles =
 
 
         averageContainer: {
-            flexDirection: "row",
 
-            alignItems: "center",
+            flexDirection:
+                "row",
 
-            paddingHorizontal: 10,
+            alignItems:
+                "center",
 
-            paddingVertical: 6,
+            paddingHorizontal:
+                10,
 
-            borderRadius: 14,
+            paddingVertical:
+                6,
+
+            borderRadius:
+                14,
 
             backgroundColor:
             colors.primaryLight,
@@ -1184,6 +1523,7 @@ const styles =
 
 
         averageStar: {
+
             marginRight: 4,
 
             fontSize: 18,
@@ -1194,9 +1534,11 @@ const styles =
 
 
         averageText: {
+
             fontSize: 16,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             color:
             colors.primaryDark,
@@ -1204,13 +1546,17 @@ const styles =
 
 
         loadingReviews: {
-            paddingVertical: 22,
 
-            alignItems: "center",
+            paddingVertical:
+                22,
+
+            alignItems:
+                "center",
         },
 
 
         loadingReviewsText: {
+
             marginTop: 8,
 
             fontSize: 12,
@@ -1221,9 +1567,12 @@ const styles =
 
 
         reviewError: {
-            paddingVertical: 18,
 
-            textAlign: "center",
+            paddingVertical:
+                18,
+
+            textAlign:
+                "center",
 
             fontSize: 13,
 
@@ -1233,13 +1582,17 @@ const styles =
 
 
         emptyReviews: {
-            paddingVertical: 18,
 
-            alignItems: "center",
+            paddingVertical:
+                18,
+
+            alignItems:
+                "center",
         },
 
 
         emptyStar: {
+
             fontSize: 32,
 
             color:
@@ -1248,11 +1601,13 @@ const styles =
 
 
         emptyReviewsText: {
+
             marginTop: 5,
 
             fontSize: 13,
 
-            textAlign: "center",
+            textAlign:
+                "center",
 
             color:
             colors.textSecondary,
@@ -1260,6 +1615,7 @@ const styles =
 
 
         reviewCard: {
+
             marginTop: 12,
 
             padding: 14,
@@ -1272,19 +1628,24 @@ const styles =
 
 
         reviewTop: {
-            flexDirection: "row",
+
+            flexDirection:
+                "row",
 
             justifyContent:
                 "space-between",
 
-            alignItems: "center",
+            alignItems:
+                "center",
         },
 
 
         reviewStars: {
+
             fontSize: 17,
 
-            letterSpacing: 1,
+            letterSpacing:
+                1,
 
             color:
             colors.primary,
@@ -1292,6 +1653,7 @@ const styles =
 
 
         reviewDate: {
+
             fontSize: 10,
 
             color:
@@ -1300,11 +1662,13 @@ const styles =
 
 
         reviewUser: {
+
             marginTop: 8,
 
             fontSize: 12,
 
-            fontWeight: "800",
+            fontWeight:
+                "800",
 
             color:
             colors.primaryDark,
@@ -1312,6 +1676,7 @@ const styles =
 
 
         reviewComment: {
+
             marginTop: 8,
 
             fontSize: 13,
@@ -1324,6 +1689,7 @@ const styles =
 
 
         reviewButton: {
+
             height: 54,
 
             marginTop: 20,
@@ -1333,19 +1699,26 @@ const styles =
             backgroundColor:
             colors.primary,
 
-            alignItems: "center",
+            alignItems:
+                "center",
 
-            justifyContent: "center",
+            justifyContent:
+                "center",
         },
 
 
         reviewText: {
+
             fontSize: 14,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
-            letterSpacing: 0.8,
+            letterSpacing:
+                0.8,
 
-            color: "#FFFFFF",
+            color:
+                "#FFFFFF",
         },
+
     });

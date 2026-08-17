@@ -16,19 +16,23 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
 
+
     public JwtAuthenticationFilter(
             JwtService jwtService,
             UsuarioRepository usuarioRepository
     ) {
+
         this.jwtService = jwtService;
         this.usuarioRepository = usuarioRepository;
     }
+
 
     @Override
     protected void doFilterInternal(
@@ -37,37 +41,73 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authorization = request.getHeader("Authorization");
+        String authorization =
+                request.getHeader("Authorization");
 
-        if (authorization == null ||
-                !authorization.startsWith("Bearer ")) {
 
-            filterChain.doFilter(request, response);
+        if (
+                authorization == null ||
+                        !authorization.startsWith("Bearer ")
+        ) {
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
 
-        String token = authorization.substring(7);
 
-        if (!jwtService.tokenValido(token)) {
-            filterChain.doFilter(request, response);
+        String token =
+                authorization.substring(7);
+
+
+        if (
+                !jwtService.tokenValido(token)
+        ) {
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
 
-        String email = jwtService.extrairEmail(token);
 
-        Usuario usuario = usuarioRepository
-                .findByEmail(email)
-                .orElse(null);
+        String email =
+                jwtService.extrairEmail(token);
 
-        if (usuario == null || !usuario.getAtivo()) {
-            filterChain.doFilter(request, response);
+
+        Usuario usuario =
+                usuarioRepository
+                        .findByEmail(email)
+                        .orElse(null);
+
+
+        if (
+                usuario == null ||
+                        !usuario.getAtivo()
+        ) {
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
+
 
         SimpleGrantedAuthority autoridade =
                 new SimpleGrantedAuthority(
-                        "ROLE_" + usuario.getTipo().name()
+                        "ROLE_" +
+                                usuario
+                                        .getTipo()
+                                        .name()
                 );
+
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
@@ -76,10 +116,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         List.of(autoridade)
                 );
 
+
         SecurityContextHolder
                 .getContext()
-                .setAuthentication(authentication);
+                .setAuthentication(
+                        authentication
+                );
 
-        filterChain.doFilter(request, response);
+
+        filterChain.doFilter(
+                request,
+                response
+        );
     }
 }

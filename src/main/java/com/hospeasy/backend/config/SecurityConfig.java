@@ -63,6 +63,13 @@ public class SecurityConfig {
                         ).permitAll()
 
 
+                        // CADASTRO PÚBLICO DE USUÁRIO COMUM
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuarios/cadastro"
+                        ).permitAll()
+
+
                         // CONSULTAR UNIDADES
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -78,7 +85,7 @@ public class SecurityConfig {
                         ).permitAll()
 
 
-                        // CADASTRAR USUÁRIO
+                        // CADASTRAR ADMIN / FUNCIONÁRIO
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/usuarios"
@@ -108,8 +115,12 @@ public class SecurityConfig {
                                 "/unidades/*/medicoes"
                         ).permitAll()
 
+                        // ERROS DO SPRING
+                        .requestMatchers(
+                                "/error"
+                        ).permitAll()
 
-                        // ⚠️ SEMPRE O ÚLTIMO
+                        // SEMPRE O ÚLTIMO
                         .anyRequest()
                         .authenticated()
                 )
@@ -131,11 +142,13 @@ public class SecurityConfig {
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
+
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:8081"
                 )
         );
+
 
         configuration.setAllowedMethods(
                 List.of(
@@ -148,9 +161,11 @@ public class SecurityConfig {
                 )
         );
 
+
         configuration.setAllowedHeaders(
                 List.of("*")
         );
+
 
         configuration.setAllowCredentials(
                 true
@@ -160,10 +175,12 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
+
         source.registerCorsConfiguration(
                 "/**",
                 configuration
         );
+
 
         return source;
     }
