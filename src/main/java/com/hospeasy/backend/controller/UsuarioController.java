@@ -1,10 +1,14 @@
 package com.hospeasy.backend.controller;
 
 import com.hospeasy.backend.dto.CadastroUsuarioRequestDTO;
+import com.hospeasy.backend.dto.EsqueciSenhaRequestDTO;
 import com.hospeasy.backend.dto.LoginRequestDTO;
 import com.hospeasy.backend.dto.LoginResponseDTO;
+import com.hospeasy.backend.dto.RedefinirSenhaRequestDTO;
 import com.hospeasy.backend.dto.UsuarioRequestDTO;
 import com.hospeasy.backend.dto.UsuarioResponseDTO;
+import com.hospeasy.backend.dto.VerificarCodigoRequestDTO;
+
 import com.hospeasy.backend.service.UsuarioService;
 
 import jakarta.validation.Valid;
@@ -22,7 +26,9 @@ public class UsuarioController {
     public UsuarioController(
             UsuarioService usuarioService
     ) {
-        this.usuarioService = usuarioService;
+
+        this.usuarioService =
+                usuarioService;
     }
 
 
@@ -35,7 +41,9 @@ public class UsuarioController {
     ) {
 
         return usuarioService
-                .cadastrarUsuario(dto);
+                .cadastrarUsuario(
+                        dto
+                );
     }
 
 
@@ -48,7 +56,9 @@ public class UsuarioController {
     ) {
 
         return usuarioService
-                .cadastrarUsuarioComum(dto);
+                .cadastrarUsuarioComum(
+                        dto
+                );
     }
 
 
@@ -61,6 +71,53 @@ public class UsuarioController {
     ) {
 
         return usuarioService
-                .login(dto);
+                .login(
+                        dto
+                );
+    }
+
+
+    // SOLICITAR RECUPERAÇÃO DE SENHA
+    @PostMapping("/esqueci-senha")
+    public String esqueciSenha(
+            @Valid
+            @RequestBody
+            EsqueciSenhaRequestDTO dto
+    ) {
+
+        return usuarioService
+                .solicitarRecuperacaoSenha(
+                        dto
+                );
+    }
+
+
+    // VERIFICAR CÓDIGO
+    @PostMapping("/verificar-codigo")
+    public void verificarCodigo(
+            @Valid
+            @RequestBody
+            VerificarCodigoRequestDTO dto
+    ) {
+
+        usuarioService
+                .verificarCodigoRecuperacao(
+                        dto
+                );
+    }
+
+
+    // REDEFINIR SENHA
+    @PostMapping("/redefinir-senha")
+    public void redefinirSenha(
+            @Valid
+            @RequestBody
+            RedefinirSenhaRequestDTO dto
+    ) {
+
+        usuarioService
+                .redefinirSenha(
+                        dto
+                );
     }
 }

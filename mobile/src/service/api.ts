@@ -4,7 +4,7 @@ import {
 
 
 const URL_BACKEND =
-    "http://192.168.15.206:8080";
+    "http://192.168.1.103:8080";
 
 
 export type CriarAvaliacaoPayload = {
@@ -207,6 +207,7 @@ export async function fazerLogin(
     return resposta.json();
 }
 
+
 export async function buscarSituacaoUnidade(
     unidadeId: number
 ): Promise<Unidade> {
@@ -254,20 +255,14 @@ export async function cadastrarUsuario(
 
     if (!resposta.ok) {
 
-        /*
-         * O backend pode responder com
-         * formatos diferentes dependendo
-         * do ExceptionHandler.
-         *
-         * Tentamos ler a resposta para
-         * identificar email duplicado.
-         */
         let mensagem = "";
+
 
         try {
 
             const dadosErro =
                 await resposta.json();
+
 
             mensagem =
                 dadosErro?.message ??
@@ -299,4 +294,122 @@ export async function cadastrarUsuario(
 
 
     return resposta.json();
+}
+
+
+/*
+ * RECUPERAÇÃO DE SENHA
+ */
+export async function solicitarRecuperacaoSenha(
+    email: string
+): Promise<string> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/esqueci-senha`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                },
+
+                body:
+                    JSON.stringify({
+                        email,
+                    }),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        if (
+            resposta.status === 404
+        ) {
+
+            throw new Error(
+                "EMAIL_NAO_ENCONTRADO"
+            );
+        }
+
+
+        throw new Error(
+            `Erro ao solicitar recuperação: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.text();
+}
+
+
+export async function verificarCodigoRecuperacao(
+    email: string,
+    codigo: string
+): Promise<void> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/verificar-codigo`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                },
+
+                body:
+                    JSON.stringify({
+                        email,
+                        codigo,
+                    }),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            "CODIGO_INVALIDO"
+        );
+    }
+}
+
+
+export async function redefinirSenha(
+    email: string,
+    codigo: string,
+    novaSenha: string
+): Promise<void> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/redefinir-senha`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                },
+
+                body:
+                    JSON.stringify({
+                        email,
+                        codigo,
+                        novaSenha,
+                    }),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            "ERRO_REDEFINIR_SENHA"
+        );
+    }
 }

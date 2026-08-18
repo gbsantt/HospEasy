@@ -20,8 +20,8 @@ import {
 } from "../navigation/AppNavigator";
 
 import {
-    useAuth,
-} from "../context/AuthContext";
+    verificarCodigoRecuperacao,
+} from "../service/api";
 
 import {
     colors,
@@ -31,58 +31,52 @@ import {
 type Props =
     NativeStackScreenProps<
         RootStackParamList,
-        "Login"
+        "VerifyCode"
     >;
 
 
-export default function LoginScreen({
-                                        navigation,
-                                    }: Props) {
+export default function VerifyCodeScreen({
+                                             navigation,
+                                             route,
+                                         }: Props) {
 
     const {
-        login,
-    } = useAuth();
-
-
-    const [
         email,
-        setEmail,
-    ] =
-        useState("");
+    } = route.params;
 
 
     const [
-        senha,
-        setSenha,
-    ] =
-        useState("");
+        codigo,
+        setCodigo,
+    ] = useState("");
 
 
     const [
         enviando,
         setEnviando,
-    ] =
-        useState(false);
+    ] = useState(false);
 
 
     const [
         erro,
         setErro,
-    ] =
-        useState<string | null>(
-            null
-        );
+    ] = useState<string | null>(
+        null
+    );
 
 
-    async function entrar() {
+    async function continuar() {
+
+        const codigoTratado =
+            codigo.trim();
+
 
         if (
-            !email.trim() ||
-            !senha
+            codigoTratado.length !== 6
         ) {
 
             setErro(
-                "Preencha email e senha."
+                "Digite o código de 6 dígitos."
             );
 
             return;
@@ -100,46 +94,32 @@ export default function LoginScreen({
             );
 
 
-            await login(
-                email.trim(),
-                senha
+            await verificarCodigoRecuperacao(
+                email,
+                codigoTratado
             );
 
 
-            navigation.reset({
-                index: 0,
-
-                routes: [
-                    {
-                        name: "Home",
-                    },
-                ],
-            });
+            navigation.navigate(
+                "ResetPassword",
+                {
+                    email,
+                    codigo:
+                    codigoTratado,
+                }
+            );
 
         } catch (erro) {
 
             console.error(
-                "Erro no login:",
+                "Erro ao verificar código:",
                 erro
             );
 
 
-            if (
-                erro instanceof Error &&
-                erro.message ===
-                "EMAIL_SENHA_INVALIDOS"
-            ) {
-
-                setErro(
-                    "Email ou senha inválidos."
-                );
-
-            } else {
-
-                setErro(
-                    "Não foi possível entrar."
-                );
-            }
+            setErro(
+                "Código inválido ou expirado."
+            );
 
         } finally {
 
@@ -159,7 +139,6 @@ export default function LoginScreen({
         >
 
             <Pressable
-
                 style={
                     styles.backButton
                 }
@@ -167,7 +146,6 @@ export default function LoginScreen({
                 onPress={() =>
                     navigation.goBack()
                 }
-
             >
 
                 <Text
@@ -192,7 +170,7 @@ export default function LoginScreen({
                         styles.title
                     }
                 >
-                    Entrar
+                    Verifique o código
                 </Text>
 
 
@@ -201,7 +179,17 @@ export default function LoginScreen({
                         styles.subtitle
                     }
                 >
-                    Acesse sua conta HospEasy.
+                    Digite o código de 6 dígitos
+                    para continuar.
+                </Text>
+
+
+                <Text
+                    style={
+                        styles.email
+                    }
+                >
+                    {email}
                 </Text>
 
 
@@ -210,87 +198,46 @@ export default function LoginScreen({
                         styles.label
                     }
                 >
-                    Email
+                    Código
                 </Text>
 
 
                 <TextInput
-
                     value={
-                        email
+                        codigo
                     }
 
-                    onChangeText={
-                        setEmail
-                    }
-
-                    placeholder="seu@email.com"
-
-                    placeholderTextColor={
-                        colors.textSecondary
-                    }
-
-                    keyboardType="email-address"
-
-                    autoCapitalize="none"
-
-                    style={
-                        styles.input
-                    }
-
-                />
-
-
-                <Text
-                    style={
-                        styles.label
-                    }
-                >
-                    Senha
-                </Text>
-
-
-                <TextInput
-
-                    value={
-                        senha
-                    }
-
-                    onChangeText={
-                        setSenha
-                    }
-
-                    placeholder="Sua senha"
-
-                    placeholderTextColor={
-                        colors.textSecondary
-                    }
-
-                    secureTextEntry
-
-                    style={
-                        styles.input
-                    }
-
-                />
-
-                <Pressable
-                    onPress={() =>
-                        navigation.navigate(
-                            "ForgotPassword"
+                    onChangeText={(texto) =>
+                        setCodigo(
+                            texto
+                                .replace(
+                                    /\D/g,
+                                    ""
+                                )
+                                .slice(
+                                    0,
+                                    6
+                                )
                         )
                     }
-                >
 
-                    <Text
-                        style={
-                            styles.forgotPassword
-                        }
-                    >
-                        Esqueceu sua senha?
-                    </Text>
+                    placeholder="000000"
 
-                </Pressable>
+                    placeholderTextColor={
+                        colors.textSecondary
+                    }
+
+                    keyboardType="number-pad"
+
+                    maxLength={
+                        6
+                    }
+
+                    style={
+                        styles.codeInput
+                    }
+                />
+
 
                 {
                     erro && (
@@ -308,7 +255,6 @@ export default function LoginScreen({
 
 
                 <Pressable
-
                     disabled={
                         enviando
                     }
@@ -321,9 +267,8 @@ export default function LoginScreen({
                     ]}
 
                     onPress={
-                        entrar
+                        continuar
                     }
-
                 >
 
                     {
@@ -342,7 +287,7 @@ export default function LoginScreen({
                                         styles.buttonText
                                     }
                                 >
-                                    ENTRAR
+                                    CONTINUAR
                                 </Text>
 
                             )
@@ -353,7 +298,6 @@ export default function LoginScreen({
             </View>
 
         </View>
-
     );
 }
 
@@ -430,8 +374,6 @@ const styles =
 
             marginTop: 7,
 
-            marginBottom: 30,
-
             fontSize: 14,
 
             color:
@@ -439,9 +381,22 @@ const styles =
         },
 
 
-        label: {
+        email: {
 
-            marginTop: 15,
+            marginTop: 8,
+
+            marginBottom: 25,
+
+            fontSize: 14,
+
+            fontWeight: "800",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        label: {
 
             marginBottom: 7,
 
@@ -454,9 +409,9 @@ const styles =
         },
 
 
-        input: {
+        codeInput: {
 
-            height: 54,
+            height: 60,
 
             paddingHorizontal: 16,
 
@@ -470,7 +425,13 @@ const styles =
             backgroundColor:
             colors.surface,
 
-            fontSize: 15,
+            fontSize: 24,
+
+            fontWeight: "900",
+
+            letterSpacing: 8,
+
+            textAlign: "center",
 
             color:
             colors.text,
@@ -526,20 +487,6 @@ const styles =
             letterSpacing: 0.8,
 
             color: "#FFFFFF",
-        },
-
-        forgotPassword: {
-
-            marginTop: 12,
-
-            alignSelf: "flex-end",
-
-            fontSize: 13,
-
-            fontWeight: "800",
-
-            color:
-            colors.primaryDark,
         },
 
     });

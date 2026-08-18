@@ -20,8 +20,8 @@ import {
 } from "../navigation/AppNavigator";
 
 import {
-    useAuth,
-} from "../context/AuthContext";
+    redefinirSenha,
+} from "../service/api";
 
 import {
     colors,
@@ -31,58 +31,67 @@ import {
 type Props =
     NativeStackScreenProps<
         RootStackParamList,
-        "Login"
+        "ResetPassword"
     >;
 
 
-export default function LoginScreen({
-                                        navigation,
-                                    }: Props) {
+export default function ResetPasswordScreen({
+                                                navigation,
+                                                route,
+                                            }: Props) {
 
     const {
-        login,
-    } = useAuth();
-
-
-    const [
         email,
-        setEmail,
-    ] =
-        useState("");
+        codigo,
+    } = route.params;
 
 
     const [
         senha,
         setSenha,
-    ] =
-        useState("");
+    ] = useState("");
+
+
+    const [
+        confirmarSenha,
+        setConfirmarSenha,
+    ] = useState("");
 
 
     const [
         enviando,
         setEnviando,
-    ] =
-        useState(false);
+    ] = useState(false);
 
 
     const [
         erro,
         setErro,
-    ] =
-        useState<string | null>(
-            null
-        );
+    ] = useState<string | null>(
+        null
+    );
 
 
-    async function entrar() {
+    async function salvar() {
 
         if (
-            !email.trim() ||
-            !senha
+            senha.length < 6
         ) {
 
             setErro(
-                "Preencha email e senha."
+                "A senha precisa ter pelo menos 6 caracteres."
+            );
+
+            return;
+        }
+
+
+        if (
+            senha !== confirmarSenha
+        ) {
+
+            setErro(
+                "As senhas não coincidem."
             );
 
             return;
@@ -100,8 +109,9 @@ export default function LoginScreen({
             );
 
 
-            await login(
-                email.trim(),
+            await redefinirSenha(
+                email,
+                codigo,
                 senha
             );
 
@@ -111,7 +121,8 @@ export default function LoginScreen({
 
                 routes: [
                     {
-                        name: "Home",
+                        name:
+                            "Login",
                     },
                 ],
             });
@@ -119,27 +130,14 @@ export default function LoginScreen({
         } catch (erro) {
 
             console.error(
-                "Erro no login:",
+                "Erro ao redefinir senha:",
                 erro
             );
 
 
-            if (
-                erro instanceof Error &&
-                erro.message ===
-                "EMAIL_SENHA_INVALIDOS"
-            ) {
-
-                setErro(
-                    "Email ou senha inválidos."
-                );
-
-            } else {
-
-                setErro(
-                    "Não foi possível entrar."
-                );
-            }
+            setErro(
+                "Não foi possível redefinir sua senha."
+            );
 
         } finally {
 
@@ -159,7 +157,6 @@ export default function LoginScreen({
         >
 
             <Pressable
-
                 style={
                     styles.backButton
                 }
@@ -167,7 +164,6 @@ export default function LoginScreen({
                 onPress={() =>
                     navigation.goBack()
                 }
-
             >
 
                 <Text
@@ -192,7 +188,7 @@ export default function LoginScreen({
                         styles.title
                     }
                 >
-                    Entrar
+                    Nova senha
                 </Text>
 
 
@@ -201,7 +197,8 @@ export default function LoginScreen({
                         styles.subtitle
                     }
                 >
-                    Acesse sua conta HospEasy.
+                    Escolha uma nova senha
+                    para sua conta HospEasy.
                 </Text>
 
 
@@ -210,48 +207,11 @@ export default function LoginScreen({
                         styles.label
                     }
                 >
-                    Email
+                    Nova senha
                 </Text>
 
 
                 <TextInput
-
-                    value={
-                        email
-                    }
-
-                    onChangeText={
-                        setEmail
-                    }
-
-                    placeholder="seu@email.com"
-
-                    placeholderTextColor={
-                        colors.textSecondary
-                    }
-
-                    keyboardType="email-address"
-
-                    autoCapitalize="none"
-
-                    style={
-                        styles.input
-                    }
-
-                />
-
-
-                <Text
-                    style={
-                        styles.label
-                    }
-                >
-                    Senha
-                </Text>
-
-
-                <TextInput
-
                     value={
                         senha
                     }
@@ -260,7 +220,7 @@ export default function LoginScreen({
                         setSenha
                     }
 
-                    placeholder="Sua senha"
+                    placeholder="Nova senha"
 
                     placeholderTextColor={
                         colors.textSecondary
@@ -271,26 +231,40 @@ export default function LoginScreen({
                     style={
                         styles.input
                     }
-
                 />
 
-                <Pressable
-                    onPress={() =>
-                        navigation.navigate(
-                            "ForgotPassword"
-                        )
+
+                <Text
+                    style={
+                        styles.label
                     }
                 >
+                    Confirmar senha
+                </Text>
 
-                    <Text
-                        style={
-                            styles.forgotPassword
-                        }
-                    >
-                        Esqueceu sua senha?
-                    </Text>
 
-                </Pressable>
+                <TextInput
+                    value={
+                        confirmarSenha
+                    }
+
+                    onChangeText={
+                        setConfirmarSenha
+                    }
+
+                    placeholder="Digite novamente"
+
+                    placeholderTextColor={
+                        colors.textSecondary
+                    }
+
+                    secureTextEntry
+
+                    style={
+                        styles.input
+                    }
+                />
+
 
                 {
                     erro && (
@@ -308,7 +282,6 @@ export default function LoginScreen({
 
 
                 <Pressable
-
                     disabled={
                         enviando
                     }
@@ -321,9 +294,8 @@ export default function LoginScreen({
                     ]}
 
                     onPress={
-                        entrar
+                        salvar
                     }
-
                 >
 
                     {
@@ -342,7 +314,7 @@ export default function LoginScreen({
                                         styles.buttonText
                                     }
                                 >
-                                    ENTRAR
+                                    SALVAR NOVA SENHA
                                 </Text>
 
                             )
@@ -353,7 +325,6 @@ export default function LoginScreen({
             </View>
 
         </View>
-
     );
 }
 
@@ -526,20 +497,6 @@ const styles =
             letterSpacing: 0.8,
 
             color: "#FFFFFF",
-        },
-
-        forgotPassword: {
-
-            marginTop: 12,
-
-            alignSelf: "flex-end",
-
-            fontSize: 13,
-
-            fontWeight: "800",
-
-            color:
-            colors.primaryDark,
         },
 
     });

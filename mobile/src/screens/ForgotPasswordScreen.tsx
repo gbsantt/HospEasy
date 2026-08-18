@@ -20,8 +20,8 @@ import {
 } from "../navigation/AppNavigator";
 
 import {
-    useAuth,
-} from "../context/AuthContext";
+    solicitarRecuperacaoSenha,
+} from "../service/api";
 
 import {
     colors,
@@ -31,58 +31,46 @@ import {
 type Props =
     NativeStackScreenProps<
         RootStackParamList,
-        "Login"
+        "ForgotPassword"
     >;
 
 
-export default function LoginScreen({
-                                        navigation,
-                                    }: Props) {
-
-    const {
-        login,
-    } = useAuth();
-
+export default function ForgotPasswordScreen({
+                                                 navigation,
+                                             }: Props) {
 
     const [
         email,
         setEmail,
-    ] =
-        useState("");
-
-
-    const [
-        senha,
-        setSenha,
-    ] =
-        useState("");
+    ] = useState("");
 
 
     const [
         enviando,
         setEnviando,
-    ] =
-        useState(false);
+    ] = useState(false);
 
 
     const [
         erro,
         setErro,
-    ] =
-        useState<string | null>(
-            null
-        );
+    ] = useState<string | null>(
+        null
+    );
 
 
-    async function entrar() {
+    async function continuar() {
 
-        if (
-            !email.trim() ||
-            !senha
-        ) {
+        const emailTratado =
+            email
+                .trim()
+                .toLowerCase();
+
+
+        if (!emailTratado) {
 
             setErro(
-                "Preencha email e senha."
+                "Digite seu email."
             );
 
             return;
@@ -100,26 +88,30 @@ export default function LoginScreen({
             );
 
 
-            await login(
-                email.trim(),
-                senha
+            const codigo =
+                await solicitarRecuperacaoSenha(
+                    emailTratado
+                );
+
+
+            console.log(
+                "Código de recuperação:",
+                codigo
             );
 
 
-            navigation.reset({
-                index: 0,
-
-                routes: [
-                    {
-                        name: "Home",
-                    },
-                ],
-            });
+            navigation.navigate(
+                "VerifyCode",
+                {
+                    email:
+                    emailTratado,
+                }
+            );
 
         } catch (erro) {
 
             console.error(
-                "Erro no login:",
+                "Erro ao recuperar senha:",
                 erro
             );
 
@@ -127,17 +119,17 @@ export default function LoginScreen({
             if (
                 erro instanceof Error &&
                 erro.message ===
-                "EMAIL_SENHA_INVALIDOS"
+                "EMAIL_NAO_ENCONTRADO"
             ) {
 
                 setErro(
-                    "Email ou senha inválidos."
+                    "Não encontramos uma conta com esse email."
                 );
 
             } else {
 
                 setErro(
-                    "Não foi possível entrar."
+                    "Não foi possível solicitar a recuperação."
                 );
             }
 
@@ -159,7 +151,6 @@ export default function LoginScreen({
         >
 
             <Pressable
-
                 style={
                     styles.backButton
                 }
@@ -167,7 +158,6 @@ export default function LoginScreen({
                 onPress={() =>
                     navigation.goBack()
                 }
-
             >
 
                 <Text
@@ -192,7 +182,7 @@ export default function LoginScreen({
                         styles.title
                     }
                 >
-                    Entrar
+                    Esqueceu a senha?
                 </Text>
 
 
@@ -201,7 +191,8 @@ export default function LoginScreen({
                         styles.subtitle
                     }
                 >
-                    Acesse sua conta HospEasy.
+                    Digite o email da sua conta
+                    para recuperar o acesso.
                 </Text>
 
 
@@ -215,7 +206,6 @@ export default function LoginScreen({
 
 
                 <TextInput
-
                     value={
                         email
                     }
@@ -234,63 +224,15 @@ export default function LoginScreen({
 
                     autoCapitalize="none"
 
-                    style={
-                        styles.input
+                    autoCorrect={
+                        false
                     }
-
-                />
-
-
-                <Text
-                    style={
-                        styles.label
-                    }
-                >
-                    Senha
-                </Text>
-
-
-                <TextInput
-
-                    value={
-                        senha
-                    }
-
-                    onChangeText={
-                        setSenha
-                    }
-
-                    placeholder="Sua senha"
-
-                    placeholderTextColor={
-                        colors.textSecondary
-                    }
-
-                    secureTextEntry
 
                     style={
                         styles.input
                     }
-
                 />
 
-                <Pressable
-                    onPress={() =>
-                        navigation.navigate(
-                            "ForgotPassword"
-                        )
-                    }
-                >
-
-                    <Text
-                        style={
-                            styles.forgotPassword
-                        }
-                    >
-                        Esqueceu sua senha?
-                    </Text>
-
-                </Pressable>
 
                 {
                     erro && (
@@ -308,7 +250,6 @@ export default function LoginScreen({
 
 
                 <Pressable
-
                     disabled={
                         enviando
                     }
@@ -321,9 +262,8 @@ export default function LoginScreen({
                     ]}
 
                     onPress={
-                        entrar
+                        continuar
                     }
-
                 >
 
                     {
@@ -342,7 +282,7 @@ export default function LoginScreen({
                                         styles.buttonText
                                     }
                                 >
-                                    ENTRAR
+                                    CONTINUAR
                                 </Text>
 
                             )
@@ -353,7 +293,6 @@ export default function LoginScreen({
             </View>
 
         </View>
-
     );
 }
 
@@ -433,6 +372,8 @@ const styles =
             marginBottom: 30,
 
             fontSize: 14,
+
+            lineHeight: 21,
 
             color:
             colors.textSecondary,
@@ -526,20 +467,6 @@ const styles =
             letterSpacing: 0.8,
 
             color: "#FFFFFF",
-        },
-
-        forgotPassword: {
-
-            marginTop: 12,
-
-            alignSelf: "flex-end",
-
-            fontSize: 13,
-
-            fontWeight: "800",
-
-            color:
-            colors.primaryDark,
         },
 
     });

@@ -27,6 +27,7 @@ public class SecurityConfig {
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter
     ) {
+
         this.jwtAuthenticationFilter =
                 jwtAuthenticationFilter;
     }
@@ -70,6 +71,15 @@ public class SecurityConfig {
                         ).permitAll()
 
 
+                        // RECUPERAÇÃO DE SENHA
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuarios/esqueci-senha",
+                                "/usuarios/verificar-codigo",
+                                "/usuarios/redefinir-senha"
+                        ).permitAll()
+
+
                         // CONSULTAR UNIDADES
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -109,16 +119,18 @@ public class SecurityConfig {
                         ).hasRole("ADMIN")
 
 
-                        // RECEBER MEDIÇÕES
+                        // RECEBER MEDIÇÕES DA CÂMERA
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/unidades/*/medicoes"
                         ).permitAll()
 
+
                         // ERROS DO SPRING
                         .requestMatchers(
                                 "/error"
                         ).permitAll()
+
 
                         // SEMPRE O ÚLTIMO
                         .anyRequest()

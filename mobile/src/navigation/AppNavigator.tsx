@@ -14,6 +14,15 @@ import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 
+import ForgotPasswordScreen
+    from "../screens/ForgotPasswordScreen";
+
+import VerifyCodeScreen
+    from "../screens/VerifyCodeScreen";
+
+import ResetPasswordScreen
+    from "../screens/ResetPasswordScreen";
+
 import {
     Unidade,
 } from "../types/Unidade";
@@ -37,6 +46,18 @@ export type RootStackParamList = {
 
     Login:
         undefined;
+
+    ForgotPassword:
+        undefined;
+
+    VerifyCode: {
+        email: string;
+    };
+
+    ResetPassword: {
+        email: string;
+        codigo: string;
+    };
 
     Register:
         undefined;
@@ -101,6 +122,30 @@ export default function AppNavigator() {
                     name="Login"
                     component={
                         LoginScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="ForgotPassword"
+                    component={
+                        ForgotPasswordScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="VerifyCode"
+                    component={
+                        VerifyCodeScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="ResetPassword"
+                    component={
+                        ResetPasswordScreen
                     }
                 />
 
