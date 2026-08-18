@@ -9,6 +9,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
+    cadastrarUsuario,
     fazerLogin,
     LoginResponse,
 } from "../service/api";
@@ -19,18 +20,29 @@ const CHAVE_SESSAO =
 
 
 type AuthContextType = {
-    usuario: LoginResponse | null;
 
-    carregandoSessao: boolean;
+    usuario:
+        LoginResponse | null;
 
-    autenticado: boolean;
+    carregandoSessao:
+        boolean;
+
+    autenticado:
+        boolean;
 
     login: (
         email: string,
         senha: string
     ) => Promise<void>;
 
-    logout: () => Promise<void>;
+    cadastro: (
+        nome: string,
+        email: string,
+        senha: string
+    ) => Promise<void>;
+
+    logout:
+        () => Promise<void>;
 };
 
 
@@ -66,7 +78,9 @@ export function AuthProvider({
 
 
     useEffect(() => {
+
         carregarSessao();
+
     }, []);
 
 
@@ -117,6 +131,24 @@ export function AuthProvider({
     }
 
 
+    async function salvarSessao(
+        dados: LoginResponse
+    ) {
+
+        setUsuario(
+            dados
+        );
+
+
+        await AsyncStorage.setItem(
+            CHAVE_SESSAO,
+            JSON.stringify(
+                dados
+            )
+        );
+    }
+
+
     async function login(
         email: string,
         senha: string
@@ -124,21 +156,59 @@ export function AuthProvider({
 
         const resposta =
             await fazerLogin(
-                email,
+                email.trim(),
                 senha
             );
 
 
-        setUsuario(
+        await salvarSessao(
             resposta
         );
+    }
 
 
-        await AsyncStorage.setItem(
-            CHAVE_SESSAO,
-            JSON.stringify(
-                resposta
-            )
+    async function cadastro(
+        nome: string,
+        email: string,
+        senha: string
+    ) {
+
+        const nomeLimpo =
+            nome.trim();
+
+        const emailLimpo =
+            email
+                .trim()
+                .toLowerCase();
+
+
+        /*
+         * Primeiro cria o usuário.
+         */
+        await cadastrarUsuario({
+            nome:
+            nomeLimpo,
+
+            email:
+            emailLimpo,
+
+            senha,
+        });
+
+
+        /*
+         * Se o cadastro funcionou,
+         * faz login automaticamente.
+         */
+        const respostaLogin =
+            await fazerLogin(
+                emailLimpo,
+                senha
+            );
+
+
+        await salvarSessao(
+            respostaLogin
         );
     }
 
@@ -169,6 +239,8 @@ export function AuthProvider({
 
                 login,
 
+                cadastro,
+
                 logout,
             }}
         >
@@ -176,7 +248,6 @@ export function AuthProvider({
             {children}
 
         </AuthContext.Provider>
-
     );
 }
 

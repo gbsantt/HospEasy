@@ -11,6 +11,7 @@ import UnitScreen from "../screens/UnitScreen";
 import ReviewScreen from "../screens/ReviewScreen";
 import AccessScreen from "../screens/AccessScreen";
 import LoginScreen from "../screens/LoginScreen";
+import RegisterScreen from "../screens/RegisterScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 
 import {
@@ -35,6 +36,9 @@ export type RootStackParamList = {
         undefined;
 
     Login:
+        undefined;
+
+    Register:
         undefined;
 
     Profile:
@@ -102,6 +106,14 @@ export default function AppNavigator() {
 
 
                 <Stack.Screen
+                    name="Register"
+                    component={
+                        RegisterScreen
+                    }
+                />
+
+
+                <Stack.Screen
                     name="Profile"
                     component={
                         ProfileScreen
@@ -111,6 +123,5 @@ export default function AppNavigator() {
             </Stack.Navigator>
 
         </NavigationContainer>
-
     );
 }

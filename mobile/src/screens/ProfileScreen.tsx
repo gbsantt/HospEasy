@@ -1,5 +1,6 @@
 import {
     Pressable,
+    ScrollView,
     StyleSheet,
     Text,
     View,
@@ -16,6 +17,10 @@ import {
 import {
     useAuth,
 } from "../context/AuthContext";
+
+import {
+    useFavorites,
+} from "../context/FavoritesContext";
 
 import {
     colors,
@@ -37,6 +42,12 @@ export default function ProfileScreen({
         usuario,
         logout,
     } = useAuth();
+
+
+    const {
+        favoritos,
+        alternarFavorito,
+    } = useFavorites();
 
 
     async function sair() {
@@ -66,12 +77,15 @@ export default function ProfileScreen({
                 }
             >
 
-                <Text>
+                <Text
+                    style={
+                        styles.notAuthenticatedText
+                    }
+                >
                     Usuário não autenticado.
                 </Text>
 
             </View>
-
         );
     }
 
@@ -84,135 +98,157 @@ export default function ProfileScreen({
             }
         >
 
-            <Pressable
-
-                style={
-                    styles.backButton
+            <ScrollView
+                showsVerticalScrollIndicator={
+                    false
                 }
 
-                onPress={() =>
-                    navigation.goBack()
+                contentContainerStyle={
+                    styles.content
                 }
-
             >
 
-                <Text
+                {/* VOLTAR */}
+
+                <Pressable
                     style={
-                        styles.backText
+                        styles.backButton
                     }
-                >
-                    ‹
-                </Text>
 
-            </Pressable>
-
-
-            <View
-                style={
-                    styles.profileHeader
-                }
-            >
-
-                <View
-                    style={
-                        styles.avatar
+                    onPress={() =>
+                        navigation.goBack()
                     }
                 >
 
                     <Text
                         style={
-                            styles.avatarText
+                            styles.backText
                         }
                     >
-                        {
-                            usuario.nome
-                                .charAt(0)
-                                .toUpperCase()
+                        ‹
+                    </Text>
+
+                </Pressable>
+
+
+                {/* PERFIL */}
+
+                <View
+                    style={
+                        styles.profileHeader
+                    }
+                >
+
+                    <View
+                        style={
+                            styles.avatar
                         }
+                    >
+
+                        <Text
+                            style={
+                                styles.avatarText
+                            }
+                        >
+                            {
+                                usuario.nome
+                                    .charAt(0)
+                                    .toUpperCase()
+                            }
+                        </Text>
+
+                    </View>
+
+
+                    <Text
+                        style={
+                            styles.name
+                        }
+                    >
+                        {usuario.nome}
+                    </Text>
+
+
+                    <Text
+                        style={
+                            styles.email
+                        }
+                    >
+                        {usuario.email}
                     </Text>
 
                 </View>
 
 
-                <Text
-                    style={
-                        styles.name
-                    }
-                >
-                    {usuario.nome}
-                </Text>
-
-
-                <Text
-                    style={
-                        styles.email
-                    }
-                >
-                    {usuario.email}
-                </Text>
-
-            </View>
-
-
-            <View
-                style={
-                    styles.card
-                }
-            >
-
-                <View
-                    style={
-                        styles.infoRow
-                    }
-                >
-
-                    <Text
-                        style={
-                            styles.infoLabel
-                        }
-                    >
-                        Tipo de conta
-                    </Text>
-
-
-                    <Text
-                        style={
-                            styles.infoValue
-                        }
-                    >
-                        {
-                            usuario.tipo ===
-                            "ADMIN"
-                                ? "Administrador"
-                                : "Funcionário"
-                        }
-                    </Text>
-
-                </View>
-
+                {/* ADMIN */}
 
                 {
-                    usuario.unidadeId !==
-                    null && (
+                    usuario.tipo ===
+                    "ADMIN" && (
 
                         <View
                             style={
-                                styles.infoRow
+                                styles.accountCard
                             }
                         >
 
                             <Text
                                 style={
-                                    styles.infoLabel
+                                    styles.accountLabel
                                 }
                             >
-                                Unidade
+                                Tipo de conta
+                            </Text>
+
+
+                            <View
+                                style={
+                                    styles.adminBadge
+                                }
+                            >
+
+                                <Text
+                                    style={
+                                        styles.adminBadgeText
+                                    }
+                                >
+                                    Administrador
+                                </Text>
+
+                            </View>
+
+                        </View>
+
+                    )
+                }
+
+
+                {/* FUNCIONÁRIO */}
+
+                {
+                    usuario.tipo ===
+                    "FUNCIONARIO" &&
+                    usuario.unidadeId !==
+                    null && (
+
+                        <View
+                            style={
+                                styles.accountCard
+                            }
+                        >
+
+                            <Text
+                                style={
+                                    styles.accountLabel
+                                }
+                            >
+                                Unidade vinculada
                             </Text>
 
 
                             <Text
                                 style={
-                                    styles.infoValue
+                                    styles.accountValue
                                 }
                             >
                                 #{usuario.unidadeId}
@@ -223,33 +259,350 @@ export default function ProfileScreen({
                     )
                 }
 
-            </View>
+
+                {/* FAVORITOS */}
+
+                {
+                    usuario.tipo ===
+                    "USUARIO" && (
+
+                        <View
+                            style={
+                                styles.section
+                            }
+                        >
+
+                            <View
+                                style={
+                                    styles.sectionHeader
+                                }
+                            >
+
+                                <View>
+
+                                    <Text
+                                        style={
+                                            styles.sectionTitle
+                                        }
+                                    >
+                                        Favoritos
+                                    </Text>
 
 
-            <Pressable
+                                    <Text
+                                        style={
+                                            styles.sectionSubtitle
+                                        }
+                                    >
+                                        Suas unidades salvas
+                                    </Text>
 
-                style={
-                    styles.logoutButton
+                                </View>
+
+
+                                <View
+                                    style={
+                                        styles.counterBadge
+                                    }
+                                >
+
+                                    <Text
+                                        style={
+                                            styles.counterText
+                                        }
+                                    >
+                                        {
+                                            favoritos.length
+                                        }
+                                    </Text>
+
+                                </View>
+
+                            </View>
+
+
+                            {
+                                favoritos.length ===
+                                0
+                                    ? (
+
+                                        <View
+                                            style={
+                                                styles.emptyContainer
+                                            }
+                                        >
+
+                                            <Text
+                                                style={
+                                                    styles.emptyHeart
+                                                }
+                                            >
+                                                ♡
+                                            </Text>
+
+
+                                            <Text
+                                                style={
+                                                    styles.emptyTitle
+                                                }
+                                            >
+                                                Nenhum favorito
+                                            </Text>
+
+
+                                            <Text
+                                                style={
+                                                    styles.emptyText
+                                                }
+                                            >
+                                                Favorite uma unidade para
+                                                encontrá-la rapidamente aqui.
+                                            </Text>
+
+                                        </View>
+
+                                    )
+                                    : (
+
+                                        <View
+                                            style={
+                                                styles.favoritesContainer
+                                            }
+                                        >
+
+                                            {
+                                                favoritos.map(
+                                                    (
+                                                        unidade
+                                                    ) => (
+
+                                                        <Pressable
+                                                            key={
+                                                                unidade.unidadeId
+                                                            }
+
+                                                            style={
+                                                                styles.favoriteCard
+                                                            }
+
+                                                            onPress={() =>
+                                                                navigation.navigate(
+                                                                    "Unit",
+                                                                    {
+                                                                        unidade,
+                                                                    }
+                                                                )
+                                                            }
+                                                        >
+
+                                                            <View
+                                                                style={
+                                                                    styles.favoriteIcon
+                                                                }
+                                                            >
+
+                                                                <Text
+                                                                    style={
+                                                                        styles.favoriteHeart
+                                                                    }
+                                                                >
+                                                                    ♥
+                                                                </Text>
+
+                                                            </View>
+
+
+                                                            <View
+                                                                style={
+                                                                    styles.favoriteContent
+                                                                }
+                                                            >
+
+                                                                <Text
+                                                                    style={
+                                                                        styles.favoriteName
+                                                                    }
+
+                                                                    numberOfLines={
+                                                                        1
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        unidade.nome
+                                                                    }
+                                                                </Text>
+
+
+                                                                <Text
+                                                                    style={
+                                                                        styles.favoriteInfo
+                                                                    }
+                                                                >
+                                                                    Ocupação atual:{" "}
+                                                                    {
+                                                                        unidade
+                                                                            .percentualOcupacao
+                                                                            .toFixed(
+                                                                                0
+                                                                            )
+                                                                    }
+                                                                    %
+                                                                </Text>
+
+                                                            </View>
+
+
+                                                            <Pressable
+                                                                style={
+                                                                    styles.removeFavoriteButton
+                                                                }
+
+                                                                onPress={(
+                                                                    evento
+                                                                ) => {
+
+                                                                    evento.stopPropagation();
+
+                                                                    alternarFavorito(
+                                                                        unidade
+                                                                    );
+                                                                }}
+                                                            >
+
+                                                                <Text
+                                                                    style={
+                                                                        styles.removeFavoriteText
+                                                                    }
+                                                                >
+                                                                    ♥
+                                                                </Text>
+
+                                                            </Pressable>
+
+
+                                                            <Text
+                                                                style={
+                                                                    styles.arrow
+                                                                }
+                                                            >
+                                                                ›
+                                                            </Text>
+
+                                                        </Pressable>
+
+                                                    )
+                                                )
+                                            }
+
+                                        </View>
+
+                                    )
+                            }
+
+                        </View>
+
+                    )
                 }
 
-                onPress={
-                    sair
+
+                {/* MINHAS AVALIAÇÕES */}
+
+                {
+                    usuario.tipo ===
+                    "USUARIO" && (
+
+                        <View
+                            style={
+                                styles.section
+                            }
+                        >
+
+                            <View
+                                style={
+                                    styles.sectionHeader
+                                }
+                            >
+
+                                <View>
+
+                                    <Text
+                                        style={
+                                            styles.sectionTitle
+                                        }
+                                    >
+                                        Minhas avaliações
+                                    </Text>
+
+
+                                    <Text
+                                        style={
+                                            styles.sectionSubtitle
+                                        }
+                                    >
+                                        Avaliações feitas por você
+                                    </Text>
+
+                                </View>
+
+
+                                <Text
+                                    style={
+                                        styles.reviewStar
+                                    }
+                                >
+                                    ★
+                                </Text>
+
+                            </View>
+
+
+                            <View
+                                style={
+                                    styles.reviewPlaceholder
+                                }
+                            >
+
+                                <Text
+                                    style={
+                                        styles.reviewPlaceholderText
+                                    }
+                                >
+                                    Suas avaliações aparecerão aqui.
+                                </Text>
+
+                            </View>
+
+                        </View>
+
+                    )
                 }
 
-            >
 
-                <Text
+                {/* LOGOUT */}
+
+                <Pressable
                     style={
-                        styles.logoutText
+                        styles.logoutButton
+                    }
+
+                    onPress={
+                        sair
                     }
                 >
-                    SAIR DA CONTA
-                </Text>
 
-            </Pressable>
+                    <Text
+                        style={
+                            styles.logoutText
+                        }
+                    >
+                        SAIR DA CONTA
+                    </Text>
+
+                </Pressable>
+
+            </ScrollView>
 
         </View>
-
     );
 }
 
@@ -261,10 +614,16 @@ const styles =
 
             flex: 1,
 
-            padding: 20,
-
             backgroundColor:
             colors.background,
+        },
+
+
+        content: {
+
+            padding: 20,
+
+            paddingBottom: 50,
         },
 
 
@@ -302,7 +661,7 @@ const styles =
 
         profileHeader: {
 
-            marginTop: 42,
+            marginTop: 32,
 
             alignItems:
                 "center",
@@ -332,9 +691,11 @@ const styles =
 
             fontSize: 38,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
-            color: "#FFFFFF",
+            color:
+                "#FFFFFF",
         },
 
 
@@ -344,7 +705,8 @@ const styles =
 
             fontSize: 26,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             color:
             colors.text,
@@ -362,9 +724,9 @@ const styles =
         },
 
 
-        card: {
+        accountCard: {
 
-            marginTop: 36,
+            marginTop: 30,
 
             padding: 18,
 
@@ -372,12 +734,6 @@ const styles =
 
             backgroundColor:
             colors.surface,
-        },
-
-
-        infoRow: {
-
-            minHeight: 48,
 
             flexDirection:
                 "row",
@@ -390,7 +746,7 @@ const styles =
         },
 
 
-        infoLabel: {
+        accountLabel: {
 
             fontSize: 13,
 
@@ -399,14 +755,334 @@ const styles =
         },
 
 
-        infoValue: {
+        accountValue: {
 
             fontSize: 13,
 
-            fontWeight: "800",
+            fontWeight:
+                "800",
 
             color:
             colors.text,
+        },
+
+
+        adminBadge: {
+
+            paddingHorizontal: 12,
+
+            paddingVertical: 7,
+
+            borderRadius: 14,
+
+            backgroundColor:
+            colors.primaryLight,
+        },
+
+
+        adminBadgeText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        section: {
+
+            marginTop: 28,
+        },
+
+
+        sectionHeader: {
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "space-between",
+
+            marginBottom: 12,
+        },
+
+
+        sectionTitle: {
+
+            fontSize: 19,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        sectionSubtitle: {
+
+            marginTop: 3,
+
+            fontSize: 12,
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        counterBadge: {
+
+            minWidth: 32,
+
+            height: 32,
+
+            paddingHorizontal: 9,
+
+            borderRadius: 16,
+
+            backgroundColor:
+            colors.primary,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        counterText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+                "#FFFFFF",
+        },
+
+
+        emptyContainer: {
+
+            paddingVertical: 28,
+
+            paddingHorizontal: 20,
+
+            borderRadius: 20,
+
+            backgroundColor:
+            colors.surface,
+
+            alignItems:
+                "center",
+        },
+
+
+        emptyHeart: {
+
+            fontSize: 34,
+
+            color:
+            colors.primary,
+        },
+
+
+        emptyTitle: {
+
+            marginTop: 7,
+
+            fontSize: 15,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        emptyText: {
+
+            maxWidth: 260,
+
+            marginTop: 5,
+
+            fontSize: 12,
+
+            lineHeight: 18,
+
+            textAlign:
+                "center",
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        favoritesContainer: {
+
+            borderRadius: 20,
+
+            overflow:
+                "hidden",
+
+            backgroundColor:
+            colors.surface,
+        },
+
+
+        favoriteCard: {
+
+            minHeight: 68,
+
+            paddingHorizontal: 13,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            borderBottomWidth: 1,
+
+            borderBottomColor:
+            colors.border,
+        },
+
+
+        favoriteIcon: {
+
+            width: 38,
+
+            height: 38,
+
+            marginRight: 11,
+
+            borderRadius: 19,
+
+            backgroundColor:
+            colors.primaryLight,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        favoriteHeart: {
+
+            fontSize: 18,
+
+            color:
+            colors.primary,
+        },
+
+
+        favoriteContent: {
+
+            flex: 1,
+
+            paddingRight: 8,
+        },
+
+
+        favoriteName: {
+
+            fontSize: 14,
+
+            fontWeight:
+                "800",
+
+            color:
+            colors.text,
+        },
+
+
+        favoriteInfo: {
+
+            marginTop: 3,
+
+            fontSize: 11,
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        removeFavoriteButton: {
+
+            width: 34,
+
+            height: 34,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        removeFavoriteText: {
+
+            fontSize: 18,
+
+            color:
+            colors.primary,
+        },
+
+
+        arrow: {
+
+            marginLeft: 2,
+
+            fontSize: 23,
+
+            color:
+            colors.primary,
+        },
+
+
+        reviewStar: {
+
+            fontSize: 22,
+
+            color:
+            colors.primary,
+        },
+
+
+        reviewPlaceholder: {
+
+            paddingVertical: 22,
+
+            paddingHorizontal: 18,
+
+            borderRadius: 20,
+
+            backgroundColor:
+            colors.surface,
+
+            alignItems:
+                "center",
+        },
+
+
+        reviewPlaceholderText: {
+
+            fontSize: 12,
+
+            color:
+            colors.textSecondary,
         },
 
 
@@ -414,7 +1090,7 @@ const styles =
 
             height: 54,
 
-            marginTop: 24,
+            marginTop: 34,
 
             borderWidth: 1.5,
 
@@ -435,10 +1111,20 @@ const styles =
 
             fontSize: 13,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             color:
             colors.danger,
+        },
+
+
+        notAuthenticatedText: {
+
+            fontSize: 14,
+
+            color:
+            colors.textSecondary,
         },
 
     });

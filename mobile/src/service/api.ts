@@ -4,7 +4,7 @@ import {
 
 
 const URL_BACKEND =
-    "http://localhost:8080";
+    "http://192.168.1.103:8080";
 
 
 export type CriarAvaliacaoPayload = {
@@ -33,6 +33,12 @@ export type Avaliacao = {
 };
 
 
+export type TipoUsuario =
+    | "ADMIN"
+    | "FUNCIONARIO"
+    | "USUARIO";
+
+
 export type LoginResponse = {
     id: number;
 
@@ -40,14 +46,38 @@ export type LoginResponse = {
 
     email: string;
 
-    tipo:
-        | "ADMIN"
-        | "FUNCIONARIO";
+    tipo: TipoUsuario;
 
     unidadeId:
         number | null;
 
     token: string;
+};
+
+
+export type CadastroUsuarioPayload = {
+    nome: string;
+    email: string;
+    senha: string;
+};
+
+
+export type CadastroUsuarioResponse = {
+    id: number;
+
+    nome: string;
+
+    email: string;
+
+    tipo: TipoUsuario;
+
+    ativo: boolean;
+
+    unidadeId:
+        number | null;
+
+    unidadeNome:
+        string | null;
 };
 
 
@@ -170,6 +200,79 @@ export async function fazerLogin(
 
         throw new Error(
             `Erro no login: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+export async function cadastrarUsuario(
+    dados: CadastroUsuarioPayload
+): Promise<CadastroUsuarioResponse> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/cadastro`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                },
+
+                body:
+                    JSON.stringify(
+                        dados
+                    ),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        /*
+         * O backend pode responder com
+         * formatos diferentes dependendo
+         * do ExceptionHandler.
+         *
+         * Tentamos ler a resposta para
+         * identificar email duplicado.
+         */
+        let mensagem = "";
+
+        try {
+
+            const dadosErro =
+                await resposta.json();
+
+            mensagem =
+                dadosErro?.message ??
+                dadosErro?.mensagem ??
+                "";
+
+        } catch {
+
+            // Ignora caso não exista JSON.
+        }
+
+
+        if (
+            mensagem
+                .toLowerCase()
+                .includes("email")
+        ) {
+
+            throw new Error(
+                "EMAIL_JA_CADASTRADO"
+            );
+        }
+
+
+        throw new Error(
+            `Erro no cadastro: ${resposta.status}`
         );
     }
 

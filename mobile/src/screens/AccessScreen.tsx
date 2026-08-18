@@ -38,7 +38,6 @@ export default function AccessScreen({
         >
 
             <Pressable
-
                 style={
                     styles.backButton
                 }
@@ -46,7 +45,6 @@ export default function AccessScreen({
                 onPress={() =>
                     navigation.goBack()
                 }
-
             >
 
                 <Text
@@ -97,13 +95,13 @@ export default function AccessScreen({
                         styles.description
                     }
                 >
-                    Entre na sua conta para acessar
-                    seu perfil e recursos personalizados.
+                    Entre na sua conta ou crie
+                    uma para acessar seu perfil
+                    e recursos personalizados.
                 </Text>
 
 
                 <Pressable
-
                     style={
                         styles.primaryButton
                     }
@@ -113,7 +111,6 @@ export default function AccessScreen({
                             "Login"
                         )
                     }
-
                 >
 
                     <Text
@@ -127,19 +124,41 @@ export default function AccessScreen({
                 </Pressable>
 
 
+                <Pressable
+                    style={
+                        styles.secondaryButton
+                    }
+
+                    onPress={() =>
+                        navigation.navigate(
+                            "Register"
+                        )
+                    }
+                >
+
+                    <Text
+                        style={
+                            styles.secondaryButtonText
+                        }
+                    >
+                        CRIAR CONTA
+                    </Text>
+
+                </Pressable>
+
+
                 <Text
                     style={
                         styles.registerInfo
                     }
                 >
-                    O cadastro de usuários será
-                    disponibilizado em breve.
+                    Crie sua conta gratuitamente
+                    para personalizar sua experiência.
                 </Text>
 
             </View>
 
         </View>
-
     );
 }
 
@@ -298,11 +317,56 @@ const styles =
         },
 
 
+        secondaryButton: {
+
+            width: "100%",
+
+            height: 56,
+
+            maxWidth: 380,
+
+            marginTop: 12,
+
+            borderRadius: 18,
+
+            borderWidth: 2,
+
+            borderColor:
+            colors.primary,
+
+            backgroundColor:
+            colors.background,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        secondaryButtonText: {
+
+            fontSize: 14,
+
+            fontWeight: "900",
+
+            letterSpacing: 0.8,
+
+            color:
+            colors.primary,
+        },
+
+
         registerInfo: {
+
+            maxWidth: 300,
 
             marginTop: 18,
 
             fontSize: 12,
+
+            lineHeight: 18,
 
             textAlign: "center",
 
