@@ -31,6 +31,7 @@ import {
 import {
     Avaliacao,
     buscarAvaliacoes,
+    buscarSituacaoUnidade,
 } from "../service/api";
 
 import {
@@ -50,9 +51,17 @@ export default function UnitScreen({
                                        navigation,
                                    }: Props) {
 
-    const { unidade } =
-        route.params;
+    const {
+        unidade: unidadeInicial,
+    } = route.params;
 
+
+    const [
+        unidade,
+        setUnidade,
+    ] = useState(
+        unidadeInicial
+    );
 
     const {
         alternarFavorito,
@@ -87,11 +96,55 @@ export default function UnitScreen({
 
 
     useFocusEffect(
+
         useCallback(() => {
+
             carregarAvaliacoes();
-        }, [unidade.unidadeId])
+
+            atualizarUnidade();
+
+
+            const intervalo =
+                setInterval(() => {
+
+                    atualizarUnidade();
+
+                }, 1000);
+
+
+            return () => {
+
+                clearInterval(
+                    intervalo
+                );
+            };
+
+        }, [unidadeInicial.unidadeId])
+
     );
 
+    async function atualizarUnidade() {
+
+        try {
+
+            const dados =
+                await buscarSituacaoUnidade(
+                    unidadeInicial.unidadeId
+                );
+
+
+            setUnidade(
+                dados
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao atualizar unidade:",
+                erro
+            );
+        }
+    }
 
     async function carregarAvaliacoes() {
 

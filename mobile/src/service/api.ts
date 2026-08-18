@@ -4,7 +4,7 @@ import {
 
 
 const URL_BACKEND =
-    "http://192.168.1.103:8080";
+    "http://192.168.15.206:8080";
 
 
 export type CriarAvaliacaoPayload = {
@@ -200,6 +200,27 @@ export async function fazerLogin(
 
         throw new Error(
             `Erro no login: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+export async function buscarSituacaoUnidade(
+    unidadeId: number
+): Promise<Unidade> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/unidades/${unidadeId}/situacao`
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao buscar situação da unidade: ${resposta.status}`
         );
     }
 

@@ -88,23 +88,59 @@ export default function HomeScreen() {
 
 
     useEffect(() => {
-        carregarUnidades();
+
+        carregarUnidades(
+            true
+        );
+
+
+        const intervalo =
+            setInterval(() => {
+
+                carregarUnidades(
+                    false
+                );
+
+            }, 1000);
+
+
+        return () => {
+
+            clearInterval(
+                intervalo
+            );
+        };
+
     }, []);
 
 
-    async function carregarUnidades() {
+    async function carregarUnidades(
+        mostrarCarregamento = false
+    ) {
 
         try {
 
-            setCarregando(true);
-            setErro(null);
+            if (
+                mostrarCarregamento
+            ) {
+
+                setCarregando(
+                    true
+                );
+            }
+
+            setErro(
+                null
+            );
 
 
             const dados =
                 await buscarSituacoesUnidades();
 
 
-            setUnidades(dados);
+            setUnidades(
+                dados
+            );
 
         } catch (erro) {
 
@@ -120,8 +156,14 @@ export default function HomeScreen() {
 
         } finally {
 
-            setCarregando(false);
+            if (
+                mostrarCarregamento
+            ) {
 
+                setCarregando(
+                    false
+                );
+            }
         }
     }
 
