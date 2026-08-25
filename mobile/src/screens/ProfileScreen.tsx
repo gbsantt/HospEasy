@@ -223,13 +223,11 @@ export default function ProfileScreen({
                 }
 
 
-                {/* FUNCIONÁRIO */}
+                {/* USUÁRIO COMUM */}
 
                 {
                     usuario.tipo ===
-                    "FUNCIONARIO" &&
-                    usuario.unidadeId !==
-                    null && (
+                    "USUARIO" && (
 
                         <View
                             style={
@@ -242,7 +240,7 @@ export default function ProfileScreen({
                                     styles.accountLabel
                                 }
                             >
-                                Unidade vinculada
+                                Tipo de conta
                             </Text>
 
 
@@ -251,7 +249,7 @@ export default function ProfileScreen({
                                     styles.accountValue
                                 }
                             >
-                                #{usuario.unidadeId}
+                                Usuário
                             </Text>
 
                         </View>

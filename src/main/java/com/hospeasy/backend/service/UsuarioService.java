@@ -10,13 +10,11 @@ import com.hospeasy.backend.dto.UsuarioResponseDTO;
 import com.hospeasy.backend.dto.VerificarCodigoRequestDTO;
 
 import com.hospeasy.backend.entity.TipoUsuario;
-import com.hospeasy.backend.entity.UnidadeAtendimento;
 import com.hospeasy.backend.entity.Usuario;
 
 import com.hospeasy.backend.exception.CredenciaisInvalidasException;
 import com.hospeasy.backend.exception.EmailJaCadastradoException;
 
-import com.hospeasy.backend.repository.UnidadeAtendimentoRepository;
 import com.hospeasy.backend.repository.UsuarioRepository;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,21 +31,13 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
 
-    private final UnidadeAtendimentoRepository
-            unidadeAtendimentoRepository;
-
     private final PasswordEncoder passwordEncoder;
 
     private final JwtService jwtService;
 
+    private final EmailService emailService;
 
-    /*
-     * Recuperação de senha.
-     *
-     * Por enquanto os códigos ficam em memória.
-     * Depois podemos mover isso para banco ou
-     * cache e enviar o código por e-mail.
-     */
+
     private final Map<
             String,
             CodigoRecuperacao
@@ -73,21 +63,16 @@ public class UsuarioService {
 
             UsuarioRepository usuarioRepository,
 
-            UnidadeAtendimentoRepository
-                    unidadeAtendimentoRepository,
-
             PasswordEncoder passwordEncoder,
 
-            JwtService jwtService
+            JwtService jwtService,
+
+            EmailService emailService
 
     ) {
 
         this.usuarioRepository =
                 usuarioRepository;
-
-
-        this.unidadeAtendimentoRepository =
-                unidadeAtendimentoRepository;
 
 
         this.passwordEncoder =
@@ -96,11 +81,17 @@ public class UsuarioService {
 
         this.jwtService =
                 jwtService;
+
+
+        this.emailService =
+                emailService;
     }
 
 
     /*
-     * CADASTRO ADMINISTRATIVO
+     * CADASTRO ADMINISTRATIVO.
+     *
+     * O tipo é escolhido pelo ADMIN.
      */
     public UsuarioResponseDTO cadastrarUsuario(
             UsuarioRequestDTO dto
@@ -117,28 +108,6 @@ public class UsuarioService {
         }
 
 
-        UnidadeAtendimento unidadeAtendimento =
-                null;
-
-
-        if (
-                dto.unidadeId() != null
-        ) {
-
-            unidadeAtendimento =
-                    unidadeAtendimentoRepository
-                            .findById(
-                                    dto.unidadeId()
-                            )
-                            .orElseThrow(
-                                    () ->
-                                            new RuntimeException(
-                                                    "Unidade de atendimento não encontrada"
-                                            )
-                            );
-        }
-
-
         Usuario usuario =
                 new Usuario();
 
@@ -150,6 +119,8 @@ public class UsuarioService {
 
         usuario.setEmail(
                 dto.email()
+                        .trim()
+                        .toLowerCase()
         );
 
 
@@ -170,11 +141,6 @@ public class UsuarioService {
         );
 
 
-        usuario.setUnidadeAtendimento(
-                unidadeAtendimento
-        );
-
-
         Usuario usuarioSalvo =
                 usuarioRepository.save(
                         usuario
@@ -188,16 +154,24 @@ public class UsuarioService {
 
 
     /*
-     * CADASTRO DE USUÁRIO COMUM
+     * CADASTRO PÚBLICO.
+     *
+     * Sempre cria USUARIO.
      */
     public UsuarioResponseDTO cadastrarUsuarioComum(
             CadastroUsuarioRequestDTO dto
     ) {
 
+        String email =
+                dto.email()
+                        .trim()
+                        .toLowerCase();
+
+
         if (
                 usuarioRepository
                         .existsByEmail(
-                                dto.email()
+                                email
                         )
         ) {
 
@@ -215,7 +189,7 @@ public class UsuarioService {
 
 
         usuario.setEmail(
-                dto.email()
+                email
         );
 
 
@@ -233,11 +207,6 @@ public class UsuarioService {
 
         usuario.setAtivo(
                 true
-        );
-
-
-        usuario.setUnidadeAtendimento(
-                null
         );
 
 
@@ -260,10 +229,16 @@ public class UsuarioService {
             LoginRequestDTO dto
     ) {
 
+        String email =
+                dto.email()
+                        .trim()
+                        .toLowerCase();
+
+
         Usuario usuario =
                 usuarioRepository
                         .findByEmail(
-                                dto.email()
+                                email
                         )
                         .orElseThrow(
                                 CredenciaisInvalidasException::new
@@ -308,12 +283,7 @@ public class UsuarioService {
 
                 usuario.getTipo(),
 
-                usuario.getUnidadeAtendimento()
-                        != null
-                        ? usuario
-                        .getUnidadeAtendimento()
-                        .getId()
-                        : null,
+                null,
 
                 token
         );
@@ -322,12 +292,6 @@ public class UsuarioService {
 
     /*
      * SOLICITAR RECUPERAÇÃO DE SENHA
-     *
-     * Por enquanto retorna o código.
-     * Isso é útil para testar no Postman.
-     *
-     * Depois podemos substituir esse return
-     * por envio real por e-mail.
      */
     public String solicitarRecuperacaoSenha(
             EsqueciSenhaRequestDTO dto
@@ -371,7 +335,7 @@ public class UsuarioService {
 
         codigosRecuperacao.put(
 
-                usuario.getEmail(),
+                email,
 
                 new CodigoRecuperacao(
                         codigo,
@@ -380,13 +344,23 @@ public class UsuarioService {
         );
 
 
+        emailService
+                .enviarCodigoRecuperacao(
+                        usuario.getEmail(),
+                        codigo
+                );
+
+
+        /*
+         * Ainda retorna enquanto estamos
+         * testando.
+         */
         return codigo;
     }
 
 
     /*
-     * VERIFICA SE O CÓDIGO EXISTE,
-     * ESTÁ CORRETO E NÃO EXPIROU.
+     * VERIFICAR CÓDIGO
      */
     public void verificarCodigoRecuperacao(
             VerificarCodigoRequestDTO dto
@@ -450,7 +424,7 @@ public class UsuarioService {
 
 
     /*
-     * REDEFINE A SENHA.
+     * REDEFINIR SENHA
      */
     public void redefinirSenha(
             RedefinirSenhaRequestDTO dto
@@ -497,11 +471,6 @@ public class UsuarioService {
         );
 
 
-        /*
-         * Depois de usar o código,
-         * removemos para não poder
-         * reutilizar.
-         */
         codigosRecuperacao.remove(
                 email
         );
@@ -509,7 +478,7 @@ public class UsuarioService {
 
 
     /*
-     * CONVERTER ENTITY → DTO
+     * ENTITY -> DTO
      */
     private UsuarioResponseDTO converterParaDTO(
             Usuario usuario
@@ -525,21 +494,7 @@ public class UsuarioService {
 
                 usuario.getTipo(),
 
-                usuario.getAtivo(),
-
-                usuario.getUnidadeAtendimento()
-                        != null
-                        ? usuario
-                        .getUnidadeAtendimento()
-                        .getId()
-                        : null,
-
-                usuario.getUnidadeAtendimento()
-                        != null
-                        ? usuario
-                        .getUnidadeAtendimento()
-                        .getNome()
-                        : null
+                usuario.getAtivo()
         );
     }
 }

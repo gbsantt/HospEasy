@@ -2,6 +2,7 @@ package com.hospeasy.backend.dto;
 
 import com.hospeasy.backend.entity.TipoUsuario;
 
+
 public record UsuarioResponseDTO(
 
         Long id,
@@ -12,11 +13,7 @@ public record UsuarioResponseDTO(
 
         TipoUsuario tipo,
 
-        Boolean ativo,
-
-        Long unidadeId,
-
-        String unidadeNome
+        Boolean ativo
 
 ) {
 }

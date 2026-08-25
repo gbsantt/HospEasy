@@ -38,12 +38,9 @@ public class JwtService {
         return Jwts.builder()
                 .subject(usuario.getEmail())
                 .claim("usuarioId", usuario.getId())
-                .claim("tipo", usuario.getTipo().name())
                 .claim(
-                        "unidadeId",
-                        usuario.getUnidadeAtendimento() != null
-                                ? usuario.getUnidadeAtendimento().getId()
-                                : null
+                        "tipo",
+                        usuario.getTipo().name()
                 )
                 .issuedAt(agora)
                 .expiration(validade)

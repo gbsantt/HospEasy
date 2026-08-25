@@ -4,7 +4,7 @@ import {
 
 
 const URL_BACKEND =
-    "http://192.168.1.103:8080";
+    "http://192.168.56.1:8080";
 
 
 export type CriarAvaliacaoPayload = {
@@ -35,7 +35,6 @@ export type Avaliacao = {
 
 export type TipoUsuario =
     | "ADMIN"
-    | "FUNCIONARIO"
     | "USUARIO";
 
 
@@ -47,9 +46,6 @@ export type LoginResponse = {
     email: string;
 
     tipo: TipoUsuario;
-
-    unidadeId:
-        number | null;
 
     token: string;
 };
@@ -73,11 +69,6 @@ export type CadastroUsuarioResponse = {
 
     ativo: boolean;
 
-    unidadeId:
-        number | null;
-
-    unidadeNome:
-        string | null;
 };
 
 
