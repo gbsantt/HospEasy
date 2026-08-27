@@ -222,6 +222,121 @@ export default function ProfileScreen({
                     )
                 }
 
+                {/* PAINEL ADMINISTRATIVO */}
+
+                {
+                    usuario.tipo ===
+                    "ADMIN" && (
+
+                        <View
+                            style={
+                                styles.adminSection
+                            }
+                        >
+
+                            <View
+                                style={
+                                    styles.adminSectionHeader
+                                }
+                            >
+
+                                <Text
+                                    style={
+                                        styles.adminSectionTitle
+                                    }
+                                >
+                                    Painel administrativo
+                                </Text>
+
+
+                                <Text
+                                    style={
+                                        styles.adminSectionSubtitle
+                                    }
+                                >
+                                    Gerencie o HospEasy
+                                </Text>
+
+                            </View>
+
+
+                            <View
+                                style={
+                                    styles.adminMenu
+                                }
+                            >
+
+                                <Pressable
+                                    style={
+                                        styles.adminMenuItem
+                                    }
+
+                                    onPress={() =>
+                                        navigation.navigate(
+                                            "UsuariosAdmin"
+                                        )
+                                    }
+                                >
+
+                                    <View
+                                        style={
+                                            styles.adminMenuIcon
+                                        }
+                                    >
+
+                                        <Text
+                                            style={
+                                                styles.adminMenuIconText
+                                            }
+                                        >
+                                            U
+                                        </Text>
+
+                                    </View>
+
+
+                                    <View
+                                        style={
+                                            styles.adminMenuContent
+                                        }
+                                    >
+
+                                        <Text
+                                            style={
+                                                styles.adminMenuTitle
+                                            }
+                                        >
+                                            Gerenciar usuários
+                                        </Text>
+
+
+                                        <Text
+                                            style={
+                                                styles.adminMenuDescription
+                                            }
+                                        >
+                                            Contas, permissões e acessos
+                                        </Text>
+
+                                    </View>
+
+
+                                    <Text
+                                        style={
+                                            styles.adminMenuArrow
+                                        }
+                                    >
+                                        ›
+                                    </Text>
+
+                                </Pressable>
+
+                            </View>
+
+                        </View>
+
+                    )
+                }
 
                 {/* USUÁRIO COMUM */}
 
@@ -1123,6 +1238,139 @@ const styles =
 
             color:
             colors.textSecondary,
+        },
+
+        adminSection: {
+
+            marginTop: 28,
+        },
+
+
+        adminSectionHeader: {
+
+            marginBottom: 12,
+        },
+
+
+        adminSectionTitle: {
+
+            fontSize: 19,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        adminSectionSubtitle: {
+
+            marginTop: 3,
+
+            fontSize: 12,
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        adminMenu: {
+
+            borderRadius: 20,
+
+            overflow:
+                "hidden",
+
+            backgroundColor:
+            colors.surface,
+        },
+
+
+        adminMenuItem: {
+
+            minHeight: 76,
+
+            paddingHorizontal: 15,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+        },
+
+
+        adminMenuIcon: {
+
+            width: 44,
+
+            height: 44,
+
+            marginRight: 13,
+
+            borderRadius: 22,
+
+            backgroundColor:
+            colors.primaryLight,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        adminMenuIconText: {
+
+            fontSize: 15,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        adminMenuContent: {
+
+            flex: 1,
+        },
+
+
+        adminMenuTitle: {
+
+            fontSize: 14,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        adminMenuDescription: {
+
+            marginTop: 4,
+
+            fontSize: 11,
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        adminMenuArrow: {
+
+            marginLeft: 10,
+
+            fontSize: 25,
+
+            color:
+            colors.primary,
         },
 
     });

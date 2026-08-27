@@ -4,7 +4,7 @@ import {
 
 
 const URL_BACKEND =
-    "http://192.168.56.1:8080";
+    "http://192.168.1.103:8080";
 
 
 export type CriarAvaliacaoPayload = {
@@ -68,9 +68,30 @@ export type CadastroUsuarioResponse = {
     tipo: TipoUsuario;
 
     ativo: boolean;
-
 };
 
+
+/*
+ * USUÁRIO RETORNADO PELO PAINEL ADMIN
+ */
+export type UsuarioAdmin = {
+    id: number;
+
+    nome: string;
+
+    email: string;
+
+    tipo: TipoUsuario;
+
+    ativo: boolean;
+};
+
+
+/*
+ * =========================================================
+ * UNIDADES
+ * =========================================================
+ */
 
 export async function buscarSituacoesUnidades():
     Promise<Unidade[]> {
@@ -92,6 +113,12 @@ export async function buscarSituacoesUnidades():
     return resposta.json();
 }
 
+
+/*
+ * =========================================================
+ * AVALIAÇÕES
+ * =========================================================
+ */
 
 export async function criarAvaliacao(
     unidadeId: number,
@@ -151,6 +178,12 @@ export async function buscarAvaliacoes(
 }
 
 
+/*
+ * =========================================================
+ * LOGIN
+ * =========================================================
+ */
+
 export async function fazerLogin(
     email: string,
     senha: string
@@ -199,6 +232,12 @@ export async function fazerLogin(
 }
 
 
+/*
+ * =========================================================
+ * SITUAÇÃO DA UNIDADE
+ * =========================================================
+ */
+
 export async function buscarSituacaoUnidade(
     unidadeId: number
 ): Promise<Unidade> {
@@ -220,6 +259,12 @@ export async function buscarSituacaoUnidade(
     return resposta.json();
 }
 
+
+/*
+ * =========================================================
+ * CADASTRO PÚBLICO
+ * =========================================================
+ */
 
 export async function cadastrarUsuario(
     dados: CadastroUsuarioPayload
@@ -289,8 +334,11 @@ export async function cadastrarUsuario(
 
 
 /*
+ * =========================================================
  * RECUPERAÇÃO DE SENHA
+ * =========================================================
  */
+
 export async function solicitarRecuperacaoSenha(
     email: string
 ): Promise<string> {
@@ -403,4 +451,243 @@ export async function redefinirSenha(
             "ERRO_REDEFINIR_SENHA"
         );
     }
+}
+
+
+/*
+ * =========================================================
+ * ADMIN - USUÁRIOS
+ * =========================================================
+ */
+
+
+/*
+ * LISTAR TODOS OS USUÁRIOS
+ */
+export async function listarUsuariosAdmin(
+    token: string
+): Promise<UsuarioAdmin[]> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios`,
+            {
+                method: "GET",
+
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao buscar usuários: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+/*
+ * ALTERAR TIPO
+ *
+ * USUARIO -> ADMIN
+ * ADMIN -> USUARIO
+ */
+export async function alterarTipoUsuarioAdmin(
+    usuarioId: number,
+    tipo: TipoUsuario,
+    token: string
+): Promise<UsuarioAdmin> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/${usuarioId}/tipo`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+
+                body:
+                    JSON.stringify({
+                        tipo,
+                    }),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        let mensagem = "";
+
+
+        try {
+
+            const erro =
+                await resposta.json();
+
+
+            mensagem =
+                erro?.message ??
+                erro?.mensagem ??
+                "";
+
+        } catch {
+
+            // Sem JSON.
+        }
+
+
+        throw new Error(
+            mensagem ||
+            `Erro ao alterar tipo: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+/*
+ * ATIVAR / DESATIVAR USUÁRIO
+ */
+export async function alterarStatusUsuarioAdmin(
+    usuarioId: number,
+    ativo: boolean,
+    token: string
+): Promise<UsuarioAdmin> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/${usuarioId}/status`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+
+                body:
+                    JSON.stringify({
+                        ativo,
+                    }),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        let mensagem = "";
+
+
+        try {
+
+            const erro =
+                await resposta.json();
+
+
+            mensagem =
+                erro?.message ??
+                erro?.mensagem ??
+                "";
+
+        } catch {
+
+            // Sem JSON.
+        }
+
+
+        throw new Error(
+            mensagem ||
+            `Erro ao alterar status: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+/*
+ * CRIAR USUÁRIO PELO ADMIN
+ */
+export async function criarUsuarioAdmin(
+    dados: {
+        nome: string;
+        email: string;
+        senha: string;
+        tipo: TipoUsuario;
+    },
+    token: string
+): Promise<UsuarioAdmin> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+
+                body:
+                    JSON.stringify(
+                        dados
+                    ),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        let mensagem = "";
+
+
+        try {
+
+            const erro =
+                await resposta.json();
+
+
+            mensagem =
+                erro?.message ??
+                erro?.mensagem ??
+                "";
+
+        } catch {
+
+            // Sem JSON.
+        }
+
+
+        throw new Error(
+            mensagem ||
+            `Erro ao criar usuário: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
 }

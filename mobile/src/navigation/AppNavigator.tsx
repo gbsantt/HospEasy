@@ -6,13 +6,26 @@ import {
     createNativeStackNavigator,
 } from "@react-navigation/native-stack";
 
-import HomeScreen from "../screens/HomeScreen";
-import UnitScreen from "../screens/UnitScreen";
-import ReviewScreen from "../screens/ReviewScreen";
-import AccessScreen from "../screens/AccessScreen";
-import LoginScreen from "../screens/LoginScreen";
-import RegisterScreen from "../screens/RegisterScreen";
-import ProfileScreen from "../screens/ProfileScreen";
+import HomeScreen
+    from "../screens/HomeScreen";
+
+import UnitScreen
+    from "../screens/UnitScreen";
+
+import ReviewScreen
+    from "../screens/ReviewScreen";
+
+import AccessScreen
+    from "../screens/AccessScreen";
+
+import LoginScreen
+    from "../screens/LoginScreen";
+
+import RegisterScreen
+    from "../screens/RegisterScreen";
+
+import ProfileScreen
+    from "../screens/ProfileScreen";
 
 import ForgotPasswordScreen
     from "../screens/ForgotPasswordScreen";
@@ -22,6 +35,12 @@ import VerifyCodeScreen
 
 import ResetPasswordScreen
     from "../screens/ResetPasswordScreen";
+
+import UsuariosAdminScreen
+    from "../screens/UsuariosAdminScreen";
+
+import CriarUsuarioAdminScreen
+    from "../screens/CriarUsuarioAdminScreen";
 
 import {
     Unidade,
@@ -33,36 +52,53 @@ export type RootStackParamList = {
     Home:
         undefined;
 
+
     Unit: {
         unidade: Unidade;
     };
+
 
     Review: {
         unidade: Unidade;
     };
 
+
     Access:
         undefined;
+
 
     Login:
         undefined;
 
+
     ForgotPassword:
         undefined;
+
 
     VerifyCode: {
         email: string;
     };
+
 
     ResetPassword: {
         email: string;
         codigo: string;
     };
 
+
     Register:
         undefined;
 
+
     Profile:
+        undefined;
+
+
+    UsuariosAdmin:
+        undefined;
+
+
+    CriarUsuarioAdmin:
         undefined;
 };
 
@@ -162,6 +198,22 @@ export default function AppNavigator() {
                     name="Profile"
                     component={
                         ProfileScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="UsuariosAdmin"
+                    component={
+                        UsuariosAdminScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="CriarUsuarioAdmin"
+                    component={
+                        CriarUsuarioAdminScreen
                     }
                 />
 
