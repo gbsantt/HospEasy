@@ -21,8 +21,7 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter
-            jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 
     public SecurityConfig(
@@ -40,109 +39,102 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
-                .csrf(
-                        csrf ->
-                                csrf.disable()
+                .csrf(csrf ->
+                        csrf.disable()
                 )
 
-                .cors(
-                        cors ->
-                                cors.configurationSource(
-                                        corsConfigurationSource()
-                                )
+                .cors(cors ->
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
                 )
 
-                .sessionManagement(
-                        session ->
-                                session.sessionCreationPolicy(
-                                        SessionCreationPolicy.STATELESS
-                                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
                 )
 
-                .authorizeHttpRequests(
-                        auth -> auth
+                .authorizeHttpRequests(auth -> auth
+
+                        // LOGIN PÚBLICO
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuarios/login"
+                        ).permitAll()
 
 
-                                // LOGIN
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/usuarios/login"
-                                )
-                                .permitAll()
+                        // CADASTRO PÚBLICO DE USUÁRIO COMUM
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuarios/cadastro"
+                        ).permitAll()
 
 
-                                // CADASTRO COMUM
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/usuarios/cadastro"
-                                )
-                                .permitAll()
+                        // RECUPERAÇÃO DE SENHA
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuarios/esqueci-senha",
+                                "/usuarios/verificar-codigo",
+                                "/usuarios/redefinir-senha"
+                        ).permitAll()
 
 
-                                // RECUPERAÇÃO DE SENHA
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/usuarios/esqueci-senha",
-                                        "/usuarios/verificar-codigo",
-                                        "/usuarios/redefinir-senha"
-                                )
-                                .permitAll()
+                        // CONSULTAR UNIDADES
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/unidades",
+                                "/unidades/**"
+                        ).permitAll()
 
 
-                                // CONSULTAR UNIDADES
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/unidades",
-                                        "/unidades/**"
-                                )
-                                .permitAll()
+                        // CRIAR AVALIAÇÃO
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/unidades/*/avaliacoes"
+                        ).permitAll()
 
 
-                                // CRIAR AVALIAÇÃO
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/unidades/*/avaliacoes"
-                                )
-                                .permitAll()
+                        // CADASTRAR ADMIN / FUNCIONÁRIO
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuarios"
+                        ).hasRole("ADMIN")
 
 
-                                // CRIAR USUÁRIO ADMINISTRATIVAMENTE
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/usuarios"
-                                )
-                                .hasRole(
-                                        "ADMIN"
-                                )
+                        // ATUALIZAR OCUPAÇÃO
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/unidades/*/ocupacao"
+                        ).hasAnyRole(
+                                "ADMIN",
+                                "FUNCIONARIO"
+                        )
 
 
-                                // CADASTRAR UNIDADE
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/unidades"
-                                )
-                                .hasRole(
-                                        "ADMIN"
-                                )
+                        // CADASTRAR UNIDADE
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/unidades"
+                        ).hasRole("ADMIN")
 
 
-                                // CÂMERA
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/unidades/*/medicoes"
-                                )
-                                .permitAll()
+                        // RECEBER MEDIÇÕES DA CÂMERA
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/unidades/*/medicoes"
+                        ).permitAll()
 
 
-                                // ERROS DO SPRING
-                                .requestMatchers(
-                                        "/error"
-                                )
-                                .permitAll()
+                        // ERROS DO SPRING
+                        .requestMatchers(
+                                "/error"
+                        ).permitAll()
 
 
-                                .anyRequest()
-                                .authenticated()
+                        // SEMPRE O ÚLTIMO
+                        .anyRequest()
+                        .authenticated()
                 )
 
                 .addFilterBefore(
@@ -183,9 +175,7 @@ public class SecurityConfig {
 
 
         configuration.setAllowedHeaders(
-                List.of(
-                        "*"
-                )
+                List.of("*")
         );
 
 

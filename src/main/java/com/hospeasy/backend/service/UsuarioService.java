@@ -1,5 +1,7 @@
 package com.hospeasy.backend.service;
 
+import com.hospeasy.backend.dto.AtualizarStatusUsuarioRequestDTO;
+import com.hospeasy.backend.dto.AtualizarTipoUsuarioRequestDTO;
 import com.hospeasy.backend.dto.CadastroUsuarioRequestDTO;
 import com.hospeasy.backend.dto.EsqueciSenhaRequestDTO;
 import com.hospeasy.backend.dto.LoginRequestDTO;
@@ -20,24 +22,33 @@ import com.hospeasy.backend.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 @Service
 public class UsuarioService {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioRepository
+            usuarioRepository;
 
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder
+            passwordEncoder;
 
-    private final JwtService jwtService;
+    private final JwtService
+            jwtService;
 
-    private final EmailService emailService;
+    private final EmailService
+            emailService;
 
 
+    /*
+     * CÓDIGOS DE RECUPERAÇÃO
+     */
     private final Map<
             String,
             CodigoRecuperacao
@@ -45,8 +56,8 @@ public class UsuarioService {
             new ConcurrentHashMap<>();
 
 
-    private final Random random =
-            new Random();
+    private final SecureRandom random =
+            new SecureRandom();
 
 
     private record CodigoRecuperacao(
@@ -89,18 +100,32 @@ public class UsuarioService {
 
 
     /*
-     * CADASTRO ADMINISTRATIVO.
+     * =========================================================
+     * CADASTRO ADMINISTRATIVO
+     * =========================================================
      *
-     * O tipo é escolhido pelo ADMIN.
+     * Somente ADMIN consegue acessar
+     * esse endpoint pelo SecurityConfig.
+     *
+     * Pode criar:
+     *
+     * USUARIO
+     * ADMIN
      */
     public UsuarioResponseDTO cadastrarUsuario(
             UsuarioRequestDTO dto
     ) {
 
+        String email =
+                normalizarEmail(
+                        dto.email()
+                );
+
+
         if (
                 usuarioRepository
                         .existsByEmail(
-                                dto.email()
+                                email
                         )
         ) {
 
@@ -114,13 +139,12 @@ public class UsuarioService {
 
         usuario.setNome(
                 dto.nome()
+                        .trim()
         );
 
 
         usuario.setEmail(
-                dto.email()
-                        .trim()
-                        .toLowerCase()
+                email
         );
 
 
@@ -154,18 +178,21 @@ public class UsuarioService {
 
 
     /*
-     * CADASTRO PÚBLICO.
+     * =========================================================
+     * CADASTRO PÚBLICO
+     * =========================================================
      *
-     * Sempre cria USUARIO.
+     * Cadastro pelo app sempre cria
+     * usuário comum.
      */
     public UsuarioResponseDTO cadastrarUsuarioComum(
             CadastroUsuarioRequestDTO dto
     ) {
 
         String email =
-                dto.email()
-                        .trim()
-                        .toLowerCase();
+                normalizarEmail(
+                        dto.email()
+                );
 
 
         if (
@@ -185,6 +212,7 @@ public class UsuarioService {
 
         usuario.setNome(
                 dto.nome()
+                        .trim()
         );
 
 
@@ -223,16 +251,18 @@ public class UsuarioService {
 
 
     /*
+     * =========================================================
      * LOGIN
+     * =========================================================
      */
     public LoginResponseDTO login(
             LoginRequestDTO dto
     ) {
 
         String email =
-                dto.email()
-                        .trim()
-                        .toLowerCase();
+                normalizarEmail(
+                        dto.email()
+                );
 
 
         Usuario usuario =
@@ -283,24 +313,237 @@ public class UsuarioService {
 
                 usuario.getTipo(),
 
-                null,
-
                 token
         );
     }
 
 
     /*
-     * SOLICITAR RECUPERAÇÃO DE SENHA
+     * =========================================================
+     * ADMIN - LISTAR USUÁRIOS
+     * =========================================================
+     */
+    public List<UsuarioResponseDTO>
+    listarUsuarios() {
+
+        return usuarioRepository
+                .findAll()
+                .stream()
+                .sorted(
+                        Comparator.comparing(
+                                Usuario::getNome,
+                                String.CASE_INSENSITIVE_ORDER
+                        )
+                )
+                .map(
+                        this::converterParaDTO
+                )
+                .toList();
+    }
+
+
+    /*
+     * =========================================================
+     * ADMIN - BUSCAR USUÁRIO
+     * =========================================================
+     */
+    public UsuarioResponseDTO buscarUsuarioPorId(
+            Long id
+    ) {
+
+        Usuario usuario =
+                buscarUsuario(
+                        id
+                );
+
+
+        return converterParaDTO(
+                usuario
+        );
+    }
+
+
+    /*
+     * =========================================================
+     * ADMIN - ALTERAR TIPO
+     * =========================================================
+     *
+     * USUARIO -> ADMIN
+     * ADMIN -> USUARIO
+     */
+    public UsuarioResponseDTO atualizarTipoUsuario(
+
+            Long id,
+
+            AtualizarTipoUsuarioRequestDTO dto,
+
+            Usuario adminLogado
+
+    ) {
+
+        Usuario usuario =
+                buscarUsuario(
+                        id
+                );
+
+
+        /*
+         * Não deixa o administrador
+         * rebaixar a própria conta.
+         */
+        if (
+                adminLogado != null
+                        &&
+                        adminLogado
+                                .getId()
+                                .equals(
+                                        usuario.getId()
+                                )
+                        &&
+                        dto.tipo()
+                                != TipoUsuario.ADMIN
+        ) {
+
+            throw new IllegalStateException(
+                    "Você não pode remover seu próprio acesso de administrador"
+            );
+        }
+
+
+        /*
+         * Se estiver tentando remover
+         * um ADMIN ativo, verificamos
+         * se existe outro ADMIN ativo.
+         */
+        if (
+                usuario.getTipo()
+                        == TipoUsuario.ADMIN
+
+                        &&
+
+                        usuario.getAtivo()
+
+                        &&
+
+                        dto.tipo()
+                                != TipoUsuario.ADMIN
+        ) {
+
+            verificarSePodeRemoverAdmin();
+        }
+
+
+        usuario.setTipo(
+                dto.tipo()
+        );
+
+
+        Usuario usuarioSalvo =
+                usuarioRepository.save(
+                        usuario
+                );
+
+
+        return converterParaDTO(
+                usuarioSalvo
+        );
+    }
+
+
+    /*
+     * =========================================================
+     * ADMIN - ATIVAR / DESATIVAR
+     * =========================================================
+     */
+    public UsuarioResponseDTO atualizarStatusUsuario(
+
+            Long id,
+
+            AtualizarStatusUsuarioRequestDTO dto,
+
+            Usuario adminLogado
+
+    ) {
+
+        Usuario usuario =
+                buscarUsuario(
+                        id
+                );
+
+
+        /*
+         * Não permite que o admin
+         * desative a própria conta.
+         */
+        if (
+                adminLogado != null
+                        &&
+                        adminLogado
+                                .getId()
+                                .equals(
+                                        usuario.getId()
+                                )
+                        &&
+                        !dto.ativo()
+        ) {
+
+            throw new IllegalStateException(
+                    "Você não pode desativar sua própria conta"
+            );
+        }
+
+
+        /*
+         * Não pode desativar o último
+         * administrador ativo.
+         */
+        if (
+                usuario.getTipo()
+                        == TipoUsuario.ADMIN
+
+                        &&
+
+                        usuario.getAtivo()
+
+                        &&
+
+                        !dto.ativo()
+        ) {
+
+            verificarSePodeRemoverAdmin();
+        }
+
+
+        usuario.setAtivo(
+                dto.ativo()
+        );
+
+
+        Usuario usuarioSalvo =
+                usuarioRepository.save(
+                        usuario
+                );
+
+
+        return converterParaDTO(
+                usuarioSalvo
+        );
+    }
+
+
+    /*
+     * =========================================================
+     * SOLICITAR RECUPERAÇÃO
+     * =========================================================
      */
     public String solicitarRecuperacaoSenha(
             EsqueciSenhaRequestDTO dto
     ) {
 
         String email =
-                dto.email()
-                        .trim()
-                        .toLowerCase();
+                normalizarEmail(
+                        dto.email()
+                );
 
 
         Usuario usuario =
@@ -352,24 +595,26 @@ public class UsuarioService {
 
 
         /*
-         * Ainda retorna enquanto estamos
-         * testando.
+         * Não devolvemos mais o código
+         * diretamente pela API.
          */
-        return codigo;
+        return "Código de recuperação enviado para o e-mail";
     }
 
 
     /*
+     * =========================================================
      * VERIFICAR CÓDIGO
+     * =========================================================
      */
     public void verificarCodigoRecuperacao(
             VerificarCodigoRequestDTO dto
     ) {
 
         String email =
-                dto.email()
-                        .trim()
-                        .toLowerCase();
+                normalizarEmail(
+                        dto.email()
+                );
 
 
         CodigoRecuperacao recuperacao =
@@ -424,7 +669,9 @@ public class UsuarioService {
 
 
     /*
+     * =========================================================
      * REDEFINIR SENHA
+     * =========================================================
      */
     public void redefinirSenha(
             RedefinirSenhaRequestDTO dto
@@ -440,9 +687,9 @@ public class UsuarioService {
 
 
         String email =
-                dto.email()
-                        .trim()
-                        .toLowerCase();
+                normalizarEmail(
+                        dto.email()
+                );
 
 
         Usuario usuario =
@@ -459,7 +706,6 @@ public class UsuarioService {
 
 
         usuario.setSenhaHash(
-
                 passwordEncoder.encode(
                         dto.novaSenha()
                 )
@@ -471,6 +717,9 @@ public class UsuarioService {
         );
 
 
+        /*
+         * Código só funciona uma vez.
+         */
         codigosRecuperacao.remove(
                 email
         );
@@ -478,8 +727,57 @@ public class UsuarioService {
 
 
     /*
-     * ENTITY -> DTO
+     * =========================================================
+     * AUXILIARES
+     * =========================================================
      */
+    private Usuario buscarUsuario(
+            Long id
+    ) {
+
+        return usuarioRepository
+                .findById(
+                        id
+                )
+                .orElseThrow(
+                        () ->
+                                new RuntimeException(
+                                        "Usuário não encontrado"
+                                )
+                );
+    }
+
+
+    private void verificarSePodeRemoverAdmin() {
+
+        long administradoresAtivos =
+                usuarioRepository
+                        .countByTipoAndAtivoTrue(
+                                TipoUsuario.ADMIN
+                        );
+
+
+        if (
+                administradoresAtivos <= 1
+        ) {
+
+            throw new IllegalStateException(
+                    "O sistema precisa possuir pelo menos um administrador ativo"
+            );
+        }
+    }
+
+
+    private String normalizarEmail(
+            String email
+    ) {
+
+        return email
+                .trim()
+                .toLowerCase();
+    }
+
+
     private UsuarioResponseDTO converterParaDTO(
             Usuario usuario
     ) {
