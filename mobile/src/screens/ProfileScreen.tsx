@@ -331,6 +331,79 @@ export default function ProfileScreen({
 
                                 </Pressable>
 
+
+                                <View
+                                    style={
+                                        styles.adminMenuDivider
+                                    }
+                                />
+
+
+                                <Pressable
+                                    style={
+                                        styles.adminMenuItem
+                                    }
+
+                                    onPress={() =>
+                                        navigation.navigate(
+                                            "UnidadesAdmin"
+                                        )
+                                    }
+                                >
+
+                                    <View
+                                        style={
+                                            styles.adminMenuIcon
+                                        }
+                                    >
+
+                                        <Text
+                                            style={
+                                                styles.adminMenuIconText
+                                            }
+                                        >
+                                            H
+                                        </Text>
+
+                                    </View>
+
+
+                                    <View
+                                        style={
+                                            styles.adminMenuContent
+                                        }
+                                    >
+
+                                        <Text
+                                            style={
+                                                styles.adminMenuTitle
+                                            }
+                                        >
+                                            Gerenciar unidades
+                                        </Text>
+
+
+                                        <Text
+                                            style={
+                                                styles.adminMenuDescription
+                                            }
+                                        >
+                                            Cadastro e informações das unidades
+                                        </Text>
+
+                                    </View>
+
+
+                                    <Text
+                                        style={
+                                            styles.adminMenuArrow
+                                        }
+                                    >
+                                        ›
+                                    </Text>
+
+                                </Pressable>
+
                             </View>
 
                         </View>
@@ -1284,6 +1357,17 @@ const styles =
 
             backgroundColor:
             colors.surface,
+        },
+
+
+        adminMenuDivider: {
+
+            height: 1,
+
+            marginLeft: 72,
+
+            backgroundColor:
+            colors.border,
         },
 
 

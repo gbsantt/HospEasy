@@ -6,6 +6,7 @@ import {
     createNativeStackNavigator,
 } from "@react-navigation/native-stack";
 
+
 import HomeScreen
     from "../screens/HomeScreen";
 
@@ -44,6 +45,13 @@ import CriarUsuarioAdminScreen
 
 import EditarUsuarioAdminScreen
     from "../screens/EditarUsuarioAdminScreen";
+
+import UnidadesAdminScreen
+    from "../screens/UnidadesAdminScreen";
+
+import EditarUnidadeAdminScreen
+    from "../screens/EditarUnidadeAdminScreen";
+
 
 import {
     Unidade,
@@ -111,6 +119,15 @@ export type RootStackParamList = {
 
     EditarUsuarioAdmin: {
         usuario: UsuarioAdmin;
+    };
+
+
+    UnidadesAdmin:
+        undefined;
+
+
+    EditarUnidadeAdmin: {
+        unidade: Unidade;
     };
 };
 
@@ -234,6 +251,22 @@ export default function AppNavigator() {
                     name="EditarUsuarioAdmin"
                     component={
                         EditarUsuarioAdminScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="UnidadesAdmin"
+                    component={
+                        UnidadesAdminScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="EditarUnidadeAdmin"
+                    component={
+                        EditarUnidadeAdminScreen
                     }
                 />
 

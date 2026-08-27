@@ -493,7 +493,6 @@ export async function listarUsuariosAdmin(
     return resposta.json();
 }
 
-
 /*
  * CRIAR USUÁRIO PELO ADMIN
  */
@@ -561,16 +560,6 @@ export async function criarUsuarioAdmin(
     return resposta.json();
 }
 
-
-/*
- * ATUALIZAR USUÁRIO PELO ADMIN
- *
- * Atualiza:
- * nome
- * email
- * tipo
- * ativo
- */
 export async function atualizarUsuarioAdmin(
     usuarioId: number,
 
@@ -582,7 +571,6 @@ export async function atualizarUsuarioAdmin(
     },
 
     token: string
-
 ): Promise<UsuarioAdmin> {
 
     const resposta =
@@ -625,13 +613,75 @@ export async function atualizarUsuarioAdmin(
 
         } catch {
 
-            // Sem JSON.
+            // Resposta sem JSON.
         }
 
 
         throw new Error(
             mensagem ||
             `Erro ao atualizar usuário: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+/*
+ * =========================================================
+ * ADMIN - UNIDADES
+ * =========================================================
+ */
+
+export type AtualizarUnidadeAdminPayload = {
+    nome: string;
+    endereco: string;
+    telefone: string | null;
+    capacidadeAreaMonitorada: number;
+    latitude: number | null;
+    longitude: number | null;
+    tipo:
+        | "UPA"
+        | "PRONTO_ATENDIMENTO"
+        | "PRONTO_SOCORRO";
+};
+
+
+export async function atualizarUnidadeAdmin(
+    unidadeId: number,
+    dados: AtualizarUnidadeAdminPayload,
+    token: string
+): Promise<Unidade> {
+
+    const resposta = await fetch(
+        `${URL_BACKEND}/unidades/${unidadeId}`,
+        {
+            method: "PUT",
+
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+
+            body: JSON.stringify(dados),
+        }
+    );
+
+
+    if (!resposta.ok) {
+
+        let mensagem = "";
+
+        try {
+            const erro = await resposta.json();
+            mensagem = erro?.message ?? erro?.mensagem ?? "";
+        } catch {
+            // Sem JSON.
+        }
+
+        throw new Error(
+            mensagem ||
+            `Erro ao atualizar unidade: ${resposta.status}`
         );
     }
 

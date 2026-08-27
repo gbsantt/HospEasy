@@ -1,6 +1,7 @@
 package com.hospeasy.backend.service;
 
 import com.hospeasy.backend.dto.AtualizarOcupacaoDTO;
+import com.hospeasy.backend.dto.AtualizarUnidadeRequestDTO;
 import com.hospeasy.backend.dto.HistoricoOcupacaoResponseDTO;
 import com.hospeasy.backend.dto.UnidadeAtendimentoRequestDTO;
 import com.hospeasy.backend.dto.UnidadeAtendimentoResponseDTO;
@@ -166,6 +167,91 @@ public class UnidadeAtendimentoService {
 
         return converterParaDTO(
                 unidadeAtendimento
+        );
+    }
+
+
+    /*
+     * ATUALIZAR DADOS CADASTRAIS DA UNIDADE
+     *
+     * Não altera ocupação atual nem histórico.
+     */
+    public UnidadeAtendimentoResponseDTO
+    atualizarUnidade(
+
+            Long id,
+
+            AtualizarUnidadeRequestDTO dto
+
+    ) {
+
+        UnidadeAtendimento unidadeAtendimento =
+                unidadeAtendimentoRepository
+                        .findById(
+                                id
+                        )
+                        .orElseThrow(
+                                UnidadeNaoEncontradaException::new
+                        );
+
+
+        if (
+                unidadeAtendimento.getOcupacaoAtual() != null
+                        &&
+                        dto.capacidadeAreaMonitorada()
+                                < unidadeAtendimento.getOcupacaoAtual()
+        ) {
+
+            throw new IllegalArgumentException(
+                    "A capacidade da área monitorada não pode ser menor que a ocupação atual"
+            );
+        }
+
+
+        unidadeAtendimento.setNome(
+                dto.nome().trim()
+        );
+
+        unidadeAtendimento.setEndereco(
+                dto.endereco().trim()
+        );
+
+        String telefone =
+                dto.telefone() == null
+                        ? null
+                        : dto.telefone().trim();
+
+        unidadeAtendimento.setTelefone(
+                telefone == null || telefone.isBlank()
+                        ? null
+                        : telefone
+        );
+
+        unidadeAtendimento.setCapacidadeAreaMonitorada(
+                dto.capacidadeAreaMonitorada()
+        );
+
+        unidadeAtendimento.setLatitude(
+                dto.latitude()
+        );
+
+        unidadeAtendimento.setLongitude(
+                dto.longitude()
+        );
+
+        unidadeAtendimento.setTipo(
+                dto.tipo()
+        );
+
+
+        UnidadeAtendimento unidadeSalva =
+                unidadeAtendimentoRepository.save(
+                        unidadeAtendimento
+                );
+
+
+        return converterParaDTO(
+                unidadeSalva
         );
     }
 
@@ -1058,4 +1144,6 @@ public class UnidadeAtendimentoService {
 
         return "BAIXA";
     }
+
+
 }

@@ -6,6 +6,7 @@ import com.hospeasy.backend.service.UnidadeAtendimentoService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import com.hospeasy.backend.dto.AtualizarOcupacaoDTO;
+import com.hospeasy.backend.dto.AtualizarUnidadeRequestDTO;
 import com.hospeasy.backend.dto.HistoricoOcupacaoResponseDTO;
 import com.hospeasy.backend.entity.Usuario;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,7 +17,7 @@ import com.hospeasy.backend.dto.SituacaoUnidadeResponseDTO;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/unidades", "/unidades"})
+@RequestMapping("/unidades")
 public class UnidadeAtendimentoController {
 
     private final UnidadeAtendimentoService unidadeAtendimentoService;
@@ -96,5 +97,16 @@ public class UnidadeAtendimentoController {
     @GetMapping("/situacoes/ordenadas")
     public List<SituacaoUnidadeResponseDTO> listarSituacoesOrdenadas() {
         return unidadeAtendimentoService.listarSituacoesOrdenadasPorOcupacao();
+    }
+    @PutMapping("/{id}")
+    public UnidadeAtendimentoResponseDTO atualizarUnidade(
+            @PathVariable Long id,
+            @Valid @RequestBody AtualizarUnidadeRequestDTO dto
+    ) {
+
+        return unidadeAtendimentoService.atualizarUnidade(
+                id,
+                dto
+        );
     }
 }
