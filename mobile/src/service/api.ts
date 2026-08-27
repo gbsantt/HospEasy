@@ -495,137 +495,6 @@ export async function listarUsuariosAdmin(
 
 
 /*
- * ALTERAR TIPO
- *
- * USUARIO -> ADMIN
- * ADMIN -> USUARIO
- */
-export async function alterarTipoUsuarioAdmin(
-    usuarioId: number,
-    tipo: TipoUsuario,
-    token: string
-): Promise<UsuarioAdmin> {
-
-    const resposta =
-        await fetch(
-            `${URL_BACKEND}/usuarios/${usuarioId}/tipo`,
-            {
-                method: "PATCH",
-
-                headers: {
-                    "Content-Type":
-                        "application/json",
-
-                    Authorization:
-                        `Bearer ${token}`,
-                },
-
-                body:
-                    JSON.stringify({
-                        tipo,
-                    }),
-            }
-        );
-
-
-    if (!resposta.ok) {
-
-        let mensagem = "";
-
-
-        try {
-
-            const erro =
-                await resposta.json();
-
-
-            mensagem =
-                erro?.message ??
-                erro?.mensagem ??
-                "";
-
-        } catch {
-
-            // Sem JSON.
-        }
-
-
-        throw new Error(
-            mensagem ||
-            `Erro ao alterar tipo: ${resposta.status}`
-        );
-    }
-
-
-    return resposta.json();
-}
-
-
-/*
- * ATIVAR / DESATIVAR USUÁRIO
- */
-export async function alterarStatusUsuarioAdmin(
-    usuarioId: number,
-    ativo: boolean,
-    token: string
-): Promise<UsuarioAdmin> {
-
-    const resposta =
-        await fetch(
-            `${URL_BACKEND}/usuarios/${usuarioId}/status`,
-            {
-                method: "PATCH",
-
-                headers: {
-                    "Content-Type":
-                        "application/json",
-
-                    Authorization:
-                        `Bearer ${token}`,
-                },
-
-                body:
-                    JSON.stringify({
-                        ativo,
-                    }),
-            }
-        );
-
-
-    if (!resposta.ok) {
-
-        let mensagem = "";
-
-
-        try {
-
-            const erro =
-                await resposta.json();
-
-
-            mensagem =
-                erro?.message ??
-                erro?.mensagem ??
-                "";
-
-        } catch {
-
-            // Sem JSON.
-        }
-
-
-        throw new Error(
-            mensagem ||
-            `Erro ao alterar status: ${resposta.status}`
-        );
-    }
-
-
-    return resposta.json();
-}
-
-
-/*
  * CRIAR USUÁRIO PELO ADMIN
  */
 export async function criarUsuarioAdmin(
@@ -685,6 +554,84 @@ export async function criarUsuarioAdmin(
         throw new Error(
             mensagem ||
             `Erro ao criar usuário: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+/*
+ * ATUALIZAR USUÁRIO PELO ADMIN
+ *
+ * Atualiza:
+ * nome
+ * email
+ * tipo
+ * ativo
+ */
+export async function atualizarUsuarioAdmin(
+    usuarioId: number,
+
+    dados: {
+        nome: string;
+        email: string;
+        tipo: TipoUsuario;
+        ativo: boolean;
+    },
+
+    token: string
+
+): Promise<UsuarioAdmin> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/${usuarioId}`,
+            {
+                method: "PUT",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+
+                body:
+                    JSON.stringify(
+                        dados
+                    ),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        let mensagem = "";
+
+
+        try {
+
+            const erro =
+                await resposta.json();
+
+
+            mensagem =
+                erro?.message ??
+                erro?.mensagem ??
+                "";
+
+        } catch {
+
+            // Sem JSON.
+        }
+
+
+        throw new Error(
+            mensagem ||
+            `Erro ao atualizar usuário: ${resposta.status}`
         );
     }
 

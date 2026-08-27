@@ -57,30 +57,22 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // LOGIN PÚBLICO
+                        /*
+                         * ROTAS PÚBLICAS DE USUÁRIO
+                         */
                         .requestMatchers(
                                 HttpMethod.POST,
-                                "/usuarios/login"
-                        ).permitAll()
-
-
-                        // CADASTRO PÚBLICO DE USUÁRIO COMUM
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/usuarios/cadastro"
-                        ).permitAll()
-
-
-                        // RECUPERAÇÃO DE SENHA
-                        .requestMatchers(
-                                HttpMethod.POST,
+                                "/usuarios/login",
+                                "/usuarios/cadastro",
                                 "/usuarios/esqueci-senha",
                                 "/usuarios/verificar-codigo",
                                 "/usuarios/redefinir-senha"
                         ).permitAll()
 
 
-                        // CONSULTAR UNIDADES
+                        /*
+                         * CONSULTAR UNIDADES
+                         */
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/unidades",
@@ -88,51 +80,92 @@ public class SecurityConfig {
                         ).permitAll()
 
 
-                        // CRIAR AVALIAÇÃO
+                        /*
+                         * CRIAR AVALIAÇÃO
+                         */
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/unidades/*/avaliacoes"
                         ).permitAll()
 
 
-                        // CADASTRAR ADMIN / FUNCIONÁRIO
+                        /*
+                         * ADMIN - LISTAR USUÁRIOS
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/usuarios"
+                        ).hasRole("ADMIN")
+
+
+                        /*
+                         * ADMIN - BUSCAR USUÁRIO
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/usuarios/*"
+                        ).hasRole("ADMIN")
+
+
+                        /*
+                         * ADMIN - CADASTRAR USUÁRIO
+                         */
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/usuarios"
                         ).hasRole("ADMIN")
 
 
-                        // ATUALIZAR OCUPAÇÃO
+                        /*
+                         * ADMIN - ATUALIZAR USUÁRIO
+                         */
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/usuarios/*"
+                        ).hasRole("ADMIN")
+
+
+                        /*
+                         * ADMIN - ATUALIZAR OCUPAÇÃO
+                         */
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/unidades/*/ocupacao"
-                        ).hasAnyRole(
-                                "ADMIN",
-                                "FUNCIONARIO"
-                        )
+                        ).hasRole("ADMIN")
 
 
-                        // CADASTRAR UNIDADE
+                        /*
+                         * ADMIN - CADASTRAR UNIDADE
+                         */
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/unidades"
                         ).hasRole("ADMIN")
 
 
-                        // RECEBER MEDIÇÕES DA CÂMERA
+                        /*
+                         * RECEBER MEDIÇÕES DA CÂMERA
+                         */
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/unidades/*/medicoes"
                         ).permitAll()
 
 
-                        // ERROS DO SPRING
+                        /*
+                         * ERROS DO SPRING
+                         */
                         .requestMatchers(
                                 "/error"
                         ).permitAll()
 
 
-                        // SEMPRE O ÚLTIMO
+                        /*
+                         * QUALQUER OUTRA ROTA
+                         * EXIGE AUTENTICAÇÃO
+                         *
+                         * SEMPRE DEVE SER O ÚLTIMO.
+                         */
                         .anyRequest()
                         .authenticated()
                 )

@@ -42,9 +42,16 @@ import UsuariosAdminScreen
 import CriarUsuarioAdminScreen
     from "../screens/CriarUsuarioAdminScreen";
 
+import EditarUsuarioAdminScreen
+    from "../screens/EditarUsuarioAdminScreen";
+
 import {
     Unidade,
 } from "../types/Unidade";
+
+import {
+    UsuarioAdmin,
+} from "../service/api";
 
 
 export type RootStackParamList = {
@@ -100,6 +107,11 @@ export type RootStackParamList = {
 
     CriarUsuarioAdmin:
         undefined;
+
+
+    EditarUsuarioAdmin: {
+        usuario: UsuarioAdmin;
+    };
 };
 
 
@@ -214,6 +226,14 @@ export default function AppNavigator() {
                     name="CriarUsuarioAdmin"
                     component={
                         CriarUsuarioAdminScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="EditarUsuarioAdmin"
+                    component={
+                        EditarUsuarioAdminScreen
                     }
                 />
 

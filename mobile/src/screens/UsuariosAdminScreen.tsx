@@ -30,8 +30,6 @@ import {
 } from "../context/AuthContext";
 
 import {
-    alterarStatusUsuarioAdmin,
-    alterarTipoUsuarioAdmin,
     listarUsuariosAdmin,
     UsuarioAdmin,
 } from "../service/api";
@@ -68,14 +66,6 @@ export default function UsuariosAdminScreen({
         setCarregando,
     ] = useState(
         true
-    );
-
-
-    const [
-        atualizandoId,
-        setAtualizandoId,
-    ] = useState<number | null>(
-        null
     );
 
 
@@ -128,6 +118,14 @@ export default function UsuariosAdminScreen({
     }
 
 
+    /*
+     * Recarrega sempre que a tela
+     * volta a ficar em foco.
+     *
+     * Assim, depois de editar ou criar
+     * um usuário, a lista já aparece
+     * atualizada.
+     */
     useFocusEffect(
 
         useCallback(
@@ -141,182 +139,6 @@ export default function UsuariosAdminScreen({
             ]
         )
     );
-
-
-    async function alterarTipo(
-        alvo: UsuarioAdmin
-    ) {
-
-        if (!usuario) {
-            return;
-        }
-
-
-        const novoTipo =
-            alvo.tipo === "ADMIN"
-                ? "USUARIO"
-                : "ADMIN";
-
-
-        const acao =
-            novoTipo === "ADMIN"
-                ? "promover"
-                : "rebaixar";
-
-
-        Alert.alert(
-            "Alterar permissão",
-
-            `Deseja ${acao} ${alvo.nome}?`,
-
-            [
-                {
-                    text:
-                        "Cancelar",
-
-                    style:
-                        "cancel",
-                },
-
-                {
-                    text:
-                        "Confirmar",
-
-                    onPress:
-                        async () => {
-
-                            try {
-
-                                setAtualizandoId(
-                                    alvo.id
-                                );
-
-
-                                const atualizado =
-                                    await alterarTipoUsuarioAdmin(
-                                        alvo.id,
-                                        novoTipo,
-                                        usuario.token
-                                    );
-
-
-                                setUsuarios(
-                                    lista =>
-                                        lista.map(
-                                            item =>
-                                                item.id === atualizado.id
-                                                    ? atualizado
-                                                    : item
-                                        )
-                                );
-
-                            } catch (erro) {
-
-                                Alert.alert(
-                                    "Não foi possível alterar",
-
-                                    erro instanceof Error
-                                        ? erro.message
-                                        : "Ocorreu um erro."
-                                );
-
-                            } finally {
-
-                                setAtualizandoId(
-                                    null
-                                );
-                            }
-                        },
-                },
-            ]
-        );
-    }
-
-
-    async function alterarStatus(
-        alvo: UsuarioAdmin
-    ) {
-
-        if (!usuario) {
-            return;
-        }
-
-
-        const novoStatus =
-            !alvo.ativo;
-
-
-        Alert.alert(
-            novoStatus
-                ? "Ativar usuário"
-                : "Desativar usuário",
-
-            novoStatus
-                ? `Deseja reativar ${alvo.nome}?`
-                : `Deseja desativar ${alvo.nome}?`,
-
-            [
-                {
-                    text:
-                        "Cancelar",
-
-                    style:
-                        "cancel",
-                },
-
-                {
-                    text:
-                        "Confirmar",
-
-                    onPress:
-                        async () => {
-
-                            try {
-
-                                setAtualizandoId(
-                                    alvo.id
-                                );
-
-
-                                const atualizado =
-                                    await alterarStatusUsuarioAdmin(
-                                        alvo.id,
-                                        novoStatus,
-                                        usuario.token
-                                    );
-
-
-                                setUsuarios(
-                                    lista =>
-                                        lista.map(
-                                            item =>
-                                                item.id === atualizado.id
-                                                    ? atualizado
-                                                    : item
-                                        )
-                                );
-
-                            } catch (erro) {
-
-                                Alert.alert(
-                                    "Não foi possível alterar",
-
-                                    erro instanceof Error
-                                        ? erro.message
-                                        : "Ocorreu um erro."
-                                );
-
-                            } finally {
-
-                                setAtualizandoId(
-                                    null
-                                );
-                            }
-                        },
-                },
-            ]
-        );
-    }
 
 
     if (
@@ -487,11 +309,6 @@ export default function UsuariosAdminScreen({
                                                 usuario.id;
 
 
-                                            const atualizando =
-                                                atualizandoId ===
-                                                item.id;
-
-
                                             return (
 
                                                 <View
@@ -640,117 +457,39 @@ export default function UsuariosAdminScreen({
                                                     </View>
 
 
-                                                    {
-                                                        atualizando
-                                                            ? (
+                                                    <Pressable
+                                                        style={
+                                                            styles.editButton
+                                                        }
 
-                                                                <View
-                                                                    style={
-                                                                        styles.updating
-                                                                    }
-                                                                >
-
-                                                                    <ActivityIndicator
-                                                                        color={
-                                                                            colors.primary
-                                                                        }
-                                                                    />
-
-                                                                </View>
-
+                                                        onPress={() =>
+                                                            navigation.navigate(
+                                                                "EditarUsuarioAdmin",
+                                                                {
+                                                                    usuario:
+                                                                    item,
+                                                                }
                                                             )
-                                                            : (
+                                                        }
+                                                    >
 
-                                                                <View
-                                                                    style={
-                                                                        styles.actions
-                                                                    }
-                                                                >
+                                                        <Text
+                                                            style={
+                                                                styles.editButtonText
+                                                            }
+                                                        >
+                                                            EDITAR USUÁRIO
+                                                        </Text>
 
-                                                                    <Pressable
-                                                                        style={[
-                                                                            styles.actionButton,
-
-                                                                            ehProprioUsuario &&
-                                                                            styles.disabledButton,
-                                                                        ]}
-
-                                                                        disabled={
-                                                                            ehProprioUsuario
-                                                                        }
-
-                                                                        onPress={() =>
-                                                                            alterarTipo(
-                                                                                item
-                                                                            )
-                                                                        }
-                                                                    >
-
-                                                                        <Text
-                                                                            style={
-                                                                                styles.actionButtonText
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                item.tipo === "ADMIN"
-                                                                                    ? "TORNAR USUÁRIO"
-                                                                                    : "TORNAR ADMIN"
-                                                                            }
-                                                                        </Text>
-
-                                                                    </Pressable>
-
-
-                                                                    <Pressable
-                                                                        style={[
-                                                                            styles.statusButton,
-
-                                                                            !item.ativo &&
-                                                                            styles.activateButton,
-
-                                                                            ehProprioUsuario &&
-                                                                            styles.disabledButton,
-                                                                        ]}
-
-                                                                        disabled={
-                                                                            ehProprioUsuario
-                                                                        }
-
-                                                                        onPress={() =>
-                                                                            alterarStatus(
-                                                                                item
-                                                                            )
-                                                                        }
-                                                                    >
-
-                                                                        <Text
-                                                                            style={
-                                                                                styles.statusButtonText
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                item.ativo
-                                                                                    ? "DESATIVAR"
-                                                                                    : "ATIVAR"
-                                                                            }
-                                                                        </Text>
-
-                                                                    </Pressable>
-
-                                                                </View>
-
-                                                            )
-                                                    }
+                                                    </Pressable>
 
                                                 </View>
-
                                             );
                                         }
                                     )
                                 }
 
                             </View>
-
                         )
                 }
 
@@ -1115,22 +854,10 @@ const styles =
         },
 
 
-        actions: {
+        editButton: {
+            height: 42,
+
             marginTop: 15,
-
-            flexDirection:
-                "row",
-
-            gap: 8,
-        },
-
-
-        actionButton: {
-            flex: 1,
-
-            minHeight: 40,
-
-            paddingHorizontal: 8,
 
             borderRadius: 12,
 
@@ -1145,72 +872,14 @@ const styles =
         },
 
 
-        actionButtonText: {
-            fontSize: 9,
+        editButtonText: {
+            fontSize: 10,
 
             fontWeight:
                 "900",
 
             color:
             colors.primaryDark,
-
-            textAlign:
-                "center",
-        },
-
-
-        statusButton: {
-            flex: 1,
-
-            minHeight: 40,
-
-            paddingHorizontal: 8,
-
-            borderWidth: 1,
-
-            borderColor:
-                "#999999",
-
-            borderRadius: 12,
-
-            alignItems:
-                "center",
-
-            justifyContent:
-                "center",
-        },
-
-
-        activateButton: {
-            borderColor:
-            colors.primary,
-        },
-
-
-        statusButtonText: {
-            fontSize: 9,
-
-            fontWeight:
-                "900",
-
-            color:
-            colors.text,
-        },
-
-
-        disabledButton: {
-            opacity: 0.35,
-        },
-
-
-        updating: {
-            minHeight: 55,
-
-            alignItems:
-                "center",
-
-            justifyContent:
-                "center",
         },
 
     });

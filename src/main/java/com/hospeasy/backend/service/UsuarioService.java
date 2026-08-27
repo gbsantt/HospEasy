@@ -1,7 +1,6 @@
 package com.hospeasy.backend.service;
 
-import com.hospeasy.backend.dto.AtualizarStatusUsuarioRequestDTO;
-import com.hospeasy.backend.dto.AtualizarTipoUsuarioRequestDTO;
+import com.hospeasy.backend.dto.AtualizarUsuarioRequestDTO;
 import com.hospeasy.backend.dto.CadastroUsuarioRequestDTO;
 import com.hospeasy.backend.dto.EsqueciSenhaRequestDTO;
 import com.hospeasy.backend.dto.LoginRequestDTO;
@@ -85,14 +84,11 @@ public class UsuarioService {
         this.usuarioRepository =
                 usuarioRepository;
 
-
         this.passwordEncoder =
                 passwordEncoder;
 
-
         this.jwtService =
                 jwtService;
-
 
         this.emailService =
                 emailService;
@@ -365,17 +361,27 @@ public class UsuarioService {
 
     /*
      * =========================================================
-     * ADMIN - ALTERAR TIPO
+     * ADMIN - ATUALIZAR USUÁRIO
      * =========================================================
      *
-     * USUARIO -> ADMIN
-     * ADMIN -> USUARIO
+     * Atualiza:
+     *
+     * nome
+     * email
+     * tipo
+     * status
+     *
+     * Mantém as proteções administrativas:
+     *
+     * - não pode rebaixar a própria conta
+     * - não pode desativar a própria conta
+     * - não pode remover o último ADMIN ativo
      */
-    public UsuarioResponseDTO atualizarTipoUsuario(
+    public UsuarioResponseDTO atualizarUsuario(
 
             Long id,
 
-            AtualizarTipoUsuarioRequestDTO dto,
+            AtualizarUsuarioRequestDTO dto,
 
             Usuario adminLogado
 
@@ -387,18 +393,46 @@ public class UsuarioService {
                 );
 
 
+        String email =
+                normalizarEmail(
+                        dto.email()
+                );
+
+
         /*
-         * Não deixa o administrador
-         * rebaixar a própria conta.
+         * Verifica se o novo e-mail pertence
+         * a OUTRO usuário.
          */
         if (
+                usuarioRepository
+                        .existsByEmailAndIdNot(
+                                email,
+                                id
+                        )
+        ) {
+
+            throw new IllegalStateException(
+                    "Este e-mail já está sendo utilizado por outro usuário"
+            );
+        }
+
+
+        boolean propriaConta =
                 adminLogado != null
                         &&
                         adminLogado
                                 .getId()
                                 .equals(
                                         usuario.getId()
-                                )
+                                );
+
+
+        /*
+         * O administrador logado não pode
+         * remover o próprio acesso ADMIN.
+         */
+        if (
+                propriaConta
                         &&
                         dto.tipo()
                                 != TipoUsuario.ADMIN
@@ -411,78 +445,11 @@ public class UsuarioService {
 
 
         /*
-         * Se estiver tentando remover
-         * um ADMIN ativo, verificamos
-         * se existe outro ADMIN ativo.
+         * O administrador logado não pode
+         * desativar a própria conta.
          */
         if (
-                usuario.getTipo()
-                        == TipoUsuario.ADMIN
-
-                        &&
-
-                        usuario.getAtivo()
-
-                        &&
-
-                        dto.tipo()
-                                != TipoUsuario.ADMIN
-        ) {
-
-            verificarSePodeRemoverAdmin();
-        }
-
-
-        usuario.setTipo(
-                dto.tipo()
-        );
-
-
-        Usuario usuarioSalvo =
-                usuarioRepository.save(
-                        usuario
-                );
-
-
-        return converterParaDTO(
-                usuarioSalvo
-        );
-    }
-
-
-    /*
-     * =========================================================
-     * ADMIN - ATIVAR / DESATIVAR
-     * =========================================================
-     */
-    public UsuarioResponseDTO atualizarStatusUsuario(
-
-            Long id,
-
-            AtualizarStatusUsuarioRequestDTO dto,
-
-            Usuario adminLogado
-
-    ) {
-
-        Usuario usuario =
-                buscarUsuario(
-                        id
-                );
-
-
-        /*
-         * Não permite que o admin
-         * desative a própria conta.
-         */
-        if (
-                adminLogado != null
-                        &&
-                        adminLogado
-                                .getId()
-                                .equals(
-                                        usuario.getId()
-                                )
+                propriaConta
                         &&
                         !dto.ativo()
         ) {
@@ -494,24 +461,56 @@ public class UsuarioService {
 
 
         /*
-         * Não pode desativar o último
-         * administrador ativo.
+         * Verifica se esta alteração faria
+         * um ADMIN ativo deixar de ser um
+         * ADMIN ativo.
+         *
+         * Isso acontece quando:
+         *
+         * ADMIN -> USUARIO
+         *
+         * ou
+         *
+         * ativo -> inativo
          */
-        if (
+        boolean eraAdminAtivo =
                 usuario.getTipo()
                         == TipoUsuario.ADMIN
-
                         &&
+                        usuario.getAtivo();
 
-                        usuario.getAtivo()
 
+        boolean continuaraAdminAtivo =
+                dto.tipo()
+                        == TipoUsuario.ADMIN
                         &&
+                        dto.ativo();
 
-                        !dto.ativo()
+
+        if (
+                eraAdminAtivo
+                        &&
+                        !continuaraAdminAtivo
         ) {
 
             verificarSePodeRemoverAdmin();
         }
+
+
+        usuario.setNome(
+                dto.nome()
+                        .trim()
+        );
+
+
+        usuario.setEmail(
+                email
+        );
+
+
+        usuario.setTipo(
+                dto.tipo()
+        );
 
 
         usuario.setAtivo(
@@ -594,10 +593,6 @@ public class UsuarioService {
                 );
 
 
-        /*
-         * Não devolvemos mais o código
-         * diretamente pela API.
-         */
         return "Código de recuperação enviado para o e-mail";
     }
 
