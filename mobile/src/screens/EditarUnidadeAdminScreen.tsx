@@ -1,6 +1,7 @@
 import {
     Alert,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     Pressable,
     ScrollView,
@@ -15,6 +16,7 @@ import {
 } from "@react-navigation/native-stack";
 
 import {
+    useEffect,
     useState,
 } from "react";
 
@@ -24,6 +26,7 @@ import {
 
 import {
     atualizarUnidadeAdmin,
+    buscarUnidadePorId,
 } from "../service/api";
 
 import {
@@ -122,8 +125,8 @@ export default function EditarUnidadeAdminScreen({
     const [
         tipo,
         setTipo,
-    ] = useState<TipoUnidade>(
-        unidade.tipo
+    ] = useState<TipoUnidade | null>(
+        unidade.tipo ?? null
     );
 
 
@@ -132,6 +135,102 @@ export default function EditarUnidadeAdminScreen({
         setSalvando,
     ] = useState(
         false
+    );
+
+
+    const [
+        confirmacaoVisivel,
+        setConfirmacaoVisivel,
+    ] = useState(
+        false
+    );
+
+
+    const [
+        carregandoTipo,
+        setCarregandoTipo,
+    ] = useState(
+        true
+    );
+
+
+    /*
+     * A listagem de situações não traz o tipo da unidade.
+     * Por isso buscamos o cadastro completo ao abrir a tela,
+     * garantindo que o botão correto já venha marcado.
+     */
+    useEffect(
+        () => {
+
+            let telaAtiva =
+                true;
+
+
+            async function carregarTipoDaUnidade() {
+
+                try {
+
+                    const unidadeCompleta =
+                        await buscarUnidadePorId(
+                            unidade.unidadeId
+                        );
+
+
+                    if (
+                        telaAtiva
+                    ) {
+
+                        setTipo(
+                            unidadeCompleta.tipo
+                        );
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        "Erro ao carregar tipo da unidade:",
+                        error
+                    );
+
+
+                    if (
+                        telaAtiva &&
+                        unidade.tipo
+                    ) {
+
+                        setTipo(
+                            unidade.tipo
+                        );
+                    }
+
+                } finally {
+
+                    if (
+                        telaAtiva
+                    ) {
+
+                        setCarregandoTipo(
+                            false
+                        );
+                    }
+                }
+            }
+
+
+            carregarTipoDaUnidade();
+
+
+            return () => {
+
+                telaAtiva =
+                    false;
+            };
+
+        },
+        [
+            unidade.unidadeId,
+            unidade.tipo,
+        ]
     );
 
 
@@ -150,7 +249,17 @@ export default function EditarUnidadeAdminScreen({
     }
 
 
-    async function salvar() {
+    async function confirmarSalvamento() {
+
+        setConfirmacaoVisivel(
+            false
+        );
+
+        await executarSalvamento();
+    }
+
+
+    async function executarSalvamento() {
 
         if (
             !usuario ||
@@ -302,6 +411,19 @@ export default function EditarUnidadeAdminScreen({
         }
 
 
+        if (
+            !tipo
+        ) {
+
+            Alert.alert(
+                "Tipo obrigatório",
+                "Selecione o tipo da unidade."
+            );
+
+            return;
+        }
+
+
         try {
 
             setSalvando(
@@ -338,20 +460,7 @@ export default function EditarUnidadeAdminScreen({
             );
 
 
-            Alert.alert(
-                "Unidade atualizada",
-                "As informações da unidade foram salvas.",
-                [
-                    {
-                        text:
-                            "OK",
-
-                        onPress:
-                            () =>
-                                navigation.goBack(),
-                    },
-                ]
-            );
+            navigation.goBack();
 
         } catch (error) {
 
@@ -735,6 +844,19 @@ export default function EditarUnidadeAdminScreen({
                     </View>
 
 
+                    {
+                        carregandoTipo && (
+                            <Text
+                                style={
+                                    styles.typeLoadingText
+                                }
+                            >
+                                Carregando tipo da unidade...
+                            </Text>
+                        )
+                    }
+
+
                     {/* COORDENADAS */}
 
                     <Text
@@ -843,8 +965,10 @@ export default function EditarUnidadeAdminScreen({
                         salvando
                     }
 
-                    onPress={
-                        salvar
+                    onPress={() =>
+                        setConfirmacaoVisivel(
+                            true
+                        )
                     }
                 >
 
@@ -863,6 +987,111 @@ export default function EditarUnidadeAdminScreen({
                 </Pressable>
 
             </ScrollView>
+
+            <Modal
+                visible={
+                    confirmacaoVisivel
+                }
+
+                transparent
+
+                animationType="fade"
+
+                onRequestClose={() =>
+                    setConfirmacaoVisivel(
+                        false
+                    )
+                }
+            >
+
+                <View
+                    style={
+                        styles.modalOverlay
+                    }
+                >
+
+                    <View
+                        style={
+                            styles.modalCard
+                        }
+                    >
+
+                        <Text
+                            style={
+                                styles.modalTitle
+                            }
+                        >
+                            Confirmar alteração
+                        </Text>
+
+
+                        <Text
+                            style={
+                                styles.modalDescription
+                            }
+                        >
+                            Deseja salvar as alterações desta unidade?
+                        </Text>
+
+
+                        <View
+                            style={
+                                styles.modalActions
+                            }
+                        >
+
+                            <Pressable
+                                style={[
+                                    styles.modalButton,
+                                    styles.modalCancelButton,
+                                ]}
+
+                                onPress={() =>
+                                    setConfirmacaoVisivel(
+                                        false
+                                    )
+                                }
+                            >
+
+                                <Text
+                                    style={
+                                        styles.modalCancelText
+                                    }
+                                >
+                                    CANCELAR
+                                </Text>
+
+                            </Pressable>
+
+
+                            <Pressable
+                                style={[
+                                    styles.modalButton,
+                                    styles.modalConfirmButton,
+                                ]}
+
+                                onPress={
+                                    confirmarSalvamento
+                                }
+                            >
+
+                                <Text
+                                    style={
+                                        styles.modalConfirmText
+                                    }
+                                >
+                                    SIM, SALVAR
+                                </Text>
+
+                            </Pressable>
+
+                        </View>
+
+                    </View>
+
+                </View>
+
+            </Modal>
 
         </KeyboardAvoidingView>
     );
@@ -1074,16 +1303,20 @@ const styles =
 
         optionButton: {
 
-            flex: 1,
+            width: "100%",
 
-            height: 48,
+            minHeight: 68,
 
-            borderWidth: 1,
+            paddingHorizontal: 20,
+
+            paddingVertical: 18,
+
+            borderWidth: 2,
 
             borderColor:
             colors.border,
 
-            borderRadius: 15,
+            borderRadius: 16,
 
             backgroundColor:
             colors.background,
@@ -1098,20 +1331,27 @@ const styles =
 
         optionButtonSelected: {
 
+            borderWidth: 2.5,
+
             borderColor:
             colors.primary,
 
             backgroundColor:
-            colors.primaryLight,
+            colors.primary,
         },
 
 
         optionText: {
 
-            fontSize: 11,
+            fontSize: 12,
+
+            lineHeight: 17,
 
             fontWeight:
                 "900",
+
+            textAlign:
+                "center",
 
             color:
             colors.textSecondary,
@@ -1121,7 +1361,143 @@ const styles =
         optionTextSelected: {
 
             color:
-            colors.primaryDark,
+                "#FFFFFF",
+        },
+
+
+        typeLoadingText: {
+
+            marginTop: 9,
+
+            fontSize: 11,
+
+            color:
+            colors.textSecondary,
+
+            textAlign:
+                "center",
+        },
+
+
+        modalOverlay: {
+
+            flex: 1,
+
+            padding: 24,
+
+            backgroundColor:
+                "rgba(0, 0, 0, 0.55)",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        modalCard: {
+
+            width: "100%",
+
+            maxWidth: 430,
+
+            padding: 24,
+
+            borderRadius: 22,
+
+            backgroundColor:
+            colors.surface,
+        },
+
+
+        modalTitle: {
+
+            fontSize: 22,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        modalDescription: {
+
+            marginTop: 10,
+
+            fontSize: 13,
+
+            lineHeight: 20,
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        modalActions: {
+
+            marginTop: 24,
+
+            gap: 10,
+        },
+
+
+        modalButton: {
+
+            minHeight: 54,
+
+            borderRadius: 16,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        modalCancelButton: {
+
+            borderWidth: 1,
+
+            borderColor:
+            colors.border,
+
+            backgroundColor:
+            colors.background,
+        },
+
+
+        modalConfirmButton: {
+
+            backgroundColor:
+            colors.primary,
+        },
+
+
+        modalCancelText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        modalConfirmText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+                "#FFFFFF",
         },
 
 

@@ -114,6 +114,27 @@ export async function buscarSituacoesUnidades():
 }
 
 
+
+export async function buscarUnidadePorId(
+    unidadeId: number
+): Promise<Unidade> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/unidades/${unidadeId}`
+        );
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao buscar unidade: ${resposta.status}`
+        );
+    }
+
+    return resposta.json();
+}
+
+
 /*
  * =========================================================
  * AVALIAÇÕES
@@ -640,10 +661,7 @@ export type AtualizarUnidadeAdminPayload = {
     capacidadeAreaMonitorada: number;
     latitude: number | null;
     longitude: number | null;
-    tipo:
-        | "UPA"
-        | "PRONTO_ATENDIMENTO"
-        | "PRONTO_SOCORRO";
+    tipo: "UPA" | "PRONTO_ATENDIMENTO" | "PRONTO_SOCORRO";
 };
 
 
