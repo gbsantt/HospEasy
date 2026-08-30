@@ -654,6 +654,87 @@ export async function atualizarUsuarioAdmin(
  * =========================================================
  */
 
+
+export type CriarUnidadeAdminPayload = {
+    nome: string;
+    endereco: string;
+    telefone: string | null;
+    capacidadeAreaMonitorada: number;
+    tipo: "UPA" | "PRONTO_ATENDIMENTO" | "PRONTO_SOCORRO";
+};
+
+
+export async function criarUnidadeAdmin(
+    dados: CriarUnidadeAdminPayload,
+    token: string
+): Promise<Unidade> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/unidades`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+
+                body:
+                    JSON.stringify({
+                        ...dados,
+
+                        /*
+                         * O ADMIN não precisa mais informar
+                         * coordenadas manualmente.
+                         *
+                         * O backend geocodifica o endereço e
+                         * preenche latitude/longitude.
+                         */
+                        latitude: null,
+                        longitude: null,
+                    }),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        let mensagem = "";
+
+
+        try {
+
+            const erro =
+                await resposta.json();
+
+
+            mensagem =
+                erro?.message ??
+                erro?.mensagem ??
+                "";
+
+        } catch {
+
+            // Resposta sem JSON.
+        }
+
+
+        throw new Error(
+            mensagem ||
+            `Erro ao criar unidade: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+
 export type AtualizarUnidadeAdminPayload = {
     nome: string;
     endereco: string;

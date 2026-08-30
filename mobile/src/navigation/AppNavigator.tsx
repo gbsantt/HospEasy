@@ -49,6 +49,9 @@ import EditarUsuarioAdminScreen
 import UnidadesAdminScreen
     from "../screens/UnidadesAdminScreen";
 
+import CriarUnidadeAdminScreen
+    from "../screens/CriarUnidadeAdminScreen";
+
 import EditarUnidadeAdminScreen
     from "../screens/EditarUnidadeAdminScreen";
 
@@ -123,6 +126,10 @@ export type RootStackParamList = {
 
 
     UnidadesAdmin:
+        undefined;
+
+
+    CriarUnidadeAdmin:
         undefined;
 
 
@@ -259,6 +266,14 @@ export default function AppNavigator() {
                     name="UnidadesAdmin"
                     component={
                         UnidadesAdminScreen
+                    }
+                />
+
+
+                <Stack.Screen
+                    name="CriarUnidadeAdmin"
+                    component={
+                        CriarUnidadeAdminScreen
                     }
                 />
 

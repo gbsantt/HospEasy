@@ -375,6 +375,38 @@ export default function UnidadesAdminScreen({
                 </View>
 
 
+                <Pressable
+                    style={
+                        styles.createButton
+                    }
+
+                    onPress={() =>
+                        navigation.navigate(
+                            "CriarUnidadeAdmin"
+                        )
+                    }
+                >
+
+                    <Text
+                        style={
+                            styles.createButtonPlus
+                        }
+                    >
+                        +
+                    </Text>
+
+
+                    <Text
+                        style={
+                            styles.createButtonText
+                        }
+                    >
+                        NOVA UNIDADE
+                    </Text>
+
+                </Pressable>
+
+
                 <View
                     style={
                         styles.summaryCard
@@ -902,6 +934,58 @@ const styles =
 
             color:
             colors.textSecondary,
+        },
+
+
+        createButton: {
+
+            minHeight: 58,
+
+            marginBottom: 16,
+
+            paddingHorizontal: 20,
+
+            borderRadius: 18,
+
+            backgroundColor:
+            colors.primary,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        createButtonPlus: {
+
+            marginRight: 9,
+
+            marginTop: -2,
+
+            fontSize: 25,
+
+            fontWeight:
+                "700",
+
+            color:
+                "#FFFFFF",
+        },
+
+
+        createButtonText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+                "#FFFFFF",
         },
 
 
