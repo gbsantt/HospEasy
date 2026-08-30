@@ -2,6 +2,11 @@ import {
     useState,
 } from "react";
 
+
+import {
+    useAuth,
+} from "../context/AuthContext";
+
 import {
     Alert,
     Pressable,
@@ -44,6 +49,9 @@ export default function ReviewScreen({
     const { unidade } =
         route.params;
 
+    const {
+        usuario,
+    } = useAuth();
 
     const [
         nota,
@@ -73,6 +81,15 @@ export default function ReviewScreen({
 
     async function enviarAvaliacao() {
 
+        if (!usuario) {
+
+            setErro(
+                "Entre na sua conta para enviar uma avaliação."
+            );
+
+            return;
+        }
+
         if (nota === 0) {
             setErro(
                 "Selecione uma nota antes de enviar."
@@ -91,9 +108,12 @@ export default function ReviewScreen({
                 unidade.unidadeId,
                 {
                     nota,
+
                     comentario:
                         comentario.trim(),
-                }
+                },
+
+                usuario.token
             );
 
 

@@ -82,12 +82,31 @@ public class SecurityConfig {
 
                         /*
                          * CRIAR AVALIAÇÃO
+                         *
+                         * Exige usuário autenticado
+                         * para vincular a avaliação
+                         * à conta.
                          */
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/unidades/*/avaliacoes"
-                        ).permitAll()
+                        ).authenticated()
 
+                        /*
+                         * FAVORITOS DO USUÁRIO LOGADO
+                         */
+                        .requestMatchers(
+                                "/usuarios/me/favoritos",
+                                "/usuarios/me/favoritos/**"
+                        ).authenticated()
+
+                        /*
+                         * AVALIAÇÕES DO USUÁRIO LOGADO
+                         */
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/usuarios/me/avaliacoes"
+                        ).authenticated()
 
                         /*
                          * ADMIN - LISTAR USUÁRIOS

@@ -5,6 +5,7 @@ import com.hospeasy.backend.dto.CriarAvaliacaoRequestDTO;
 
 import com.hospeasy.backend.entity.Avaliacao;
 import com.hospeasy.backend.entity.UnidadeAtendimento;
+import com.hospeasy.backend.entity.Usuario;
 
 import com.hospeasy.backend.exception.UnidadeNaoEncontradaException;
 
@@ -15,17 +16,25 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+
 @Service
 public class AvaliacaoService {
 
-    private final AvaliacaoRepository avaliacaoRepository;
-    private final UnidadeAtendimentoRepository unidadeAtendimentoRepository;
+    private final AvaliacaoRepository
+            avaliacaoRepository;
+
+    private final UnidadeAtendimentoRepository
+            unidadeAtendimentoRepository;
+
 
     public AvaliacaoService(
             AvaliacaoRepository avaliacaoRepository,
             UnidadeAtendimentoRepository unidadeAtendimentoRepository
     ) {
-        this.avaliacaoRepository = avaliacaoRepository;
+
+        this.avaliacaoRepository =
+                avaliacaoRepository;
+
         this.unidadeAtendimentoRepository =
                 unidadeAtendimentoRepository;
     }
@@ -33,42 +42,53 @@ public class AvaliacaoService {
 
     public AvaliacaoResponseDTO criarAvaliacao(
             Long unidadeId,
-            CriarAvaliacaoRequestDTO dto
+            CriarAvaliacaoRequestDTO dto,
+            Usuario usuario
     ) {
 
         UnidadeAtendimento unidade =
                 unidadeAtendimentoRepository
-                        .findById(unidadeId)
+                        .findById(
+                                unidadeId
+                        )
                         .orElseThrow(
                                 UnidadeNaoEncontradaException::new
                         );
 
+
         Avaliacao avaliacao =
                 new Avaliacao();
+
 
         avaliacao.setNota(
                 dto.nota()
         );
 
+
         avaliacao.setComentario(
                 dto.comentario()
         );
+
 
         avaliacao.setUnidadeAtendimento(
                 unidade
         );
 
+
         /*
-         * Avaliação anônima por enquanto.
-         * Depois podemos vincular ao usuário
-         * autenticado pelo JWT.
+         * Agora a avaliação pertence
+         * ao usuário autenticado.
          */
-        avaliacao.setUsuario(null);
+        avaliacao.setUsuario(
+                usuario
+        );
+
 
         Avaliacao avaliacaoSalva =
                 avaliacaoRepository.save(
                         avaliacao
                 );
+
 
         return converterParaDTO(
                 avaliacaoSalva
@@ -76,27 +96,53 @@ public class AvaliacaoService {
     }
 
 
-    public List<AvaliacaoResponseDTO> listarPorUnidade(
+    public List<AvaliacaoResponseDTO>
+    listarPorUnidade(
             Long unidadeId
     ) {
 
-        if (!unidadeAtendimentoRepository
-                .existsById(unidadeId)) {
+        if (
+                !unidadeAtendimentoRepository
+                        .existsById(
+                                unidadeId
+                        )
+        ) {
 
             throw new UnidadeNaoEncontradaException();
         }
+
 
         return avaliacaoRepository
                 .findByUnidadeAtendimentoIdOrderByCriadoEmDesc(
                         unidadeId
                 )
                 .stream()
-                .map(this::converterParaDTO)
+                .map(
+                        this::converterParaDTO
+                )
                 .toList();
     }
 
 
-    private AvaliacaoResponseDTO converterParaDTO(
+    public List<AvaliacaoResponseDTO>
+    listarPorUsuario(
+            Usuario usuario
+    ) {
+
+        return avaliacaoRepository
+                .findByUsuarioIdOrderByCriadoEmDesc(
+                        usuario.getId()
+                )
+                .stream()
+                .map(
+                        this::converterParaDTO
+                )
+                .toList();
+    }
+
+
+    private AvaliacaoResponseDTO
+    converterParaDTO(
             Avaliacao avaliacao
     ) {
 
@@ -108,6 +154,10 @@ public class AvaliacaoService {
                         .getUnidadeAtendimento()
                         .getId(),
 
+                avaliacao
+                        .getUnidadeAtendimento()
+                        .getNome(),
+
                 avaliacao.getNota(),
 
                 avaliacao.getComentario(),
@@ -115,11 +165,15 @@ public class AvaliacaoService {
                 avaliacao.getCriadoEm(),
 
                 avaliacao.getUsuario() != null
-                        ? avaliacao.getUsuario().getId()
+                        ? avaliacao
+                        .getUsuario()
+                        .getId()
                         : null,
 
                 avaliacao.getUsuario() != null
-                        ? avaliacao.getUsuario().getNome()
+                        ? avaliacao
+                        .getUsuario()
+                        .getNome()
                         : null
         );
     }

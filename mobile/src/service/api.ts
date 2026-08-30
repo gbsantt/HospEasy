@@ -14,9 +14,12 @@ export type CriarAvaliacaoPayload = {
 
 
 export type Avaliacao = {
+
     id: number;
 
     unidadeId: number;
+
+    unidadeNome: string;
 
     nota: number;
 
@@ -143,7 +146,8 @@ export async function buscarUnidadePorId(
 
 export async function criarAvaliacao(
     unidadeId: number,
-    dados: CriarAvaliacaoPayload
+    dados: CriarAvaliacaoPayload,
+    token: string
 ): Promise<Avaliacao> {
 
     const resposta =
@@ -153,8 +157,12 @@ export async function criarAvaliacao(
                 method: "POST",
 
                 headers: {
+
                     "Content-Type":
                         "application/json",
+
+                    Authorization:
+                        `Bearer ${token}`,
                 },
 
                 body:
@@ -778,6 +786,123 @@ export async function atualizarUnidadeAdmin(
         throw new Error(
             mensagem ||
             `Erro ao atualizar unidade: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+export async function buscarFavoritos(
+    token: string
+): Promise<Unidade[]> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/me/favoritos`,
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao buscar favoritos: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+export async function adicionarFavorito(
+    unidadeId: number,
+    token: string
+): Promise<Unidade> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/me/favoritos/${unidadeId}`,
+            {
+                method:
+                    "POST",
+
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao adicionar favorito: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+export async function removerFavorito(
+    unidadeId: number,
+    token: string
+): Promise<void> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/me/favoritos/${unidadeId}`,
+            {
+                method:
+                    "DELETE",
+
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao remover favorito: ${resposta.status}`
+        );
+    }
+}
+
+export async function buscarMinhasAvaliacoes(
+    token: string
+): Promise<Avaliacao[]> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/me/avaliacoes`,
+            {
+                headers: {
+
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao buscar minhas avaliações: ${resposta.status}`
         );
     }
 

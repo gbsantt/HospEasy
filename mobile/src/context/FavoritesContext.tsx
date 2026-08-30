@@ -2,6 +2,7 @@ import {
     createContext,
     ReactNode,
     useContext,
+    useEffect,
     useState,
 } from "react";
 
@@ -9,25 +10,43 @@ import {
     Unidade,
 } from "../types/Unidade";
 
+import {
+    adicionarFavorito,
+    buscarFavoritos,
+    removerFavorito,
+} from "../service/api";
+
+import {
+    useAuth,
+} from "./AuthContext";
+
 
 type FavoritesContextType = {
-    favoritos: Unidade[];
+
+    favoritos:
+        Unidade[];
+
+    carregandoFavoritos:
+        boolean;
 
     favoritar: (
         unidade: Unidade
-    ) => void;
+    ) => Promise<void>;
 
     desfavoritar: (
         unidadeId: number
-    ) => void;
+    ) => Promise<void>;
 
     alternarFavorito: (
         unidade: Unidade
-    ) => void;
+    ) => Promise<void>;
 
     estaFavoritado: (
         unidadeId: number
     ) => boolean;
+
+    recarregarFavoritos:
+        () => Promise<void>;
 };
 
 
@@ -46,53 +65,240 @@ export function FavoritesProvider({
                                       children,
                                   }: Props) {
 
+    const {
+        usuario,
+        autenticado,
+    } = useAuth();
+
+
     const [
         favoritos,
         setFavoritos,
-    ] = useState<Unidade[]>([]);
-
-
-    function favoritar(
-        unidade: Unidade
-    ) {
-
-        setFavoritos(
-            (favoritosAtuais) => {
-
-                const jaExiste =
-                    favoritosAtuais.some(
-                        (item) =>
-                            item.unidadeId ===
-                            unidade.unidadeId
-                    );
-
-
-                if (jaExiste) {
-                    return favoritosAtuais;
-                }
-
-
-                return [
-                    ...favoritosAtuais,
-                    unidade,
-                ];
-            }
+    ] =
+        useState<Unidade[]>(
+            []
         );
+
+
+    const [
+        carregandoFavoritos,
+        setCarregandoFavoritos,
+    ] =
+        useState(false);
+
+
+    useEffect(() => {
+
+        if (
+            autenticado &&
+            usuario
+        ) {
+
+            recarregarFavoritos();
+
+        } else {
+
+            setFavoritos(
+                []
+            );
+        }
+
+    }, [
+        autenticado,
+        usuario?.id,
+    ]);
+
+
+    async function recarregarFavoritos() {
+
+        if (!usuario) {
+
+            setFavoritos(
+                []
+            );
+
+            return;
+        }
+
+
+        try {
+
+            setCarregandoFavoritos(
+                true
+            );
+
+
+            const resposta =
+                await buscarFavoritos(
+                    usuario.token
+                );
+
+
+            setFavoritos(
+                resposta
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao carregar favoritos:",
+                erro
+            );
+
+        } finally {
+
+            setCarregandoFavoritos(
+                false
+            );
+        }
     }
 
 
-    function desfavoritar(
+    async function favoritar(
+        unidade: Unidade
+    ) {
+
+        if (!usuario) {
+
+            return;
+        }
+
+
+        const jaExiste =
+            favoritos.some(
+                (item) =>
+                    item.unidadeId ===
+                    unidade.unidadeId
+            );
+
+
+        if (jaExiste) {
+
+            return;
+        }
+
+
+        /*
+         * Atualização otimista:
+         * coração muda na hora.
+         */
+        setFavoritos(
+            (favoritosAtuais) => [
+                ...favoritosAtuais,
+                unidade,
+            ]
+        );
+
+
+        try {
+
+            await adicionarFavorito(
+                unidade.unidadeId,
+                usuario.token
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao favoritar:",
+                erro
+            );
+
+
+            /*
+             * Se o backend falhar,
+             * desfaz a alteração visual.
+             */
+            setFavoritos(
+                (
+                    favoritosAtuais
+                ) =>
+                    favoritosAtuais.filter(
+                        (item) =>
+                            item.unidadeId !==
+                            unidade.unidadeId
+                    )
+            );
+        }
+    }
+
+
+    async function desfavoritar(
         unidadeId: number
     ) {
 
+        if (!usuario) {
+
+            return;
+        }
+
+
+        const favoritoAnterior =
+            favoritos.find(
+                (item) =>
+                    item.unidadeId ===
+                    unidadeId
+            );
+
+
         setFavoritos(
-            (favoritosAtuais) =>
+            (
+                favoritosAtuais
+            ) =>
                 favoritosAtuais.filter(
                     (unidade) =>
                         unidade.unidadeId !==
                         unidadeId
                 )
         );
+
+
+        try {
+
+            await removerFavorito(
+                unidadeId,
+                usuario.token
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao desfavoritar:",
+                erro
+            );
+
+
+            if (
+                favoritoAnterior
+            ) {
+
+                setFavoritos(
+                    (
+                        favoritosAtuais
+                    ) => {
+
+                        const existe =
+                            favoritosAtuais.some(
+                                (item) =>
+                                    item.unidadeId ===
+                                    favoritoAnterior.unidadeId
+                            );
+
+
+                        if (existe) {
+
+                            return favoritosAtuais;
+                        }
+
+
+                        return [
+                            ...favoritosAtuais,
+                            favoritoAnterior,
+                        ];
+                    }
+                );
+            }
+        }
     }
 
 
@@ -108,7 +314,7 @@ export function FavoritesProvider({
     }
 
 
-    function alternarFavorito(
+    async function alternarFavorito(
         unidade: Unidade
     ) {
 
@@ -118,7 +324,7 @@ export function FavoritesProvider({
             )
         ) {
 
-            desfavoritar(
+            await desfavoritar(
                 unidade.unidadeId
             );
 
@@ -126,23 +332,34 @@ export function FavoritesProvider({
         }
 
 
-        favoritar(
+        await favoritar(
             unidade
         );
     }
 
 
     return (
+
         <FavoritesContext.Provider
             value={{
                 favoritos,
+
+                carregandoFavoritos,
+
                 favoritar,
+
                 desfavoritar,
+
                 alternarFavorito,
+
                 estaFavoritado,
+
+                recarregarFavoritos,
             }}
         >
+
             {children}
+
         </FavoritesContext.Provider>
     );
 }
