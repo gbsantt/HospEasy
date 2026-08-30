@@ -2,12 +2,14 @@ package com.hospeasy.backend.service;
 
 import com.hospeasy.backend.dto.AtualizarOcupacaoDTO;
 import com.hospeasy.backend.dto.AtualizarUnidadeRequestDTO;
+import com.hospeasy.backend.dto.CadastroUnidadeResponseDTO;
 import com.hospeasy.backend.dto.HistoricoOcupacaoResponseDTO;
 import com.hospeasy.backend.dto.UnidadeAtendimentoRequestDTO;
 import com.hospeasy.backend.dto.UnidadeAtendimentoResponseDTO;
 import com.hospeasy.backend.dto.MedicaoCameraRequestDTO;
 import com.hospeasy.backend.dto.SituacaoUnidadeResponseDTO;
 
+import com.hospeasy.backend.entity.DispositivoCamera;
 import com.hospeasy.backend.entity.HistoricoOcupacao;
 import com.hospeasy.backend.entity.OrigemMedicao;
 import com.hospeasy.backend.entity.StatusMedicao;
@@ -23,6 +25,7 @@ import com.hospeasy.backend.repository.HistoricoOcupacaoRepository;
 import com.hospeasy.backend.repository.UnidadeAtendimentoRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,6 +87,13 @@ public class UnidadeAtendimentoService {
         return unidadeAtendimentoRepository
                 .findAll()
                 .stream()
+                .filter(
+                        unidade ->
+                                dispositivoCameraService
+                                        .unidadePossuiCamera(
+                                                unidade.getId()
+                                        )
+                )
                 .map(
                         this::converterParaDTO
                 )
@@ -92,9 +102,17 @@ public class UnidadeAtendimentoService {
 
 
     /*
-     * CADASTRAR UNIDADE
+     * CADASTRAR UNIDADE + CÂMERA
+     *
+     * A transação garante que:
+     *
+     * - se a unidade for salva e a câmera falhar,
+     *   a unidade também será desfeita;
+     *
+     * - não teremos uma nova unidade sem câmera.
      */
-    public UnidadeAtendimentoResponseDTO
+    @Transactional
+    public CadastroUnidadeResponseDTO
     cadastrarUnidades(
             UnidadeAtendimentoRequestDTO dto
     ) {
@@ -104,17 +122,25 @@ public class UnidadeAtendimentoService {
 
 
         unidadeAtendimento.setNome(
-                dto.nome()
+                dto.nome().trim()
         );
 
 
         unidadeAtendimento.setEndereco(
-                dto.endereco()
+                dto.endereco().trim()
         );
 
 
+        String telefone =
+                dto.telefone() == null
+                        ? null
+                        : dto.telefone().trim();
+
+
         unidadeAtendimento.setTelefone(
-                dto.telefone()
+                telefone == null || telefone.isBlank()
+                        ? null
+                        : telefone
         );
 
 
@@ -130,8 +156,8 @@ public class UnidadeAtendimentoService {
 
 
         /*
-         * O ADMIN informa apenas o endereço.
-         * As coordenadas são descobertas automaticamente.
+         * O ADMIN não informa coordenadas.
+         * O endereço é convertido automaticamente.
          */
         GeocodificacaoService.Coordenadas coordenadas =
                 geocodificacaoService.geocodificar(
@@ -154,15 +180,35 @@ public class UnidadeAtendimentoService {
         );
 
 
-        UnidadeAtendimento unidadeAtendimentoSalvo =
-                unidadeAtendimentoRepository
-                        .save(
-                                unidadeAtendimento
+        UnidadeAtendimento unidadeSalva =
+                unidadeAtendimentoRepository.save(
+                        unidadeAtendimento
+                );
+
+
+        /*
+         * A câmera é criada na MESMA transação e já
+         * recebe a unidade recém-cadastrada.
+         */
+        DispositivoCamera camera =
+                dispositivoCameraService
+                        .cadastrarDispositivo(
+                                dto.nomeCamera(),
+                                unidadeSalva
                         );
 
 
-        return converterParaDTO(
-                unidadeAtendimentoSalvo
+        return new CadastroUnidadeResponseDTO(
+
+                converterParaDTO(
+                        unidadeSalva
+                ),
+
+                camera.getId(),
+
+                camera.getNome(),
+
+                camera.getChaveApi()
         );
     }
 
@@ -232,9 +278,53 @@ public class UnidadeAtendimentoService {
                 dto.nome().trim()
         );
 
+        String enderecoAnterior =
+                unidadeAtendimento
+                        .getEndereco();
+
+
+        String novoEndereco =
+                dto.endereco()
+                        .trim();
+
+
+        /*
+         * Só consulta o geocodificador quando o endereço
+         * realmente mudou. Assim, editar telefone, nome,
+         * capacidade ou tipo não faz uma nova consulta
+         * desnecessária.
+         */
+        if (
+                enderecoAnterior == null
+                        ||
+                        !enderecoAnterior
+                                .trim()
+                                .equalsIgnoreCase(
+                                        novoEndereco
+                                )
+        ) {
+
+            GeocodificacaoService.Coordenadas coordenadas =
+                    geocodificacaoService.geocodificar(
+                            novoEndereco
+                    );
+
+
+            unidadeAtendimento.setLatitude(
+                    coordenadas.latitude()
+            );
+
+
+            unidadeAtendimento.setLongitude(
+                    coordenadas.longitude()
+            );
+        }
+
+
         unidadeAtendimento.setEndereco(
-                dto.endereco().trim()
+                novoEndereco
         );
+
 
         String telefone =
                 dto.telefone() == null
@@ -249,14 +339,6 @@ public class UnidadeAtendimentoService {
 
         unidadeAtendimento.setCapacidadeAreaMonitorada(
                 dto.capacidadeAreaMonitorada()
-        );
-
-        unidadeAtendimento.setLatitude(
-                dto.latitude()
-        );
-
-        unidadeAtendimento.setLongitude(
-                dto.longitude()
         );
 
         unidadeAtendimento.setTipo(
@@ -856,6 +938,13 @@ public class UnidadeAtendimentoService {
         return unidadeAtendimentoRepository
                 .findAll()
                 .stream()
+                .filter(
+                        unidadeAtendimento ->
+                                dispositivoCameraService
+                                        .unidadePossuiCamera(
+                                                unidadeAtendimento.getId()
+                                        )
+                )
                 .map(
                         unidadeAtendimento ->
                                 buscarSituacaoAtual(
@@ -876,6 +965,13 @@ public class UnidadeAtendimentoService {
         return unidadeAtendimentoRepository
                 .findAll()
                 .stream()
+                .filter(
+                        unidade ->
+                                dispositivoCameraService
+                                        .unidadePossuiCamera(
+                                                unidade.getId()
+                                        )
+                )
                 .map(
                         unidade ->
                                 buscarSituacaoAtual(

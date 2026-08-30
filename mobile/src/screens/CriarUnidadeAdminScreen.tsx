@@ -11,6 +11,9 @@ import {
     View,
 } from "react-native";
 
+import * as Clipboard
+    from "expo-clipboard";
+
 import {
     NativeStackScreenProps,
 } from "@react-navigation/native-stack";
@@ -89,6 +92,14 @@ export default function CriarUnidadeAdminScreen({
 
 
     const [
+        nomeCamera,
+        setNomeCamera,
+    ] = useState(
+        ""
+    );
+
+
+    const [
         tipo,
         setTipo,
     ] = useState<TipoUnidade | null>(
@@ -109,6 +120,30 @@ export default function CriarUnidadeAdminScreen({
         setConfirmacaoVisivel,
     ] = useState(
         false
+    );
+
+
+    const [
+        cadastroConcluidoVisivel,
+        setCadastroConcluidoVisivel,
+    ] = useState(
+        false
+    );
+
+
+    const [
+        chaveApiGerada,
+        setChaveApiGerada,
+    ] = useState(
+        ""
+    );
+
+
+    const [
+        nomeCameraCadastrada,
+        setNomeCameraCadastrada,
+    ] = useState(
+        ""
     );
 
 
@@ -156,6 +191,19 @@ export default function CriarUnidadeAdminScreen({
             Alert.alert(
                 "Capacidade inválida",
                 "Informe uma capacidade maior que zero."
+            );
+
+            return false;
+        }
+
+
+        if (
+            nomeCamera.trim() === ""
+        ) {
+
+            Alert.alert(
+                "Câmera obrigatória",
+                "Informe um nome para identificar a câmera da unidade."
             );
 
             return false;
@@ -231,31 +279,47 @@ export default function CriarUnidadeAdminScreen({
             );
 
 
-            await criarUnidadeAdmin(
-                {
-                    nome:
-                        nome.trim(),
+            const resultado =
+                await criarUnidadeAdmin(
+                    {
+                        nome:
+                            nome.trim(),
 
-                    endereco:
-                        endereco.trim(),
+                        endereco:
+                            endereco.trim(),
 
-                    telefone:
-                        telefone.trim() === ""
-                            ? null
-                            : telefone.trim(),
+                        telefone:
+                            telefone.trim() === ""
+                                ? null
+                                : telefone.trim(),
 
-                    capacidadeAreaMonitorada:
-                        Number(
-                            capacidade.trim()
-                        ),
+                        capacidadeAreaMonitorada:
+                            Number(
+                                capacidade.trim()
+                            ),
 
-                    tipo,
-                },
-                usuario.token
+                        tipo,
+
+                        nomeCamera:
+                            nomeCamera.trim(),
+                    },
+                    usuario.token
+                );
+
+
+            setChaveApiGerada(
+                resultado.chaveApi
             );
 
 
-            navigation.goBack();
+            setNomeCameraCadastrada(
+                resultado.cameraNome
+            );
+
+
+            setCadastroConcluidoVisivel(
+                true
+            );
 
         } catch (error) {
 
@@ -277,6 +341,39 @@ export default function CriarUnidadeAdminScreen({
                 false
             );
         }
+    }
+
+
+    async function copiarChaveApi() {
+
+        if (
+            chaveApiGerada === ""
+        ) {
+
+            return;
+        }
+
+
+        await Clipboard.setStringAsync(
+            chaveApiGerada
+        );
+
+
+        Alert.alert(
+            "Chave copiada",
+            "A chave da câmera foi copiada."
+        );
+    }
+
+
+    function concluirCadastro() {
+
+        setCadastroConcluidoVisivel(
+            false
+        );
+
+
+        navigation.goBack();
     }
 
 
@@ -560,6 +657,54 @@ export default function CriarUnidadeAdminScreen({
 
                     <Text
                         style={
+                            styles.sectionTitle
+                        }
+                    >
+                        Câmera de monitoramento
+                    </Text>
+
+
+                    <Text
+                        style={
+                            styles.sectionDescription
+                        }
+                    >
+                        Toda unidade precisa ter pelo menos uma câmera vinculada. O sistema irá gerar automaticamente a chave de acesso da câmera.
+                    </Text>
+
+
+                    <Text
+                        style={
+                            styles.label
+                        }
+                    >
+                        Nome da câmera
+                    </Text>
+
+
+                    <TextInput
+                        style={
+                            styles.input
+                        }
+
+                        value={
+                            nomeCamera
+                        }
+
+                        onChangeText={
+                            setNomeCamera
+                        }
+
+                        placeholder="Ex.: Câmera da recepção"
+
+                        placeholderTextColor={
+                            colors.textSecondary
+                        }
+                    />
+
+
+                    <Text
+                        style={
                             styles.label
                         }
                     >
@@ -796,6 +941,150 @@ export default function CriarUnidadeAdminScreen({
                             </Pressable>
 
                         </View>
+
+                    </View>
+
+                </View>
+
+            </Modal>
+
+            <Modal
+                visible={
+                    cadastroConcluidoVisivel
+                }
+
+                transparent
+
+                animationType="fade"
+
+                onRequestClose={() => {
+                    /*
+                     * Não fechamos pelo botão de voltar sem
+                     * passar pela tela da chave.
+                     */
+                }}
+            >
+
+                <View
+                    style={
+                        styles.modalOverlay
+                    }
+                >
+
+                    <View
+                        style={
+                            styles.modalCard
+                        }
+                    >
+
+                        <Text
+                            style={
+                                styles.successTitle
+                            }
+                        >
+                            Unidade cadastrada
+                        </Text>
+
+
+                        <Text
+                            style={
+                                styles.modalDescription
+                            }
+                        >
+                            A unidade e a câmera foram criadas. Guarde a chave abaixo para configurar o dispositivo físico.
+                        </Text>
+
+
+                        <View
+                            style={
+                                styles.cameraResultCard
+                            }
+                        >
+
+                            <Text
+                                style={
+                                    styles.cameraResultLabel
+                                }
+                            >
+                                CÂMERA
+                            </Text>
+
+
+                            <Text
+                                style={
+                                    styles.cameraResultName
+                                }
+                            >
+                                {
+                                    nomeCameraCadastrada
+                                }
+                            </Text>
+
+
+                            <Text
+                                style={
+                                    styles.cameraResultLabel
+                                }
+                            >
+                                CHAVE API
+                            </Text>
+
+
+                            <Text
+                                selectable
+
+                                style={
+                                    styles.apiKeyText
+                                }
+                            >
+                                {
+                                    chaveApiGerada
+                                }
+                            </Text>
+
+                        </View>
+
+
+                        <Pressable
+                            style={
+                                styles.copyButton
+                            }
+
+                            onPress={
+                                copiarChaveApi
+                            }
+                        >
+
+                            <Text
+                                style={
+                                    styles.copyButtonText
+                                }
+                            >
+                                COPIAR CHAVE
+                            </Text>
+
+                        </Pressable>
+
+
+                        <Pressable
+                            style={
+                                styles.finishButton
+                            }
+
+                            onPress={
+                                concluirCadastro
+                            }
+                        >
+
+                            <Text
+                                style={
+                                    styles.finishButtonText
+                                }
+                            >
+                                CONCLUIR
+                            </Text>
+
+                        </Pressable>
 
                     </View>
 
@@ -1232,6 +1521,173 @@ const styles =
 
 
         modalConfirmText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+                "#FFFFFF",
+        },
+
+
+        sectionTitle: {
+
+            marginTop: 28,
+
+            fontSize: 15,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        sectionDescription: {
+
+            marginTop: 6,
+
+            marginBottom: 2,
+
+            fontSize: 11,
+
+            lineHeight: 17,
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        successTitle: {
+
+            fontSize: 22,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        cameraResultCard: {
+
+            marginTop: 18,
+
+            padding: 16,
+
+            borderRadius: 16,
+
+            backgroundColor:
+            colors.primaryLight,
+        },
+
+
+        cameraResultLabel: {
+
+            marginTop: 4,
+
+            fontSize: 9,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        cameraResultName: {
+
+            marginTop: 5,
+
+            marginBottom: 14,
+
+            fontSize: 14,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        apiKeyText: {
+
+            marginTop: 7,
+
+            fontSize: 12,
+
+            lineHeight: 18,
+
+            fontWeight:
+                "700",
+
+            color:
+            colors.text,
+
+            flexWrap:
+                "wrap",
+        },
+
+
+        copyButton: {
+
+            minHeight: 52,
+
+            marginTop: 16,
+
+            borderWidth: 2,
+
+            borderColor:
+            colors.primary,
+
+            borderRadius: 16,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        copyButtonText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        finishButton: {
+
+            minHeight: 54,
+
+            marginTop: 10,
+
+            borderRadius: 16,
+
+            backgroundColor:
+            colors.primary,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        finishButtonText: {
 
             fontSize: 12,
 

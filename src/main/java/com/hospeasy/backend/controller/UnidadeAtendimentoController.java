@@ -1,6 +1,7 @@
 package com.hospeasy.backend.controller;
 
 import com.hospeasy.backend.dto.UnidadeAtendimentoRequestDTO;
+import com.hospeasy.backend.dto.CadastroUnidadeResponseDTO;
 import com.hospeasy.backend.dto.UnidadeAtendimentoResponseDTO;
 import com.hospeasy.backend.service.UnidadeAtendimentoService;
 import jakarta.validation.Valid;
@@ -42,7 +43,7 @@ public class UnidadeAtendimentoController {
     }
 
     @PostMapping
-    public UnidadeAtendimentoResponseDTO cadastrarUnidades(
+    public CadastroUnidadeResponseDTO cadastrarUnidades(
             @Valid @RequestBody UnidadeAtendimentoRequestDTO dto
     ) {
         return unidadeAtendimentoService.cadastrarUnidades(dto);

@@ -661,13 +661,22 @@ export type CriarUnidadeAdminPayload = {
     telefone: string | null;
     capacidadeAreaMonitorada: number;
     tipo: "UPA" | "PRONTO_ATENDIMENTO" | "PRONTO_SOCORRO";
+    nomeCamera: string;
+};
+
+
+export type CadastroUnidadeAdminResponse = {
+    unidade: Unidade;
+    cameraId: number;
+    cameraNome: string;
+    chaveApi: string;
 };
 
 
 export async function criarUnidadeAdmin(
     dados: CriarUnidadeAdminPayload,
     token: string
-): Promise<Unidade> {
+): Promise<CadastroUnidadeAdminResponse> {
 
     const resposta =
         await fetch(
@@ -684,19 +693,9 @@ export async function criarUnidadeAdmin(
                 },
 
                 body:
-                    JSON.stringify({
-                        ...dados,
-
-                        /*
-                         * O ADMIN não precisa mais informar
-                         * coordenadas manualmente.
-                         *
-                         * O backend geocodifica o endereço e
-                         * preenche latitude/longitude.
-                         */
-                        latitude: null,
-                        longitude: null,
-                    }),
+                    JSON.stringify(
+                        dados
+                    ),
             }
         );
 
@@ -740,8 +739,6 @@ export type AtualizarUnidadeAdminPayload = {
     endereco: string;
     telefone: string | null;
     capacidadeAreaMonitorada: number;
-    latitude: number | null;
-    longitude: number | null;
     tipo: "UPA" | "PRONTO_ATENDIMENTO" | "PRONTO_SOCORRO";
 };
 

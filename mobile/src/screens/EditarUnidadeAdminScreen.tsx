@@ -98,28 +98,6 @@ export default function EditarUnidadeAdminScreen({
     );
 
 
-    const [
-        latitude,
-        setLatitude,
-    ] = useState(
-        unidade.latitude !== null
-            ? String(
-                unidade.latitude
-            )
-            : ""
-    );
-
-
-    const [
-        longitude,
-        setLongitude,
-    ] = useState(
-        unidade.longitude !== null
-            ? String(
-                unidade.longitude
-            )
-            : ""
-    );
 
 
     const [
@@ -234,20 +212,6 @@ export default function EditarUnidadeAdminScreen({
     );
 
 
-    function converterNumeroDecimal(
-        valor: string
-    ) {
-
-        return Number(
-            valor
-                .trim()
-                .replace(
-                    ",",
-                    "."
-                )
-        );
-    }
-
 
     async function confirmarSalvamento() {
 
@@ -345,70 +309,6 @@ export default function EditarUnidadeAdminScreen({
         }
 
 
-        let latitudeNumero:
-            number | null =
-            null;
-
-
-        if (
-            latitude.trim() !== ""
-        ) {
-
-            latitudeNumero =
-                converterNumeroDecimal(
-                    latitude
-                );
-
-
-            if (
-                !Number.isFinite(
-                    latitudeNumero
-                ) ||
-                latitudeNumero < -90 ||
-                latitudeNumero > 90
-            ) {
-
-                Alert.alert(
-                    "Latitude inválida",
-                    "A latitude deve estar entre -90 e 90."
-                );
-
-                return;
-            }
-        }
-
-
-        let longitudeNumero:
-            number | null =
-            null;
-
-
-        if (
-            longitude.trim() !== ""
-        ) {
-
-            longitudeNumero =
-                converterNumeroDecimal(
-                    longitude
-                );
-
-
-            if (
-                !Number.isFinite(
-                    longitudeNumero
-                ) ||
-                longitudeNumero < -180 ||
-                longitudeNumero > 180
-            ) {
-
-                Alert.alert(
-                    "Longitude inválida",
-                    "A longitude deve estar entre -180 e 180."
-                );
-
-                return;
-            }
-        }
 
 
         if (
@@ -447,12 +347,6 @@ export default function EditarUnidadeAdminScreen({
 
                     capacidadeAreaMonitorada:
                     capacidadeNumero,
-
-                    latitude:
-                    latitudeNumero,
-
-                    longitude:
-                    longitudeNumero,
 
                     tipo,
                 },
@@ -857,96 +751,32 @@ export default function EditarUnidadeAdminScreen({
                     }
 
 
-                    {/* COORDENADAS */}
+                    {/* LOCALIZAÇÃO AUTOMÁTICA */}
 
-                    <Text
+                    <View
                         style={
-                            styles.sectionLabel
+                            styles.locationInfo
                         }
                     >
-                        Localização no mapa
-                    </Text>
+
+                        <Text
+                            style={
+                                styles.locationInfoTitle
+                            }
+                        >
+                            LOCALIZAÇÃO AUTOMÁTICA
+                        </Text>
 
 
-                    <Text
-                        style={
-                            styles.sectionDescription
-                        }
-                    >
-                        Latitude e longitude utilizadas para posicionar a unidade no mapa.
-                    </Text>
+                        <Text
+                            style={
+                                styles.locationInfoText
+                            }
+                        >
+                            Se o endereço for alterado, o HospEasy recalculará automaticamente a posição da unidade no mapa.
+                        </Text>
 
-
-                    <Text
-                        style={
-                            styles.label
-                        }
-                    >
-                        Latitude
-                    </Text>
-
-
-                    <TextInput
-                        style={
-                            styles.input
-                        }
-
-                        value={
-                            latitude
-                        }
-
-                        onChangeText={
-                            setLatitude
-                        }
-
-                        keyboardType={
-                            Platform.OS === "ios"
-                                ? "numbers-and-punctuation"
-                                : "numeric"
-                        }
-
-                        placeholder="-23.000000"
-
-                        placeholderTextColor={
-                            colors.textSecondary
-                        }
-                    />
-
-
-                    <Text
-                        style={
-                            styles.label
-                        }
-                    >
-                        Longitude
-                    </Text>
-
-
-                    <TextInput
-                        style={
-                            styles.input
-                        }
-
-                        value={
-                            longitude
-                        }
-
-                        onChangeText={
-                            setLongitude
-                        }
-
-                        keyboardType={
-                            Platform.OS === "ios"
-                                ? "numbers-and-punctuation"
-                                : "numeric"
-                        }
-
-                        placeholder="-46.000000"
-
-                        placeholderTextColor={
-                            colors.textSecondary
-                        }
-                    />
+                    </View>
 
                 </View>
 
@@ -1030,7 +860,7 @@ export default function EditarUnidadeAdminScreen({
                                 styles.modalDescription
                             }
                         >
-                            Deseja salvar as alterações desta unidade?
+                            Deseja salvar as alterações desta unidade? Se o endereço mudou, a localização no mapa será recalculada automaticamente.
                         </Text>
 
 
@@ -1501,32 +1331,42 @@ const styles =
         },
 
 
-        sectionLabel: {
 
-            marginTop: 27,
+        locationInfo: {
 
-            fontSize: 14,
+            marginTop: 22,
+
+            padding: 17,
+
+            borderRadius: 18,
+
+            backgroundColor:
+            colors.primaryLight,
+        },
+
+
+        locationInfoTitle: {
+
+            fontSize: 10,
 
             fontWeight:
                 "900",
 
             color:
-            colors.text,
+            colors.primaryDark,
         },
 
 
-        sectionDescription: {
+        locationInfoText: {
 
-            marginTop: 5,
-
-            marginBottom: 3,
+            marginTop: 7,
 
             fontSize: 11,
 
             lineHeight: 17,
 
             color:
-            colors.textSecondary,
+            colors.primaryDark,
         },
 
 
