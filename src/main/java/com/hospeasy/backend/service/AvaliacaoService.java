@@ -1,5 +1,6 @@
 package com.hospeasy.backend.service;
 
+import com.hospeasy.backend.dto.AtualizarAvaliacaoRequestDTO;
 import com.hospeasy.backend.dto.AvaliacaoResponseDTO;
 import com.hospeasy.backend.dto.CriarAvaliacaoRequestDTO;
 
@@ -13,6 +14,7 @@ import com.hospeasy.backend.repository.AvaliacaoRepository;
 import com.hospeasy.backend.repository.UnidadeAtendimentoRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -40,6 +42,7 @@ public class AvaliacaoService {
     }
 
 
+    @Transactional
     public AvaliacaoResponseDTO criarAvaliacao(
             Long unidadeId,
             CriarAvaliacaoRequestDTO dto,
@@ -48,9 +51,7 @@ public class AvaliacaoService {
 
         UnidadeAtendimento unidade =
                 unidadeAtendimentoRepository
-                        .findById(
-                                unidadeId
-                        )
+                        .findById(unidadeId)
                         .orElseThrow(
                                 UnidadeNaoEncontradaException::new
                         );
@@ -75,10 +76,6 @@ public class AvaliacaoService {
         );
 
 
-        /*
-         * Agora a avaliação pertence
-         * ao usuário autenticado.
-         */
         avaliacao.setUsuario(
                 usuario
         );
@@ -103,9 +100,7 @@ public class AvaliacaoService {
 
         if (
                 !unidadeAtendimentoRepository
-                        .existsById(
-                                unidadeId
-                        )
+                        .existsById(unidadeId)
         ) {
 
             throw new UnidadeNaoEncontradaException();
@@ -138,6 +133,73 @@ public class AvaliacaoService {
                         this::converterParaDTO
                 )
                 .toList();
+    }
+
+
+    @Transactional
+    public AvaliacaoResponseDTO atualizarAvaliacao(
+            Long avaliacaoId,
+            AtualizarAvaliacaoRequestDTO dto,
+            Usuario usuario
+    ) {
+
+        Avaliacao avaliacao =
+                avaliacaoRepository
+                        .findByIdAndUsuarioId(
+                                avaliacaoId,
+                                usuario.getId()
+                        )
+                        .orElseThrow(
+                                () -> new IllegalArgumentException(
+                                        "Avaliação não encontrada."
+                                )
+                        );
+
+
+        avaliacao.setNota(
+                dto.nota()
+        );
+
+
+        avaliacao.setComentario(
+                dto.comentario()
+        );
+
+
+        Avaliacao avaliacaoAtualizada =
+                avaliacaoRepository.save(
+                        avaliacao
+                );
+
+
+        return converterParaDTO(
+                avaliacaoAtualizada
+        );
+    }
+
+
+    @Transactional
+    public void excluirAvaliacao(
+            Long avaliacaoId,
+            Usuario usuario
+    ) {
+
+        Avaliacao avaliacao =
+                avaliacaoRepository
+                        .findByIdAndUsuarioId(
+                                avaliacaoId,
+                                usuario.getId()
+                        )
+                        .orElseThrow(
+                                () -> new IllegalArgumentException(
+                                        "Avaliação não encontrada."
+                                )
+                        );
+
+
+        avaliacaoRepository.delete(
+                avaliacao
+        );
     }
 
 

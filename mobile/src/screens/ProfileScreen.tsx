@@ -1,10 +1,21 @@
 import {
+    ActivityIndicator,
+    Alert,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+
+import {
+    useCallback,
+    useState,
+} from "react";
+
+import {
+    useFocusEffect,
+} from "@react-navigation/native";
 
 import {
     NativeStackScreenProps,
@@ -21,6 +32,12 @@ import {
 import {
     useFavorites,
 } from "../context/FavoritesContext";
+
+import {
+    Avaliacao,
+    buscarMinhasAvaliacoes,
+    excluirAvaliacao,
+} from "../service/api";
 
 import {
     colors,
@@ -48,6 +65,113 @@ export default function ProfileScreen({
         favoritos,
         alternarFavorito,
     } = useFavorites();
+
+
+    const [
+        avaliacoes,
+        setAvaliacoes,
+    ] = useState<Avaliacao[]>([]);
+
+
+    const [
+        carregandoAvaliacoes,
+        setCarregandoAvaliacoes,
+    ] = useState(false);
+
+
+    useFocusEffect(
+        useCallback(() => {
+            let ativo = true;
+
+            async function carregarAvaliacoes() {
+                if (!usuario || usuario.tipo !== "USUARIO") {
+                    return;
+                }
+
+                try {
+                    setCarregandoAvaliacoes(true);
+
+                    const resposta =
+                        await buscarMinhasAvaliacoes(
+                            usuario.token
+                        );
+
+                    if (ativo) {
+                        setAvaliacoes(resposta);
+                    }
+                } catch (erro) {
+                    console.error(
+                        "Erro ao carregar avaliações:",
+                        erro
+                    );
+                } finally {
+                    if (ativo) {
+                        setCarregandoAvaliacoes(false);
+                    }
+                }
+            }
+
+            carregarAvaliacoes();
+
+            return () => {
+                ativo = false;
+            };
+        }, [
+            usuario?.id,
+            usuario?.tipo,
+            usuario?.token,
+        ])
+    );
+
+
+    async function removerAvaliacao(
+        avaliacao: Avaliacao
+    ) {
+        if (!usuario) {
+            return;
+        }
+
+        Alert.alert(
+            "Excluir avaliação",
+            `Deseja excluir sua avaliação de ${avaliacao.unidadeNome}?`,
+            [
+                {
+                    text: "Cancelar",
+                    style: "cancel",
+                },
+                {
+                    text: "Excluir",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await excluirAvaliacao(
+                                avaliacao.id,
+                                usuario.token
+                            );
+
+                            setAvaliacoes(
+                                (atuais) =>
+                                    atuais.filter(
+                                        (item) =>
+                                            item.id !== avaliacao.id
+                                    )
+                            );
+                        } catch (erro) {
+                            console.error(
+                                "Erro ao excluir avaliação:",
+                                erro
+                            );
+
+                            Alert.alert(
+                                "Erro",
+                                "Não foi possível excluir sua avaliação."
+                            );
+                        }
+                    },
+                },
+            ]
+        );
+    }
 
 
     async function sair() {
@@ -731,32 +855,252 @@ export default function ProfileScreen({
                                 </View>
 
 
-                                <Text
+                                <View
                                     style={
-                                        styles.reviewStar
+                                        styles.counterBadge
                                     }
                                 >
-                                    ★
-                                </Text>
+
+                                    <Text
+                                        style={
+                                            styles.counterText
+                                        }
+                                    >
+                                        {
+                                            avaliacoes.length
+                                        }
+                                    </Text>
+
+                                </View>
 
                             </View>
 
 
-                            <View
-                                style={
-                                    styles.reviewPlaceholder
-                                }
-                            >
+                            {
+                                carregandoAvaliacoes
+                                    ? (
 
-                                <Text
-                                    style={
-                                        styles.reviewPlaceholderText
-                                    }
-                                >
-                                    Suas avaliações aparecerão aqui.
-                                </Text>
+                                        <View
+                                            style={
+                                                styles.reviewLoading
+                                            }
+                                        >
 
-                            </View>
+                                            <ActivityIndicator
+                                                size="small"
+                                                color={
+                                                    colors.primary
+                                                }
+                                            />
+
+                                            <Text
+                                                style={
+                                                    styles.reviewLoadingText
+                                                }
+                                            >
+                                                Carregando avaliações...
+                                            </Text>
+
+                                        </View>
+
+                                    )
+                                    : avaliacoes.length === 0
+                                        ? (
+
+                                            <View
+                                                style={
+                                                    styles.reviewPlaceholder
+                                                }
+                                            >
+
+                                                <Text
+                                                    style={
+                                                        styles.reviewEmptyStar
+                                                    }
+                                                >
+                                                    ☆
+                                                </Text>
+
+                                                <Text
+                                                    style={
+                                                        styles.emptyTitle
+                                                    }
+                                                >
+                                                    Nenhuma avaliação ainda
+                                                </Text>
+
+                                                <Text
+                                                    style={
+                                                        styles.emptyText
+                                                    }
+                                                >
+                                                    Avalie uma unidade e ela aparecerá aqui.
+                                                </Text>
+
+                                            </View>
+
+                                        )
+                                        : (
+
+                                            <View
+                                                style={
+                                                    styles.reviewsContainer
+                                                }
+                                            >
+
+                                                {
+                                                    avaliacoes.map(
+                                                        (avaliacao) => (
+
+                                                            <View
+                                                                key={
+                                                                    avaliacao.id
+                                                                }
+                                                                style={
+                                                                    styles.reviewCard
+                                                                }
+                                                            >
+
+                                                                <View
+                                                                    style={
+                                                                        styles.reviewTop
+                                                                    }
+                                                                >
+
+                                                                    <Text
+                                                                        style={
+                                                                            styles.reviewUnitName
+                                                                        }
+                                                                        numberOfLines={1}
+                                                                    >
+                                                                        {
+                                                                            avaliacao.unidadeNome
+                                                                        }
+                                                                    </Text>
+
+                                                                    <View
+                                                                        style={
+                                                                            styles.reviewScoreBadge
+                                                                        }
+                                                                    >
+                                                                        <Text
+                                                                            style={
+                                                                                styles.reviewScore
+                                                                            }
+                                                                        >
+                                                                            ★ {avaliacao.nota}
+                                                                        </Text>
+                                                                    </View>
+
+                                                                </View>
+
+
+                                                                <Text
+                                                                    style={
+                                                                        styles.reviewStars
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        "★".repeat(avaliacao.nota)
+                                                                    }
+                                                                    <Text
+                                                                        style={
+                                                                            styles.reviewStarsInactive
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            "★".repeat(5 - avaliacao.nota)
+                                                                        }
+                                                                    </Text>
+                                                                </Text>
+
+
+                                                                {
+                                                                    avaliacao.comentario &&
+                                                                    avaliacao.comentario.trim().length > 0 && (
+                                                                        <Text
+                                                                            style={
+                                                                                styles.reviewComment
+                                                                            }
+                                                                        >
+                                                                            “{avaliacao.comentario}”
+                                                                        </Text>
+                                                                    )
+                                                                }
+
+
+                                                                <Text
+                                                                    style={
+                                                                        styles.reviewDate
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        new Date(
+                                                                            avaliacao.criadoEm
+                                                                        ).toLocaleDateString(
+                                                                            "pt-BR"
+                                                                        )
+                                                                    }
+                                                                </Text>
+
+
+                                                                <View
+                                                                    style={
+                                                                        styles.reviewActions
+                                                                    }
+                                                                >
+
+                                                                    <Pressable
+                                                                        style={
+                                                                            styles.reviewEditButton
+                                                                        }
+                                                                        onPress={() => {
+                                                                            Alert.alert(
+                                                                                "Editar avaliação",
+                                                                                "Agora vamos criar a edição."
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Text
+                                                                            style={
+                                                                                styles.reviewEditText
+                                                                            }
+                                                                        >
+                                                                            EDITAR
+                                                                        </Text>
+                                                                    </Pressable>
+
+
+                                                                    <Pressable
+                                                                        style={
+                                                                            styles.reviewDeleteButton
+                                                                        }
+                                                                        onPress={() =>
+                                                                            removerAvaliacao(
+                                                                                avaliacao
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Text
+                                                                            style={
+                                                                                styles.reviewDeleteText
+                                                                            }
+                                                                        >
+                                                                            EXCLUIR
+                                                                        </Text>
+                                                                    </Pressable>
+
+                                                                </View>
+
+                                                            </View>
+                                                        )
+                                                    )
+                                                }
+
+                                            </View>
+
+                                        )
+                            }
 
                         </View>
 
@@ -1238,20 +1582,11 @@ const styles =
         },
 
 
-        reviewStar: {
-
-            fontSize: 22,
-
-            color:
-            colors.primary,
-        },
-
-
         reviewPlaceholder: {
 
-            paddingVertical: 22,
+            paddingVertical: 28,
 
-            paddingHorizontal: 18,
+            paddingHorizontal: 20,
 
             borderRadius: 20,
 
@@ -1263,12 +1598,244 @@ const styles =
         },
 
 
-        reviewPlaceholderText: {
+        reviewEmptyStar: {
+
+            fontSize: 36,
+
+            color:
+            colors.primary,
+        },
+
+
+        reviewLoading: {
+
+            minHeight: 100,
+
+            paddingHorizontal: 20,
+
+            borderRadius: 20,
+
+            backgroundColor:
+            colors.surface,
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        reviewLoadingText: {
+
+            marginLeft: 10,
 
             fontSize: 12,
 
             color:
             colors.textSecondary,
+        },
+
+
+        reviewsContainer: {
+
+            borderRadius: 20,
+
+            overflow:
+                "hidden",
+
+            backgroundColor:
+            colors.surface,
+        },
+
+
+        reviewCard: {
+
+            padding: 16,
+
+            borderBottomWidth: 1,
+
+            borderBottomColor:
+            colors.border,
+        },
+
+
+        reviewTop: {
+
+            flexDirection:
+                "row",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "space-between",
+        },
+
+
+        reviewUnitName: {
+
+            flex: 1,
+
+            marginRight: 12,
+
+            fontSize: 14,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        reviewScoreBadge: {
+
+            paddingHorizontal: 9,
+
+            paddingVertical: 5,
+
+            borderRadius: 12,
+
+            backgroundColor:
+            colors.primaryLight,
+        },
+
+
+        reviewScore: {
+
+            fontSize: 11,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        reviewStars: {
+
+            marginTop: 9,
+
+            fontSize: 16,
+
+            letterSpacing: 2,
+
+            color:
+            colors.primary,
+        },
+
+
+        reviewStarsInactive: {
+
+            color:
+            colors.disabled,
+        },
+
+
+        reviewComment: {
+
+            marginTop: 9,
+
+            fontSize: 12,
+
+            lineHeight: 18,
+
+            color:
+            colors.text,
+        },
+
+
+        reviewDate: {
+
+            marginTop: 10,
+
+            fontSize: 10,
+
+            fontWeight:
+                "700",
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        reviewActions: {
+
+            marginTop: 14,
+
+            flexDirection:
+                "row",
+
+            gap: 10,
+        },
+
+
+        reviewEditButton: {
+
+            flex: 1,
+
+            height: 38,
+
+            borderRadius: 12,
+
+            backgroundColor:
+            colors.primaryLight,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        reviewEditText: {
+
+            fontSize: 11,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.primaryDark,
+        },
+
+
+        reviewDeleteButton: {
+
+            flex: 1,
+
+            height: 38,
+
+            borderWidth: 1,
+
+            borderColor:
+            colors.danger,
+
+            borderRadius: 12,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        reviewDeleteText: {
+
+            fontSize: 11,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.danger,
         },
 
 

@@ -3,6 +3,7 @@ import {
 } from "../types/Unidade";
 
 
+
 const URL_BACKEND =
     "http://192.168.1.103:8080";
 
@@ -908,4 +909,77 @@ export async function buscarMinhasAvaliacoes(
 
 
     return resposta.json();
+}
+
+export type AtualizarAvaliacaoPayload = {
+    nota: number;
+    comentario: string;
+};
+
+
+export async function atualizarAvaliacao(
+    avaliacaoId: number,
+    dados: AtualizarAvaliacaoPayload,
+    token: string
+): Promise<Avaliacao> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/me/avaliacoes/${avaliacaoId}`,
+            {
+                method: "PUT",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+
+                body:
+                    JSON.stringify(
+                        dados
+                    ),
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao atualizar avaliação: ${resposta.status}`
+        );
+    }
+
+
+    return resposta.json();
+}
+
+
+export async function excluirAvaliacao(
+    avaliacaoId: number,
+    token: string
+): Promise<void> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/usuarios/me/avaliacoes/${avaliacaoId}`,
+            {
+                method: "DELETE",
+
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        throw new Error(
+            `Erro ao excluir avaliação: ${resposta.status}`
+        );
+    }
 }

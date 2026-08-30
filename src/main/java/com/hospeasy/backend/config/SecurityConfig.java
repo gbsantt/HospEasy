@@ -104,8 +104,8 @@ public class SecurityConfig {
                          * AVALIAÇÕES DO USUÁRIO LOGADO
                          */
                         .requestMatchers(
-                                HttpMethod.GET,
-                                "/usuarios/me/avaliacoes"
+                                "/usuarios/me/avaliacoes",
+                                "/usuarios/me/avaliacoes/**"
                         ).authenticated()
 
                         /*

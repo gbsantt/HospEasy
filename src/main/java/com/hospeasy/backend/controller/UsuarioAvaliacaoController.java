@@ -1,10 +1,15 @@
 package com.hospeasy.backend.controller;
 
+import com.hospeasy.backend.dto.AtualizarAvaliacaoRequestDTO;
 import com.hospeasy.backend.dto.AvaliacaoResponseDTO;
 
 import com.hospeasy.backend.entity.Usuario;
 
 import com.hospeasy.backend.service.AvaliacaoService;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
@@ -44,5 +49,60 @@ public class UsuarioAvaliacaoController {
                 .listarPorUsuario(
                         usuario
                 );
+    }
+
+
+    @PutMapping(
+            "/{avaliacaoId}"
+    )
+    public ResponseEntity<AvaliacaoResponseDTO>
+    atualizarAvaliacao(
+
+            @PathVariable
+            Long avaliacaoId,
+
+            @Valid
+            @RequestBody
+            AtualizarAvaliacaoRequestDTO dto,
+
+            @AuthenticationPrincipal
+            Usuario usuario
+    ) {
+
+        return ResponseEntity.ok(
+
+                avaliacaoService
+                        .atualizarAvaliacao(
+                                avaliacaoId,
+                                dto,
+                                usuario
+                        )
+        );
+    }
+
+
+    @DeleteMapping(
+            "/{avaliacaoId}"
+    )
+    public ResponseEntity<Void>
+    excluirAvaliacao(
+
+            @PathVariable
+            Long avaliacaoId,
+
+            @AuthenticationPrincipal
+            Usuario usuario
+    ) {
+
+        avaliacaoService
+                .excluirAvaliacao(
+                        avaliacaoId,
+                        usuario
+                );
+
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }
