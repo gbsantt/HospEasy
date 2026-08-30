@@ -23,11 +23,15 @@ public record UnidadeAtendimentoRequestDTO(
         @Min(value = 1, message = "A capacidade da área monitorada deve ser maior que zero")
         Integer capacidadeAreaMonitorada,
 
+        /*
+         * Mantidos temporariamente por compatibilidade com clientes antigos.
+         * No cadastro novo, o backend calcula as coordenadas pelo endereço.
+         */
         Double latitude,
 
         Double longitude,
 
         @NotNull(message = "O tipo da unidade é obrigatório")
-                TipoUnidade tipo
+        TipoUnidade tipo
 ) {
 }

@@ -41,6 +41,10 @@ public class UnidadeAtendimentoService {
             dispositivoCameraService;
 
 
+    private final GeocodificacaoService
+            geocodificacaoService;
+
+
     public UnidadeAtendimentoService(
 
             UnidadeAtendimentoRepository
@@ -50,7 +54,10 @@ public class UnidadeAtendimentoService {
                     historicoOcupacaoRepository,
 
             DispositivoCameraService
-                    dispositivoCameraService
+                    dispositivoCameraService,
+
+            GeocodificacaoService
+                    geocodificacaoService
 
     ) {
 
@@ -62,6 +69,9 @@ public class UnidadeAtendimentoService {
 
         this.dispositivoCameraService =
                 dispositivoCameraService;
+
+        this.geocodificacaoService =
+                geocodificacaoService;
     }
 
 
@@ -119,13 +129,23 @@ public class UnidadeAtendimentoService {
         );
 
 
+        /*
+         * O ADMIN informa apenas o endereço.
+         * As coordenadas são descobertas automaticamente.
+         */
+        GeocodificacaoService.Coordenadas coordenadas =
+                geocodificacaoService.geocodificar(
+                        dto.endereco()
+                );
+
+
         unidadeAtendimento.setLatitude(
-                dto.latitude()
+                coordenadas.latitude()
         );
 
 
         unidadeAtendimento.setLongitude(
-                dto.longitude()
+                coordenadas.longitude()
         );
 
 
