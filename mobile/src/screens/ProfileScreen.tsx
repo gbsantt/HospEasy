@@ -1054,12 +1054,14 @@ export default function ProfileScreen({
                                                                         style={
                                                                             styles.reviewEditButton
                                                                         }
-                                                                        onPress={() => {
-                                                                            Alert.alert(
-                                                                                "Editar avaliação",
-                                                                                "Agora vamos criar a edição."
-                                                                            );
-                                                                        }}
+                                                                        onPress={() =>
+                                                                            navigation.navigate(
+                                                                                "Review",
+                                                                                {
+                                                                                    avaliacao,
+                                                                                }
+                                                                            )
+                                                                        }
                                                                     >
                                                                         <Text
                                                                             style={

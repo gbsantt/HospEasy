@@ -61,8 +61,10 @@ import {
 } from "../types/Unidade";
 
 import {
+    Avaliacao,
     UsuarioAdmin,
 } from "../service/api";
+
 
 
 export type RootStackParamList = {
@@ -77,7 +79,8 @@ export type RootStackParamList = {
 
 
     Review: {
-        unidade: Unidade;
+        unidade?: Unidade;
+        avaliacao?: Avaliacao;
     };
 
 

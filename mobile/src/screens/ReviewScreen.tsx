@@ -2,11 +2,6 @@ import {
     useState,
 } from "react";
 
-
-import {
-    useAuth,
-} from "../context/AuthContext";
-
 import {
     Alert,
     Pressable,
@@ -26,8 +21,13 @@ import {
 } from "../navigation/AppNavigator";
 
 import {
+    atualizarAvaliacao,
     criarAvaliacao,
 } from "../service/api";
+
+import {
+    useAuth,
+} from "../context/AuthContext";
 
 import {
     colors,
@@ -46,23 +46,50 @@ export default function ReviewScreen({
                                          navigation,
                                      }: Props) {
 
-    const { unidade } =
-        route.params;
+    const {
+        unidade,
+        avaliacao,
+    } = route.params;
+
 
     const {
         usuario,
     } = useAuth();
 
+
+    const modoEdicao =
+        Boolean(
+            avaliacao
+        );
+
+
+    const unidadeId =
+        unidade?.unidadeId ??
+        avaliacao?.unidadeId;
+
+
+    const unidadeNome =
+        unidade?.nome ??
+        avaliacao?.unidadeNome ??
+        "Unidade";
+
+
     const [
         nota,
         setNota,
-    ] = useState(0);
+    ] = useState(
+        avaliacao?.nota ??
+        0
+    );
 
 
     const [
         comentario,
         setComentario,
-    ] = useState("");
+    ] = useState(
+        avaliacao?.comentario ??
+        ""
+    );
 
 
     const [
@@ -81,16 +108,10 @@ export default function ReviewScreen({
 
     async function enviarAvaliacao() {
 
-        if (!usuario) {
+        if (
+            nota === 0
+        ) {
 
-            setErro(
-                "Entre na sua conta para enviar uma avaliação."
-            );
-
-            return;
-        }
-
-        if (nota === 0) {
             setErro(
                 "Selecione uma nota antes de enviar."
             );
@@ -99,27 +120,81 @@ export default function ReviewScreen({
         }
 
 
+        if (
+            !usuario
+        ) {
+
+            setErro(
+                "Entre na sua conta para enviar uma avaliação."
+            );
+
+            return;
+        }
+
+
+        if (
+            !unidadeId
+        ) {
+
+            setErro(
+                "Não foi possível identificar a unidade."
+            );
+
+            return;
+        }
+
+
         try {
-            setEnviando(true);
-            setErro(null);
 
+            setEnviando(
+                true
+            );
 
-            await criarAvaliacao(
-                unidade.unidadeId,
-                {
-                    nota,
-
-                    comentario:
-                        comentario.trim(),
-                },
-
-                usuario.token
+            setErro(
+                null
             );
 
 
+            if (
+                modoEdicao &&
+                avaliacao
+            ) {
+
+                await atualizarAvaliacao(
+                    avaliacao.id,
+                    {
+                        nota,
+
+                        comentario:
+                            comentario.trim(),
+                    },
+                    usuario.token
+                );
+
+            } else {
+
+                await criarAvaliacao(
+                    unidadeId,
+                    {
+                        nota,
+
+                        comentario:
+                            comentario.trim(),
+                    },
+                    usuario.token
+                );
+            }
+
+
             Alert.alert(
-                "Avaliação enviada",
-                "Obrigado pela sua avaliação."
+
+                modoEdicao
+                    ? "Avaliação atualizada"
+                    : "Avaliação enviada",
+
+                modoEdicao
+                    ? "Sua avaliação foi atualizada."
+                    : "Obrigado pela sua avaliação."
             );
 
 
@@ -128,26 +203,34 @@ export default function ReviewScreen({
         } catch (erro) {
 
             console.error(
-                "Erro ao enviar avaliação:",
+                modoEdicao
+                    ? "Erro ao atualizar avaliação:"
+                    : "Erro ao enviar avaliação:",
                 erro
             );
 
 
             setErro(
-                "Não foi possível enviar sua avaliação."
+                modoEdicao
+                    ? "Não foi possível atualizar sua avaliação."
+                    : "Não foi possível enviar sua avaliação."
             );
 
         } finally {
 
-            setEnviando(false);
-
+            setEnviando(
+                false
+            );
         }
     }
 
 
     return (
+
         <View
-            style={styles.container}
+            style={
+                styles.container
+            }
         >
 
             <ScrollView
@@ -158,6 +241,8 @@ export default function ReviewScreen({
                 keyboardShouldPersistTaps="handled"
             >
 
+                {/* VOLTAR */}
+
                 <Pressable
                     style={
                         styles.backButton
@@ -167,6 +252,7 @@ export default function ReviewScreen({
                         navigation.goBack()
                     }
                 >
+
                     <Text
                         style={
                             styles.backText
@@ -174,26 +260,39 @@ export default function ReviewScreen({
                     >
                         ‹
                     </Text>
+
                 </Pressable>
 
+
+                {/* TÍTULO */}
 
                 <Text
                     style={
                         styles.title
                     }
                 >
-                    Avaliar
+                    {
+                        modoEdicao
+                            ? "Editar avaliação"
+                            : "Avaliar"
+                    }
                 </Text>
 
+
+                {/* NOME DA UNIDADE */}
 
                 <Text
                     style={
                         styles.unitName
                     }
                 >
-                    {unidade.nome}
+                    {
+                        unidadeNome
+                    }
                 </Text>
 
+
+                {/* NOTA */}
 
                 <View
                     style={
@@ -215,8 +314,11 @@ export default function ReviewScreen({
                             styles.description
                         }
                     >
-                        Toque nas estrelas para dar
-                        uma nota para a unidade.
+                        {
+                            modoEdicao
+                                ? "Altere as estrelas caso queira mudar sua nota."
+                                : "Toque nas estrelas para dar uma nota para a unidade."
+                        }
                     </Text>
 
 
@@ -225,60 +327,78 @@ export default function ReviewScreen({
                             styles.starsContainer
                         }
                     >
-                        {[1, 2, 3, 4, 5].map(
-                            (estrela) => (
 
-                                <Pressable
-                                    key={
-                                        estrela
-                                    }
+                        {
+                            [
+                                1,
+                                2,
+                                3,
+                                4,
+                                5,
+                            ].map(
+                                (
+                                    estrela
+                                ) => (
 
-                                    onPress={() => {
-                                        setNota(
+                                    <Pressable
+                                        key={
                                             estrela
-                                        );
+                                        }
 
-                                        setErro(
-                                            null
-                                        );
-                                    }}
+                                        onPress={() => {
 
-                                    style={
-                                        styles.starButton
-                                    }
-                                >
+                                            setNota(
+                                                estrela
+                                            );
 
-                                    <Text
-                                        style={[
-                                            styles.star,
+                                            setErro(
+                                                null
+                                            );
+                                        }}
 
-                                            estrela <= nota &&
-                                            styles.starActive,
-                                        ]}
+                                        style={
+                                            styles.starButton
+                                        }
                                     >
-                                        ★
-                                    </Text>
 
-                                </Pressable>
+                                        <Text
+                                            style={[
+                                                styles.star,
+
+                                                estrela <= nota &&
+                                                styles.starActive,
+                                            ]}
+                                        >
+                                            ★
+                                        </Text>
+
+                                    </Pressable>
+                                )
                             )
-                        )}
+                        }
+
                     </View>
 
 
-                    {nota > 0 && (
+                    {
+                        nota > 0 && (
 
-                        <Text
-                            style={
-                                styles.ratingText
-                            }
-                        >
-                            {nota} de 5
-                        </Text>
-
-                    )}
+                            <Text
+                                style={
+                                    styles.ratingText
+                                }
+                            >
+                                {
+                                    nota
+                                } de 5
+                            </Text>
+                        )
+                    }
 
                 </View>
 
+
+                {/* COMENTÁRIO */}
 
                 <View
                     style={
@@ -300,7 +420,11 @@ export default function ReviewScreen({
                             styles.description
                         }
                     >
-                        Conte um pouco sobre sua experiência.
+                        {
+                            modoEdicao
+                                ? "Altere seu comentário se desejar."
+                                : "Conte um pouco sobre sua experiência."
+                        }
                     </Text>
 
 
@@ -321,7 +445,9 @@ export default function ReviewScreen({
 
                         multiline
 
-                        maxLength={500}
+                        maxLength={
+                            500
+                        }
 
                         textAlignVertical="top"
 
@@ -345,26 +471,33 @@ export default function ReviewScreen({
                 </View>
 
 
-                {erro && (
+                {/* ERRO */}
 
-                    <View
-                        style={
-                            styles.errorBox
-                        }
-                    >
+                {
+                    erro && (
 
-                        <Text
+                        <View
                             style={
-                                styles.errorText
+                                styles.errorBox
                             }
                         >
-                            {erro}
-                        </Text>
 
-                    </View>
+                            <Text
+                                style={
+                                    styles.errorText
+                                }
+                            >
+                                {
+                                    erro
+                                }
+                            </Text>
 
-                )}
+                        </View>
+                    )
+                }
 
+
+                {/* ENVIAR / SALVAR */}
 
                 <Pressable
                     disabled={
@@ -394,8 +527,18 @@ export default function ReviewScreen({
                     >
                         {
                             enviando
-                                ? "ENVIANDO..."
-                                : "ENVIAR AVALIAÇÃO"
+
+                                ? (
+                                    modoEdicao
+                                        ? "SALVANDO..."
+                                        : "ENVIANDO..."
+                                )
+
+                                : (
+                                    modoEdicao
+                                        ? "SALVAR ALTERAÇÕES"
+                                        : "ENVIAR AVALIAÇÃO"
+                                )
                         }
                     </Text>
 
@@ -412,6 +555,7 @@ const styles =
     StyleSheet.create({
 
         container: {
+
             flex: 1,
 
             backgroundColor:
@@ -420,6 +564,7 @@ const styles =
 
 
         content: {
+
             padding: 20,
 
             paddingTop: 28,
@@ -429,7 +574,9 @@ const styles =
 
 
         backButton: {
+
             width: 44,
+
             height: 44,
 
             borderRadius: 22,
@@ -448,6 +595,7 @@ const styles =
 
 
         backText: {
+
             fontSize: 34,
 
             lineHeight: 36,
@@ -458,9 +606,11 @@ const styles =
 
 
         title: {
+
             fontSize: 30,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             color:
             colors.text,
@@ -468,6 +618,7 @@ const styles =
 
 
         unitName: {
+
             marginTop: 5,
 
             fontSize: 15,
@@ -478,6 +629,7 @@ const styles =
 
 
         section: {
+
             marginTop: 22,
 
             padding: 20,
@@ -490,9 +642,11 @@ const styles =
 
 
         sectionTitle: {
+
             fontSize: 18,
 
-            fontWeight: "800",
+            fontWeight:
+                "800",
 
             color:
             colors.text,
@@ -500,6 +654,7 @@ const styles =
 
 
         description: {
+
             marginTop: 6,
 
             fontSize: 13,
@@ -512,7 +667,9 @@ const styles =
 
 
         starsContainer: {
-            flexDirection: "row",
+
+            flexDirection:
+                "row",
 
             justifyContent:
                 "center",
@@ -522,11 +679,13 @@ const styles =
 
 
         starButton: {
+
             paddingHorizontal: 5,
         },
 
 
         star: {
+
             fontSize: 42,
 
             color:
@@ -535,12 +694,14 @@ const styles =
 
 
         starActive: {
+
             color:
             colors.primary,
         },
 
 
         ratingText: {
+
             marginTop: 12,
 
             textAlign:
@@ -548,7 +709,8 @@ const styles =
 
             fontSize: 13,
 
-            fontWeight: "700",
+            fontWeight:
+                "700",
 
             color:
             colors.primaryDark,
@@ -556,6 +718,7 @@ const styles =
 
 
         input: {
+
             minHeight: 140,
 
             marginTop: 18,
@@ -575,6 +738,7 @@ const styles =
 
 
         counter: {
+
             marginTop: 7,
 
             textAlign:
@@ -588,6 +752,7 @@ const styles =
 
 
         errorBox: {
+
             marginTop: 16,
 
             padding: 13,
@@ -600,12 +765,14 @@ const styles =
 
 
         errorText: {
+
             textAlign:
                 "center",
 
             fontSize: 13,
 
-            fontWeight: "700",
+            fontWeight:
+                "700",
 
             color:
             colors.danger,
@@ -613,6 +780,7 @@ const styles =
 
 
         submitButton: {
+
             height: 56,
 
             marginTop: 24,
@@ -631,18 +799,22 @@ const styles =
 
 
         submitButtonDisabled: {
+
             backgroundColor:
             colors.disabled,
         },
 
 
         submitText: {
+
             fontSize: 14,
 
-            fontWeight: "900",
+            fontWeight:
+                "900",
 
             letterSpacing: 0.8,
 
-            color: "#FFFFFF",
+            color:
+                "#FFFFFF",
         },
     });
