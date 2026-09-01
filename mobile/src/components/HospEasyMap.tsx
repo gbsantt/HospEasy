@@ -5,12 +5,20 @@ import {
     View,
 } from "react-native";
 
+import {
+    Coordenada,
+} from "../utils/location";
+
 import { Unidade } from "../types/Unidade";
 import { colors } from "../theme/colors";
 
 
 type Props = {
+
     unidades: Unidade[];
+
+    localizacaoUsuario?:
+        Coordenada | null;
 
     onSelecionarUnidade: (
         unidade: Unidade

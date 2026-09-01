@@ -1,4 +1,5 @@
 import {
+    useCallback,
     useEffect,
     useState,
 } from "react";
@@ -11,6 +12,7 @@ import {
 
 
 export function useUserLocation() {
+
     const [
         localizacao,
         setLocalizacao,
@@ -19,11 +21,13 @@ export function useUserLocation() {
             null
         );
 
+
     const [
         carregando,
         setCarregando,
     ] =
         useState(true);
+
 
     const [
         erro,
@@ -34,81 +38,149 @@ export function useUserLocation() {
         );
 
 
-    useEffect(() => {
-        carregarLocalizacao();
-    }, []);
+    const carregarLocalizacao =
+        useCallback(
+            async () => {
+
+                try {
+
+                    setCarregando(
+                        true
+                    );
+
+                    setErro(
+                        null
+                    );
 
 
-    async function carregarLocalizacao() {
-        try {
-            setCarregando(
-                true
-            );
-
-            setErro(
-                null
-            );
+                    const servicosAtivos =
+                        await Location
+                            .hasServicesEnabledAsync();
 
 
-            const permissao =
-                await Location
-                    .requestForegroundPermissionsAsync();
+                    if (
+                        !servicosAtivos
+                    ) {
+
+                        setErro(
+                            "Ative a localização do dispositivo."
+                        );
+
+                        return;
+                    }
 
 
-            if (
-                permissao.status !==
-                "granted"
-            ) {
-                setErro(
-                    "Permissão de localização negada."
-                );
-
-                return;
-            }
+                    const permissaoAtual =
+                        await Location
+                            .getForegroundPermissionsAsync();
 
 
-            const posicao =
-                await Location
-                    .getCurrentPositionAsync({
-                        accuracy:
-                        Location.Accuracy.Balanced,
+                    let status =
+                        permissaoAtual.status;
+
+
+                    if (
+                        status !==
+                        Location.PermissionStatus.GRANTED
+                    ) {
+
+                        const novaPermissao =
+                            await Location
+                                .requestForegroundPermissionsAsync();
+
+
+                        status =
+                            novaPermissao.status;
+                    }
+
+
+                    if (
+                        status !==
+                        Location.PermissionStatus.GRANTED
+                    ) {
+
+                        setErro(
+                            "Permissão de localização negada."
+                        );
+
+                        return;
+                    }
+
+
+                    let posicao =
+                        await Location
+                            .getLastKnownPositionAsync();
+
+
+                    if (
+                        !posicao
+                    ) {
+
+                        posicao =
+                            await Location
+                                .getCurrentPositionAsync({
+                                    accuracy:
+                                    Location.Accuracy.Balanced,
+                                });
+                    }
+
+
+                    setLocalizacao({
+                        latitude:
+                        posicao.coords.latitude,
+
+                        longitude:
+                        posicao.coords.longitude,
                     });
 
 
-            setLocalizacao({
-                latitude:
-                posicao.coords.latitude,
+                    setErro(
+                        null
+                    );
 
-                longitude:
-                posicao.coords.longitude,
-            });
+                } catch (error) {
 
-        } catch (erro) {
+                    console.warn(
+                        "Localização indisponível no momento."
+                    );
 
-            console.error(
-                "Erro ao obter localização:",
-                erro
-            );
 
-            setErro(
-                "Não foi possível obter sua localização."
-            );
+                    setErro(
+                        "Não foi possível obter sua localização."
+                    );
 
-        } finally {
+                } finally {
 
-            setCarregando(
-                false
-            );
+                    setCarregando(
+                        false
+                    );
 
-        }
-    }
+                }
+
+            },
+            []
+        );
+
+
+    useEffect(() => {
+
+        carregarLocalizacao();
+
+    }, [
+        carregarLocalizacao,
+    ]);
 
 
     return {
+
         localizacao,
+
         carregando,
+
         erro,
+
         recarregar:
         carregarLocalizacao,
+
     };
 }

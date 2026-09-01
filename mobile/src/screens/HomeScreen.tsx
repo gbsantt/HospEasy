@@ -9,6 +9,8 @@ import {
     View,
 } from "react-native";
 
+
+
 import {
     useNavigation,
 } from "@react-navigation/native";
@@ -203,7 +205,13 @@ export default function HomeScreen() {
         >
 
             <HospEasyMap
-                unidades={unidades}
+                unidades={
+                    unidades
+                }
+
+                localizacaoUsuario={
+                    localizacao
+                }
 
                 onSelecionarUnidade={
                     selecionarUnidade
