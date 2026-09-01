@@ -1,6 +1,6 @@
 import {
     ActivityIndicator,
-    Alert,
+    Modal,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -66,6 +66,10 @@ export default function ProfileScreen({
         alternarFavorito,
     } = useFavorites();
 
+    const [
+        modalLogoutVisivel,
+        setModalLogoutVisivel,
+    ] = useState(false);
 
     const [
         avaliacoes,
@@ -76,6 +80,18 @@ export default function ProfileScreen({
     const [
         carregandoAvaliacoes,
         setCarregandoAvaliacoes,
+    ] = useState(false);
+
+
+    const [
+        avaliacaoParaExcluir,
+        setAvaliacaoParaExcluir,
+    ] = useState<Avaliacao | null>(null);
+
+
+    const [
+        excluindoAvaliacao,
+        setExcluindoAvaliacao,
     ] = useState(false);
 
 
@@ -124,53 +140,70 @@ export default function ProfileScreen({
     );
 
 
-    async function removerAvaliacao(
+    function abrirConfirmacaoExclusao(
         avaliacao: Avaliacao
     ) {
-        if (!usuario) {
+        setAvaliacaoParaExcluir(
+            avaliacao
+        );
+    }
+
+
+    function fecharConfirmacaoExclusao() {
+        if (excluindoAvaliacao) {
             return;
         }
 
-        Alert.alert(
-            "Excluir avaliação",
-            `Deseja excluir sua avaliação de ${avaliacao.unidadeNome}?`,
-            [
-                {
-                    text: "Cancelar",
-                    style: "cancel",
-                },
-                {
-                    text: "Excluir",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await excluirAvaliacao(
-                                avaliacao.id,
-                                usuario.token
-                            );
-
-                            setAvaliacoes(
-                                (atuais) =>
-                                    atuais.filter(
-                                        (item) =>
-                                            item.id !== avaliacao.id
-                                    )
-                            );
-                        } catch (erro) {
-                            console.error(
-                                "Erro ao excluir avaliação:",
-                                erro
-                            );
-
-                            Alert.alert(
-                                "Erro",
-                                "Não foi possível excluir sua avaliação."
-                            );
-                        }
-                    },
-                },
-            ]
+        setAvaliacaoParaExcluir(
+            null
         );
+    }
+
+
+    async function confirmarExclusao() {
+        if (
+            !usuario ||
+            !avaliacaoParaExcluir
+        ) {
+            return;
+        }
+
+        try {
+            setExcluindoAvaliacao(
+                true
+            );
+
+            await excluirAvaliacao(
+                avaliacaoParaExcluir.id,
+                usuario.token
+            );
+
+            setAvaliacoes(
+                (atuais) =>
+                    atuais.filter(
+                        (item) =>
+                            item.id !==
+                            avaliacaoParaExcluir.id
+                    )
+            );
+
+            setAvaliacaoParaExcluir(
+                null
+            );
+
+            console.log(
+                "Avaliação excluída com sucesso!"
+            );
+        } catch (erro) {
+            console.error(
+                "Erro ao excluir avaliação:",
+                erro
+            );
+        } finally {
+            setExcluindoAvaliacao(
+                false
+            );
+        }
     }
 
 
@@ -345,6 +378,7 @@ export default function ProfileScreen({
 
                     )
                 }
+
 
                 {/* PAINEL ADMINISTRATIVO */}
 
@@ -534,6 +568,7 @@ export default function ProfileScreen({
 
                     )
                 }
+
 
                 {/* USUÁRIO COMUM */}
 
@@ -1078,7 +1113,7 @@ export default function ProfileScreen({
                                                                             styles.reviewDeleteButton
                                                                         }
                                                                         onPress={() =>
-                                                                            removerAvaliacao(
+                                                                            abrirConfirmacaoExclusao(
                                                                                 avaliacao
                                                                             )
                                                                         }
@@ -1117,11 +1152,10 @@ export default function ProfileScreen({
                         styles.logoutButton
                     }
 
-                    onPress={
-                        sair
+                    onPress={() =>
+                        setModalLogoutVisivel(true)
                     }
                 >
-
                     <Text
                         style={
                             styles.logoutText
@@ -1129,10 +1163,256 @@ export default function ProfileScreen({
                     >
                         SAIR DA CONTA
                     </Text>
-
                 </Pressable>
 
             </ScrollView>
+
+
+            {/* MODAL DE EXCLUSÃO */}
+
+            <Modal
+                visible={
+                    avaliacaoParaExcluir !== null
+                }
+                transparent
+                animationType="fade"
+                onRequestClose={
+                    fecharConfirmacaoExclusao
+                }
+            >
+
+                <View
+                    style={
+                        styles.modalOverlay
+                    }
+                >
+
+                    <View
+                        style={
+                            styles.modalContainer
+                        }
+                    >
+
+                        <View
+                            style={
+                                styles.modalIcon
+                            }
+                        >
+
+                            <Text
+                                style={
+                                    styles.modalIconText
+                                }
+                            >
+                                !
+                            </Text>
+
+                        </View>
+
+
+                        <Text
+                            style={
+                                styles.modalTitle
+                            }
+                        >
+                            Excluir avaliação?
+                        </Text>
+
+
+                        <Text
+                            style={
+                                styles.modalDescription
+                            }
+                        >
+                            Tem certeza que deseja excluir sua avaliação de{" "}
+                            <Text
+                                style={
+                                    styles.modalUnitName
+                                }
+                            >
+                                {
+                                    avaliacaoParaExcluir
+                                        ?.unidadeNome
+                                }
+                            </Text>
+                            ?
+                        </Text>
+
+
+                        <Text
+                            style={
+                                styles.modalWarning
+                            }
+                        >
+                            Essa ação não poderá ser desfeita.
+                        </Text>
+
+
+                        <View
+                            style={
+                                styles.modalActions
+                            }
+                        >
+
+                            <Pressable
+                                style={
+                                    styles.modalCancelButton
+                                }
+                                onPress={
+                                    fecharConfirmacaoExclusao
+                                }
+                                disabled={
+                                    excluindoAvaliacao
+                                }
+                            >
+
+                                <Text
+                                    style={
+                                        styles.modalCancelText
+                                    }
+                                >
+                                    CANCELAR
+                                </Text>
+
+                            </Pressable>
+
+
+                            <Pressable
+                                style={[
+                                    styles.modalDeleteButton,
+                                    excluindoAvaliacao &&
+                                    styles.modalDeleteButtonDisabled,
+                                ]}
+                                onPress={
+                                    confirmarExclusao
+                                }
+                                disabled={
+                                    excluindoAvaliacao
+                                }
+                            >
+
+                                {
+                                    excluindoAvaliacao
+                                        ? (
+                                            <ActivityIndicator
+                                                size="small"
+                                                color="#FFFFFF"
+                                            />
+                                        )
+                                        : (
+                                            <Text
+                                                style={
+                                                    styles.modalDeleteText
+                                                }
+                                            >
+                                                EXCLUIR
+                                            </Text>
+                                        )
+                                }
+
+                            </Pressable>
+
+                        </View>
+
+                    </View>
+
+                </View>
+
+            </Modal>
+
+            <Modal
+                visible={
+                    modalLogoutVisivel
+                }
+                transparent
+                animationType="fade"
+                onRequestClose={() =>
+                    setModalLogoutVisivel(false)
+                }
+            >
+                <View
+                    style={
+                        styles.modalOverlay
+                    }
+                >
+                    <View
+                        style={
+                            styles.modalContainer
+                        }
+                    >
+                        <View
+                            style={
+                                styles.modalIcon
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.modalIconText
+                                }
+                            >
+                                !
+                            </Text>
+                        </View>
+
+                        <Text
+                            style={
+                                styles.modalTitle
+                            }
+                        >
+                            Sair da conta?
+                        </Text>
+
+                        <Text
+                            style={
+                                styles.modalDescription
+                            }
+                        >
+                            Tem certeza que deseja encerrar sua sessão?
+                        </Text>
+
+                        <View
+                            style={
+                                styles.modalActions
+                            }
+                        >
+                            <Pressable
+                                style={
+                                    styles.modalCancelButton
+                                }
+                                onPress={() =>
+                                    setModalLogoutVisivel(false)
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.modalCancelText
+                                    }
+                                >
+                                    CANCELAR
+                                </Text>
+                            </Pressable>
+
+                            <Pressable
+                                style={
+                                    styles.modalDeleteButton
+                                }
+                                onPress={async () => {
+                                    setModalLogoutVisivel(false);
+                                    await sair();
+                                }}
+                            >
+                                <Text
+                                    style={
+                                        styles.modalDeleteText
+                                    }
+                                >
+                                    SAIR
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
         </View>
     );
@@ -1882,6 +2162,7 @@ const styles =
             colors.textSecondary,
         },
 
+
         adminSection: {
 
             marginTop: 28,
@@ -2024,6 +2305,214 @@ const styles =
 
             color:
             colors.primary,
+        },
+
+
+        modalOverlay: {
+
+            flex: 1,
+
+            paddingHorizontal: 24,
+
+            backgroundColor:
+                "rgba(0, 0, 0, 0.45)",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        modalContainer: {
+
+            width: "100%",
+
+            maxWidth: 420,
+
+            padding: 24,
+
+            borderRadius: 24,
+
+            backgroundColor:
+            colors.surface,
+
+            alignItems:
+                "center",
+        },
+
+
+        modalIcon: {
+
+            width: 54,
+
+            height: 54,
+
+            borderRadius: 27,
+
+            borderWidth: 2,
+
+            borderColor:
+            colors.danger,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        modalIconText: {
+
+            fontSize: 26,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.danger,
+        },
+
+
+        modalTitle: {
+
+            marginTop: 17,
+
+            fontSize: 20,
+
+            fontWeight:
+                "900",
+
+            textAlign:
+                "center",
+
+            color:
+            colors.text,
+        },
+
+
+        modalDescription: {
+
+            marginTop: 9,
+
+            fontSize: 13,
+
+            lineHeight: 20,
+
+            textAlign:
+                "center",
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        modalUnitName: {
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.text,
+        },
+
+
+        modalWarning: {
+
+            marginTop: 7,
+
+            fontSize: 11,
+
+            textAlign:
+                "center",
+
+            color:
+            colors.danger,
+        },
+
+
+        modalActions: {
+
+            width: "100%",
+
+            marginTop: 24,
+
+            flexDirection:
+                "row",
+
+            gap: 10,
+        },
+
+
+        modalCancelButton: {
+
+            flex: 1,
+
+            height: 46,
+
+            borderWidth: 1,
+
+            borderColor:
+            colors.border,
+
+            borderRadius: 14,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        modalCancelText: {
+
+            fontSize: 11,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.textSecondary,
+        },
+
+
+        modalDeleteButton: {
+
+            flex: 1,
+
+            height: 46,
+
+            borderRadius: 14,
+
+            backgroundColor:
+            colors.danger,
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        modalDeleteButtonDisabled: {
+
+            opacity: 0.6,
+        },
+
+
+        modalDeleteText: {
+
+            fontSize: 11,
+
+            fontWeight:
+                "900",
+
+            color:
+                "#FFFFFF",
         },
 
     });
