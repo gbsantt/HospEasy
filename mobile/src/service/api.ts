@@ -4,7 +4,7 @@ import {
 
 
 const URL_BACKEND =
-    "http://192.168.1.101:8080";
+    "http://192.168.1.100:8080";
 
 
 export type CriarAvaliacaoPayload = {

@@ -505,7 +505,7 @@ export default function CriarUnidadeAdminScreen({
                             styles.locationInfoText
                         }
                     >
-                        Não é necessário descobrir latitude e longitude. Informe um endereço completo, de preferência com rua, número, cidade e estado.
+                        Informe o endereço completo da unidade no campo Endereço para obtermos sua posição no mapa.
                     </Text>
 
                 </View>
@@ -552,7 +552,7 @@ export default function CriarUnidadeAdminScreen({
                             styles.label
                         }
                     >
-                        Endereço completo
+                        Endereço
                     </Text>
 
 
