@@ -37,4 +37,10 @@ public interface FavoritoRepository
             Long usuarioId,
             Long unidadeId
     );
+
+
+    void
+    deleteByUnidadeId(
+            Long unidadeId
+    );
 }

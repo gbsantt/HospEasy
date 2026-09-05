@@ -29,4 +29,10 @@ public interface AvaliacaoRepository
             Long avaliacaoId,
             Long usuarioId
     );
+
+
+    void
+    deleteByUnidadeAtendimentoId(
+            Long unidadeAtendimentoId
+    );
 }

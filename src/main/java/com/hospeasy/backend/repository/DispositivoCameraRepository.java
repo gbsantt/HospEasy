@@ -28,4 +28,9 @@ public interface DispositivoCameraRepository
     boolean existsByUnidadeAtendimentoId(
             Long unidadeId
     );
+
+
+    void deleteByUnidadeAtendimentoId(
+            Long unidadeId
+    );
 }

@@ -1,5 +1,6 @@
 import {
     ActivityIndicator,
+    Alert,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -27,6 +28,7 @@ import {
 
 import {
     buscarSituacoesUnidades,
+    excluirUnidadeAdmin,
 } from "../service/api";
 
 import {
@@ -47,7 +49,6 @@ type Props =
         RootStackParamList,
         "UnidadesAdmin"
     >;
-
 
 function nomeTipoUnidade(
     tipo: Unidade["tipo"]
@@ -134,6 +135,14 @@ export default function UnidadesAdminScreen({
     );
 
 
+    const [
+        excluindoId,
+        setExcluindoId,
+    ] = useState<number | null>(
+        null
+    );
+
+
     async function carregarUnidades(
         mostrarCarregamento = true
     ) {
@@ -209,6 +218,91 @@ export default function UnidadesAdminScreen({
                 false
             );
         }
+    }
+
+
+    async function excluirUnidade(
+        unidade: Unidade
+    ) {
+
+        if (
+            !usuario ||
+            usuario.tipo !== "ADMIN"
+        ) {
+
+            return;
+        }
+
+
+        try {
+
+            setExcluindoId(
+                unidade.unidadeId
+            );
+
+
+            await excluirUnidadeAdmin(
+                unidade.unidadeId,
+                usuario.token
+            );
+
+
+            setUnidades(
+                (atual) =>
+                    atual.filter(
+                        (item) =>
+                            item.unidadeId !==
+                            unidade.unidadeId
+                    )
+            );
+
+        } catch (
+            error
+            ) {
+
+            console.error(
+                error
+            );
+
+
+            Alert.alert(
+                "Não foi possível excluir",
+                error instanceof Error
+                    ? error.message
+                    : "Tente novamente em instantes."
+            );
+
+        } finally {
+
+            setExcluindoId(
+                null
+            );
+        }
+    }
+
+
+    function confirmarExclusao(
+        unidade: Unidade
+    ) {
+
+        Alert.alert(
+            "Excluir unidade",
+            `Tem certeza que deseja excluir "${unidade.nome}"? Essa ação não pode ser desfeita e também apagará o histórico de ocupação, avaliações e favoritos ligados a ela.`,
+            [
+                {
+                    text: "Cancelar",
+                    style: "cancel",
+                },
+                {
+                    text: "Excluir",
+                    style: "destructive",
+                    onPress: () =>
+                        excluirUnidade(
+                            unidade
+                        ),
+                },
+            ]
+        );
     }
 
 
@@ -821,6 +915,51 @@ export default function UnidadesAdminScreen({
 
                                     </Pressable>
 
+
+                                    <Pressable
+                                        disabled={
+                                            excluindoId ===
+                                            unidade.unidadeId
+                                        }
+
+                                        style={[
+                                            styles.deleteButton,
+                                            excluindoId ===
+                                            unidade.unidadeId &&
+                                            styles.deleteButtonDisabled,
+                                        ]}
+
+                                        onPress={() =>
+                                            confirmarExclusao(
+                                                unidade
+                                            )
+                                        }
+                                    >
+
+                                        {
+                                            excluindoId ===
+                                            unidade.unidadeId
+                                                ? (
+                                                    <ActivityIndicator
+                                                        size="small"
+                                                        color={
+                                                            colors.danger
+                                                        }
+                                                    />
+                                                )
+                                                : (
+                                                    <Text
+                                                        style={
+                                                            styles.deleteButtonText
+                                                        }
+                                                    >
+                                                        EXCLUIR UNIDADE
+                                                    </Text>
+                                                )
+                                        }
+
+                                    </Pressable>
+
                                 </View>
 
                             );
@@ -1276,6 +1415,48 @@ const styles =
 
             color:
                 "#FFFFFF",
+        },
+
+
+        deleteButton: {
+
+            height: 48,
+
+            marginTop: 10,
+
+            borderRadius: 15,
+
+            borderWidth: 1.5,
+
+            borderColor:
+            colors.danger,
+
+            backgroundColor:
+                "transparent",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+        },
+
+
+        deleteButtonDisabled: {
+
+            opacity: 0.6,
+        },
+
+
+        deleteButtonText: {
+
+            fontSize: 12,
+
+            fontWeight:
+                "900",
+
+            color:
+            colors.danger,
         },
 
 

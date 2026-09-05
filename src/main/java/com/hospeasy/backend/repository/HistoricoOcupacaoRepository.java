@@ -30,4 +30,8 @@ public interface HistoricoOcupacaoRepository
             Long unidadeAtendimentoId,
             OrigemMedicao origem
     );
+
+    void deleteByUnidadeAtendimentoId(
+            Long unidadeAtendimentoId
+    );
 }

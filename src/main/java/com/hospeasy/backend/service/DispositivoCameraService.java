@@ -158,6 +158,24 @@ public class DispositivoCameraService {
     }
 
 
+    /*
+     * REMOVE O(S) DISPOSITIVO(S) DE CÂMERA
+     * VINCULADO(S) A UMA UNIDADE.
+     *
+     * Usado antes de excluir a própria unidade,
+     * já que não existe cascade configurado.
+     */
+    public void excluirPorUnidade(
+            Long unidadeId
+    ) {
+
+        dispositivoCameraRepository
+                .deleteByUnidadeAtendimentoId(
+                        unidadeId
+                );
+    }
+
+
     public boolean unidadePossuiCamera(
             Long unidadeId
     ) {

@@ -22,6 +22,7 @@ import {
 import DynamicIsland from "../components/DynamicIsland";
 import HospEasyMap from "../components/HospEasyMap";
 import UnitMapCard from "../components/UnitMapCard";
+import LoadingScreen from "../components/LoadingScreen";
 
 import {
     buscarSituacoesUnidades,
@@ -197,6 +198,14 @@ export default function HomeScreen() {
         );
     }
 
+    if (
+        carregando
+    ) {
+
+        return (
+            <LoadingScreen />
+        );
+    }
 
     return (
 
@@ -218,26 +227,6 @@ export default function HomeScreen() {
                 }
             />
 
-
-            {carregando && (
-
-                <View
-                    style={
-                        styles.statusContainer
-                    }
-                >
-
-                    <Text
-                        style={
-                            styles.statusText
-                        }
-                    >
-                        Carregando unidades...
-                    </Text>
-
-                </View>
-
-            )}
 
 
             {erro && (

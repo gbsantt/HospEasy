@@ -794,6 +794,44 @@ export async function atualizarUnidadeAdmin(
 }
 
 
+export async function excluirUnidadeAdmin(
+    unidadeId: number,
+    token: string
+): Promise<void> {
+
+    const resposta =
+        await fetch(
+            `${URL_BACKEND}/unidades/${unidadeId}`,
+            {
+                method: "DELETE",
+
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+
+    if (!resposta.ok) {
+
+        let mensagem = "";
+
+        try {
+            const erro = await resposta.json();
+            mensagem = erro?.message ?? erro?.mensagem ?? "";
+        } catch {
+            // Sem JSON.
+        }
+
+        throw new Error(
+            mensagem ||
+            `Erro ao excluir unidade: ${resposta.status}`
+        );
+    }
+}
+
+
 export async function buscarFavoritos(
     token: string
 ): Promise<Unidade[]> {

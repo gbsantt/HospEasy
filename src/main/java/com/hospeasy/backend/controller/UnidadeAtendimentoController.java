@@ -110,4 +110,14 @@ public class UnidadeAtendimentoController {
                 dto
         );
     }
+
+    @DeleteMapping("/{id}")
+    public void excluirUnidade(
+            @PathVariable Long id
+    ) {
+
+        unidadeAtendimentoService.excluirUnidade(
+                id
+        );
+    }
 }

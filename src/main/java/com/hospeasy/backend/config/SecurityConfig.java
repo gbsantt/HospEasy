@@ -163,6 +163,15 @@ public class SecurityConfig {
 
 
                         /*
+                         * ADMIN - EXCLUIR UNIDADE
+                         */
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/unidades/*"
+                        ).hasRole("ADMIN")
+
+
+                        /*
                          * RECEBER MEDIÇÕES DA CÂMERA
                          */
                         .requestMatchers(
