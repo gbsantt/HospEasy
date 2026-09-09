@@ -1,5 +1,5 @@
+import BackChevron from "../components/BackChevron";
 import {
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -10,6 +10,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { Alert } from "../utils/alert";
 
 import * as Clipboard
     from "expo-clipboard";
@@ -448,13 +449,7 @@ export default function CriarUnidadeAdminScreen({
                     }
                 >
 
-                    <Text
-                        style={
-                            styles.backText
-                        }
-                    >
-                        ‹
-                    </Text>
+                    <BackChevron />
 
                 </Pressable>
 

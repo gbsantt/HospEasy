@@ -9,7 +9,9 @@ import {
     Text,
     TextInput,
     View,
+    useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
     useFavorites,
@@ -63,7 +65,6 @@ import {
 
 
 const ALTURA_FECHADA = 82;
-const ALTURA_ABERTA = 610;
 
 
 type Props = {
@@ -97,6 +98,9 @@ export default function DynamicIsland({
                                           onAbrirUnidade,
 
                                       }: Props) {
+    const { height } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
+    const ALTURA_ABERTA = Math.max(ALTURA_FECHADA, Math.min(610, height - insets.top - insets.bottom - 170));
 
 
     const [

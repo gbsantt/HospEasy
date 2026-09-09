@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "HospEasy",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,6 +20,9 @@
       "package": "com.anonymous.mobile"
     },
     "web": {
+      "name": "HospEasy",
+      "bundler": "metro",
+      "output": "single",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [

@@ -1,0 +1,9 @@
+.hospeasy-map-shell { position: relative; flex: 1; min-height: 180px; width: 100%; background: #e6f1de; }
+.hospeasy-map { position: absolute; inset: 0; }
+.hospeasy-marker { width: 36px; height: 36px; border: 3px solid white; border-radius: 12px; box-shadow: 0 2px 8px #0004; color: white; font: 900 19px system-ui; cursor: pointer; }
+.hospeasy-marker:focus-visible, .hospeasy-location:focus-visible { outline: 3px solid #171717; outline-offset: 3px; }
+.hospeasy-user-marker { width: 17px; height: 17px; border: 3px solid white; border-radius: 50%; background: #2563eb; box-shadow: 0 0 0 7px #2563eb30; }
+.hospeasy-location { position: absolute; top: 90px; right: 10px; width: 40px; height: 40px; border-radius: 12px; border: 1px solid #e4e7e2; background: white; color: #2f6807; font-size: 27px; cursor: pointer; box-shadow: 0 2px 8px #0002; }
+.hospeasy-location:disabled { color: #7a7a7a; cursor: default; }
+.hospeasy-map-message { position: absolute; top: 12px; left: 12px; right: 62px; max-width: 430px; background: white; border-radius: 12px; padding: 12px; color: #171717; font: 14px/1.5 system-ui; box-shadow: 0 2px 8px #0002; }
+.hospeasy-map-message button { display: block; margin-top: 8px; background: #438f0b; color: white; border: 0; padding: 8px 12px; border-radius: 8px; cursor: pointer; font: inherit; }

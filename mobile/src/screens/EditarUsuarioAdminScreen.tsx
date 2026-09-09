@@ -1,6 +1,6 @@
+import BackChevron from "../components/BackChevron";
 import {
     ActivityIndicator,
-    Alert,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -8,6 +8,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { Alert } from "../utils/alert";
 
 import {
     useState,
@@ -276,13 +277,7 @@ export default function EditarUsuarioAdminScreen({
                         }
                     >
 
-                        <Text
-                            style={
-                                styles.backText
-                            }
-                        >
-                            ‹
-                        </Text>
+                        <BackChevron />
 
                     </Pressable>
 

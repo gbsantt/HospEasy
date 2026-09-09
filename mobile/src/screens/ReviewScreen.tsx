@@ -1,9 +1,9 @@
+import BackChevron from "../components/BackChevron";
 import {
     useState,
 } from "react";
 
 import {
-    Alert,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -11,6 +11,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { Alert } from "../utils/alert";
 
 import {
     NativeStackScreenProps,
@@ -253,13 +254,7 @@ export default function ReviewScreen({
                     }
                 >
 
-                    <Text
-                        style={
-                            styles.backText
-                        }
-                    >
-                        ‹
-                    </Text>
+                    <BackChevron />
 
                 </Pressable>
 

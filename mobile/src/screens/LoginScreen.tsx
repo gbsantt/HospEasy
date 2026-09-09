@@ -1,3 +1,4 @@
+import BackChevron from "../components/BackChevron";
 import {
     useState,
 } from "react";
@@ -170,13 +171,7 @@ export default function LoginScreen({
 
             >
 
-                <Text
-                    style={
-                        styles.backText
-                    }
-                >
-                    ‹
-                </Text>
+                <BackChevron />
 
             </Pressable>
 

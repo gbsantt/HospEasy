@@ -3,6 +3,7 @@ import {
 } from "react-native-gesture-handler";
 
 import AppNavigator from "./src/navigation/AppNavigator";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
     FavoritesProvider,
@@ -23,6 +24,7 @@ export default function App() {
             }}
         >
 
+            <SafeAreaProvider>
             <AuthProvider>
 
                 <FavoritesProvider>
@@ -32,6 +34,7 @@ export default function App() {
                 </FavoritesProvider>
 
             </AuthProvider>
+            </SafeAreaProvider>
 
         </GestureHandlerRootView>
 

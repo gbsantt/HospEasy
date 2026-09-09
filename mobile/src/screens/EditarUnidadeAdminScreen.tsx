@@ -1,5 +1,5 @@
+import BackChevron from "../components/BackChevron";
 import {
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -10,6 +10,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { Alert } from "../utils/alert";
 
 import {
     NativeStackScreenProps,
@@ -417,13 +418,7 @@ export default function EditarUnidadeAdminScreen({
                     }
                 >
 
-                    <Text
-                        style={
-                            styles.backText
-                        }
-                    >
-                        ‹
-                    </Text>
+                    <BackChevron />
 
                 </Pressable>
 

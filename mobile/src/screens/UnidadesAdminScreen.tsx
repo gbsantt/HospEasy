@@ -1,6 +1,6 @@
+import BackChevron from "../components/BackChevron";
 import {
     ActivityIndicator,
-    Alert,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -8,6 +8,7 @@ import {
     Text,
     View,
 } from "react-native";
+import { Alert } from "../utils/alert";
 
 import {
     NativeStackScreenProps,
@@ -432,13 +433,7 @@ export default function UnidadesAdminScreen({
                     }
                 >
 
-                    <Text
-                        style={
-                            styles.backText
-                        }
-                    >
-                        ‹
-                    </Text>
+                    <BackChevron />
 
                 </Pressable>
 

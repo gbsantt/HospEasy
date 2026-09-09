@@ -12,6 +12,7 @@
     "expo-clipboard": "~57.0.1",
     "expo-location": "~57.0.14",
     "expo-status-bar": "~57.0.1",
+    "maplibre-gl": "^6.9.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
@@ -27,10 +28,16 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "postinstall": "node scripts/prepare-map-worker.mjs",
+    "prestart": "node scripts/prepare-map-worker.mjs",
+    "preweb": "node scripts/prepare-map-worker.mjs",
+    "prebuild:web": "node scripts/prepare-map-worker.mjs",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:web": "expo export --platform web",
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }

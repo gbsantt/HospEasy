@@ -29,6 +29,17 @@ def main():
     print("Modo de teste iniciado.")
     print("Pressione Q para sair.")
 
+    cv2.namedWindow(
+        "HospEasy - Teste da Camera",
+        cv2.WINDOW_NORMAL
+    )
+
+    cv2.resizeWindow(
+        "HospEasy - Teste da Camera",
+        960,
+        540
+    )
+
     while True:
         sucesso, frame = camera.read()
 

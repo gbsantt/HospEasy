@@ -1,3 +1,4 @@
+import BackChevron from "../components/BackChevron";
 import {
     useState,
 } from "react";
@@ -160,13 +161,7 @@ export default function ForgotPasswordScreen({
                 }
             >
 
-                <Text
-                    style={
-                        styles.backText
-                    }
-                >
-                    ‹
-                </Text>
+                <BackChevron />
 
             </Pressable>
 

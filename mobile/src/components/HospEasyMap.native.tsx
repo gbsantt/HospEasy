@@ -27,6 +27,7 @@ import {
 import {
     colors,
 } from "../theme/colors";
+import { temCoordenadas } from "../utils/mapStatus";
 
 
 type Props = {
@@ -92,9 +93,7 @@ export default function HospEasyMap({
 
     const unidadesComLocalizacao =
         unidades.filter(
-            (unidade) =>
-                unidade.latitude !== null &&
-                unidade.longitude !== null
+            temCoordenadas
         );
 
 
@@ -255,6 +254,7 @@ export default function HospEasyMap({
                             >
 
                                 <View
+                                    accessibilityLabel={`HospEasy: ${unidade.nome}`}
                                     style={[
                                         styles.marker,
                                         {
@@ -266,11 +266,7 @@ export default function HospEasyMap({
                                     ]}
                                 >
 
-                                    <View
-                                        style={
-                                            styles.markerCenter
-                                        }
-                                    />
+                                    <Text style={styles.markerLetter}>H</Text>
 
                                 </View>
 
@@ -284,6 +280,8 @@ export default function HospEasyMap({
 
 
             <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Centralizar na minha localização"
                 style={[
                     styles.locationButton,
 
@@ -317,6 +315,7 @@ export default function HospEasyMap({
 
 const styles =
     StyleSheet.create({
+        markerLetter: { color: "#FFFFFF", fontWeight: "900", fontSize: 17 },
 
         container: {
 

@@ -1,4 +1,5 @@
 import {
+    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -14,6 +15,7 @@ type Props = {
     tendencia: string;
     nivelOcupacao: string;
     statusCamera: string;
+    statusMedicao?: string;
 
     onPress: () => void;
     onClose: () => void;
@@ -26,14 +28,17 @@ export default function UnitMapCard({
                                         tendencia,
                                         nivelOcupacao,
                                         statusCamera,
+                                        statusMedicao,
                                         onPress,
                                         onClose,
                                     }: Props) {
     return (
-        <View style={styles.card}>
+        <View style={[styles.card, Platform.OS === "web" && styles.webCard]}>
             <Pressable
                 style={styles.closeButton}
                 onPress={onClose}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar detalhes da unidade"
             >
                 <Text style={styles.closeText}>
                     ×
@@ -45,7 +50,8 @@ export default function UnitMapCard({
             </Text>
 
             <Text style={styles.info}>
-                Ocupação: {percentual.toFixed(1)}%
+                {statusCamera === "OFFLINE" || statusCamera === "DESATIVADA" || (statusMedicao && statusMedicao !== "ATUALIZADA")
+                    ? "Ocupação: sem dados atuais" : `Ocupação: ${percentual.toFixed(1)}%`}
             </Text>
 
             <Text style={styles.info}>
@@ -74,6 +80,7 @@ export default function UnitMapCard({
 
 
 const styles = StyleSheet.create({
+    webCard: { bottom: 34, maxWidth: 380, maxHeight: "90%", overflow: "scroll" },
     card: {
         position: "absolute",
 

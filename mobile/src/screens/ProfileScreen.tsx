@@ -1,3 +1,4 @@
+import BackChevron from "../components/BackChevron";
 import {
     ActivityIndicator,
     Modal,
@@ -277,13 +278,7 @@ export default function ProfileScreen({
                     }
                 >
 
-                    <Text
-                        style={
-                            styles.backText
-                        }
-                    >
-                        ‹
-                    </Text>
+                    <BackChevron />
 
                 </Pressable>
 

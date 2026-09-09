@@ -23,6 +23,9 @@ import com.hospeasy.backend.exception.UnidadeNaoEncontradaException;
 
 import com.hospeasy.backend.repository.HistoricoOcupacaoRepository;
 import com.hospeasy.backend.repository.UnidadeAtendimentoRepository;
+import com.hospeasy.backend.repository.AvaliacaoRepository;
+import com.hospeasy.backend.repository.FavoritoRepository;
+import com.hospeasy.backend.repository.DispositivoCameraRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,9 @@ import java.util.List;
 
 @Service
 public class UnidadeAtendimentoService {
+    private final AvaliacaoRepository avaliacaoRepository;
+    private final FavoritoRepository favoritoRepository;
+    private final DispositivoCameraRepository dispositivoCameraRepository;
 
     private final UnidadeAtendimentoRepository
             unidadeAtendimentoRepository;
@@ -60,9 +66,15 @@ public class UnidadeAtendimentoService {
                     dispositivoCameraService,
 
             GeocodificacaoService
-                    geocodificacaoService
+                    geocodificacaoService,
+            AvaliacaoRepository avaliacaoRepository,
+            FavoritoRepository favoritoRepository,
+            DispositivoCameraRepository dispositivoCameraRepository
 
     ) {
+        this.avaliacaoRepository = avaliacaoRepository;
+        this.favoritoRepository = favoritoRepository;
+        this.dispositivoCameraRepository = dispositivoCameraRepository;
 
         this.unidadeAtendimentoRepository =
                 unidadeAtendimentoRepository;
@@ -100,6 +112,19 @@ public class UnidadeAtendimentoService {
                 .toList();
     }
 
+
+    @Transactional
+    public void excluirUnidade(Long id) {
+        UnidadeAtendimento unidade = unidadeAtendimentoRepository.findById(id)
+                .orElseThrow(UnidadeNaoEncontradaException::new);
+        historicoOcupacaoRepository.deleteByUnidadeAtendimentoId(id);
+        avaliacaoRepository.deleteByUnidadeAtendimentoId(id);
+        favoritoRepository.deleteByUnidadeId(id);
+        dispositivoCameraRepository.deleteByUnidadeAtendimentoId(id);
+        // Flush dependent rows before the parent to respect database foreign keys.
+        unidadeAtendimentoRepository.flush();
+        unidadeAtendimentoRepository.delete(unidade);
+    }
 
     /*
      * CADASTRAR UNIDADE + CÂMERA

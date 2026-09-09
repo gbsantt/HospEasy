@@ -1,12 +1,13 @@
+import BackChevron from "../components/BackChevron";
 import {
     ActivityIndicator,
-    Alert,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+import { Alert } from "../utils/alert";
 
 import {
     useCallback,
@@ -202,13 +203,7 @@ export default function UsuariosAdminScreen({
                         }
                     >
 
-                        <Text
-                            style={
-                                styles.backText
-                            }
-                        >
-                            ‹
-                        </Text>
+                        <BackChevron />
 
                     </Pressable>
 

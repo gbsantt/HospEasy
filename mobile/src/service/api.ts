@@ -3,8 +3,10 @@ import {
 } from "../types/Unidade";
 
 
-const URL_BACKEND =
-    "http://192.168.1.100:8080";
+import { Platform } from "react-native";
+
+const URL_BACKEND = (process.env.EXPO_PUBLIC_API_URL ||
+    (Platform.OS === "web" ? "http://localhost:8080" : "http://192.168.1.100:8080")).replace(/\/+$/, "");
 
 
 export type CriarAvaliacaoPayload = {
@@ -96,13 +98,16 @@ export type UsuarioAdmin = {
  * =========================================================
  */
 
-export async function buscarSituacoesUnidades():
+export async function buscarSituacoesUnidades(signal?: AbortSignal):
     Promise<Unidade[]> {
 
-    const resposta =
-        await fetch(
-            `${URL_BACKEND}/unidades/situacoes/ordenadas`
-        );
+    const controller = new AbortController();
+    const abortar = () => controller.abort();
+    signal?.addEventListener("abort", abortar, { once: true });
+    if (signal?.aborted) controller.abort();
+    const timeout = setTimeout(abortar, 10000);
+    try {
+    const resposta = await fetch(`${URL_BACKEND}/unidades/situacoes/ordenadas`, { signal: controller.signal });
 
 
     if (!resposta.ok) {
@@ -113,7 +118,11 @@ export async function buscarSituacoesUnidades():
     }
 
 
-    return resposta.json();
+    return await resposta.json();
+    } finally {
+        clearTimeout(timeout);
+        signal?.removeEventListener("abort", abortar);
+    }
 }
 
 

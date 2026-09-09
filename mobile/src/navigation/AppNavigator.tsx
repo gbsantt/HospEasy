@@ -152,7 +152,7 @@ export default function AppNavigator() {
 
     return (
 
-        <NavigationContainer>
+        <NavigationContainer documentTitle={{ formatter: () => "HospEasy — Unidades de saúde" }}>
 
             <Stack.Navigator
                 screenOptions={{

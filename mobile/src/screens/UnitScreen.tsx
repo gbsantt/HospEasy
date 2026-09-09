@@ -1,3 +1,4 @@
+import BackChevron from "../components/BackChevron";
 import {
     useCallback,
     useState,
@@ -360,13 +361,7 @@ export default function UnitScreen({
 
                     >
 
-                        <Text
-                            style={
-                                styles.backText
-                            }
-                        >
-                            ‹
-                        </Text>
+                        <BackChevron />
 
                     </Pressable>
 

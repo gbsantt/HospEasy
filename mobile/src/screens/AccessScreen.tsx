@@ -1,3 +1,4 @@
+import BackChevron from "../components/BackChevron";
 import {
     Pressable,
     StyleSheet,
@@ -47,13 +48,7 @@ export default function AccessScreen({
                 }
             >
 
-                <Text
-                    style={
-                        styles.backText
-                    }
-                >
-                    ‹
-                </Text>
+                <BackChevron />
 
             </Pressable>
 
