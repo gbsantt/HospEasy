@@ -16,6 +16,10 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class HistoricoOcupacao {
+    private java.util.UUID medicaoId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dispositivo_id")
+    private DispositivoCamera dispositivo;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

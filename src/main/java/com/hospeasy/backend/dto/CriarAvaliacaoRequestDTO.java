@@ -1,26 +1,6 @@
 package com.hospeasy.backend.dto;
-
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
-
-public record CriarAvaliacaoRequestDTO(
-
-        @Min(
-                value = 1,
-                message = "A nota mínima é 1"
-        )
-        @Max(
-                value = 5,
-                message = "A nota máxima é 5"
-        )
-        Integer nota,
-
-        @Size(
-                max = 500,
-                message = "O comentário deve ter no máximo 500 caracteres"
-        )
-        String comentario
-
-) {
-}
+import jakarta.validation.constraints.*;
+import com.hospeasy.backend.entity.TipoUnidade;
+import com.hospeasy.backend.entity.TipoUsuario;
+import com.hospeasy.backend.validation.SenhaValida;
+public record CriarAvaliacaoRequestDTO(@NotNull @Min(1) @Max(5) Integer nota, @Size(max=500) String comentario) {}

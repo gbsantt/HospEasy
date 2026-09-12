@@ -2,7 +2,7 @@ import { colors } from "../theme/colors";
 import { Unidade } from "../types/Unidade";
 
 export function statusNoMapa(unidade: Unidade) {
-    if (unidade.statusCamera === "OFFLINE" || unidade.statusCamera === "DESATIVADA" || unidade.statusMedicao !== "ATUALIZADA") {
+    if (!dadosAtuais(unidade)) {
         return { color: colors.offline, text: "Sem dados atuais" };
     }
     const percentual = unidade.percentualOcupacao;
@@ -10,6 +10,10 @@ export function statusNoMapa(unidade: Unidade) {
         color: percentual >= 80 ? colors.danger : percentual >= 50 ? colors.warning : colors.primary,
         text: `${percentual.toFixed(0)}% de ocupação`,
     };
+}
+
+export function dadosAtuais(unidade: Unidade) {
+    return unidade.statusCamera === "ONLINE" && unidade.statusMedicao === "ATUALIZADA";
 }
 
 export function temCoordenadas(unidade: Unidade): unidade is Unidade & { latitude: number; longitude: number } {

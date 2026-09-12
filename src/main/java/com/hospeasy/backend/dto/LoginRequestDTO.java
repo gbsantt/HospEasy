@@ -1,16 +1,6 @@
 package com.hospeasy.backend.dto;
-
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-
-public record LoginRequestDTO(
-
-        @NotBlank(message = "O email é obrigatório")
-        @Email(message = "Email inválido")
-        String email,
-
-        @NotBlank(message = "A senha é obrigatória")
-        String senha
-
-) {
-}
+import jakarta.validation.constraints.*;
+import com.hospeasy.backend.entity.TipoUnidade;
+import com.hospeasy.backend.entity.TipoUsuario;
+import com.hospeasy.backend.validation.SenhaValida;
+public record LoginRequestDTO(@NotBlank @Email @Size(max=180) String email, @NotBlank @Size(max=72) @SenhaValida String senha) {}

@@ -1,11 +1,167 @@
-###
-POST http://localhost:8080/unidades/1/avaliacoes
+# Use variáveis privadas do seu cliente HTTP. Nunca salve tokens reais neste arquivo.
+@baseUrl = http://localhost:8080
+@token =
+@adminToken =
+@cameraKey =
+@unidadeId = 1
+@dispositivoId = 1
+@solicitacaoId = 1
+@email =
+@senha =
+@codigo =
+
+### Login (copie token da resposta para uma variável privada)
+POST {{baseUrl}}/usuarios/login
 Content-Type: application/json
 
-{
-  "nota": 5,
-  "comentario": "Gostei bastante do atendimento."
-}
+{"email":"{{email}}","senha":"{{senha}}"}
+
+### Usuário atual
+GET {{baseUrl}}/usuarios/me
+Authorization: Bearer {{token}}
+
+### Cadastro público: sempre USUARIO
+POST {{baseUrl}}/usuarios/cadastro
+Content-Type: application/json
+
+{"nome":"Conta de teste","email":"{{email}}","senha":"{{senha}}"}
+
+### Solicitar recuperação: resposta uniforme
+POST {{baseUrl}}/usuarios/esqueci-senha
+Content-Type: application/json
+
+{"email":"{{email}}"}
+
+### Verificar código (máximo 5 tentativas por desafio)
+POST {{baseUrl}}/usuarios/verificar-codigo
+Content-Type: application/json
+
+{"email":"{{email}}","codigo":"{{codigo}}"}
+
+### Consumir código e invalidar sessões anteriores
+POST {{baseUrl}}/usuarios/redefinir-senha
+Content-Type: application/json
+
+{"email":"{{email}}","codigo":"{{codigo}}","novaSenha":"{{senha}}"}
+
+### Unidades públicas: contrato cadastral id
+GET {{baseUrl}}/unidades
+
+### Situações: contrato unidadeId + tipo
+GET {{baseUrl}}/unidades/situacoes/ordenadas
+
+### Unidade e situação
+GET {{baseUrl}}/unidades/{{unidadeId}}/situacao
+
+### Histórico público sem operador
+GET {{baseUrl}}/unidades/{{unidadeId}}/historico
+
+### Administração: inclui unidades sem câmera
+GET {{baseUrl}}/admin/unidades
+Authorization: Bearer {{adminToken}}
+
+### Criar unidade (coordenadas de exemplo; confirmar antes de uso real)
+POST {{baseUrl}}/unidades
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"nome":"Unidade de teste","endereco":"Endereço de teste confirmado","telefone":null,"capacidadeAreaMonitorada":100,"tipo":"UPA","latitude":0,"longitude":0}
+
+### Atualizar unidade: ADMIN obrigatório
+PUT {{baseUrl}}/unidades/{{unidadeId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"nome":"Unidade de teste","endereco":"Endereço de teste confirmado","telefone":null,"capacidadeAreaMonitorada":100,"tipo":"UPA"}
+
+### Ocupação manual administrativa
+PATCH {{baseUrl}}/unidades/{{unidadeId}}/ocupacao
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"quantidadePessoas":10}
+
+### Criar câmera inativa: chave retornada uma única vez
+POST {{baseUrl}}/admin/unidades/{{unidadeId}}/dispositivos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"nome":"Câmera da área monitorada","ativo":false}
+
+### Listar dispositivos: nunca retorna chave/hash
+GET {{baseUrl}}/admin/unidades/{{unidadeId}}/dispositivos
+Authorization: Bearer {{adminToken}}
+
+### Ativar / renomear: informe a versão atual da listagem
+PATCH {{baseUrl}}/admin/dispositivos/{{dispositivoId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"nome":"Câmera da área monitorada","ativo":true,"version":0}
+
+### Regenerar: invalida chave antiga
+POST {{baseUrl}}/admin/dispositivos/{{dispositivoId}}/regenerar-chave
+Authorization: Bearer {{adminToken}}
+
+### Revogar: também desativa
+POST {{baseUrl}}/admin/dispositivos/{{dispositivoId}}/revogar-chave
+Authorization: Bearer {{adminToken}}
+
+### Medição: sem unidadeId; UUID opcional recomendado, novo por medição
+POST {{baseUrl}}/cameras/medicoes
+X-Camera-Key: {{cameraKey}}
+Content-Type: application/json
+
+{"quantidadePessoas":10,"medicaoId":"e5346c3e-b4be-49ce-9718-d5b4504b551a"}
+
+### Favoritos autenticados
+GET {{baseUrl}}/usuarios/me/favoritos
+Authorization: Bearer {{token}}
 
 ###
-GET http://localhost:8080/unidades/1/avaliacoes
+POST {{baseUrl}}/usuarios/me/favoritos/{{unidadeId}}
+Authorization: Bearer {{token}}
+
+### Avaliação com nota obrigatória 1..5
+POST {{baseUrl}}/unidades/{{unidadeId}}/avaliacoes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"nota":4,"comentario":"Avaliação de teste"}
+
+###
+GET {{baseUrl}}/usuarios/me/avaliacoes
+Authorization: Bearer {{token}}
+
+### Suporte com autoria automática
+POST {{baseUrl}}/usuarios/me/suporte
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"assunto":"Ajuda com aplicativo","categoria":"APLICATIVO","descricao":"Descrição sem senhas ou dados clínicos."}
+
+###
+GET {{baseUrl}}/usuarios/me/suporte?page=0&size=20
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/usuarios/me/suporte/{{solicitacaoId}}
+Authorization: Bearer {{token}}
+
+###
+GET {{baseUrl}}/admin/suporte?status=ABERTO&categoria=APLICATIVO&page=0&size=20
+Authorization: Bearer {{adminToken}}
+
+###
+PATCH {{baseUrl}}/admin/suporte/{{solicitacaoId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"status":"EM_ANALISE","version":0}
+
+### Usuários administrativos (sem senha/hash na resposta)
+GET {{baseUrl}}/usuarios
+Authorization: Bearer {{adminToken}}
+
+# DELETE /unidades/{id} apaga a unidade e seus dependentes: execute somente em dados de teste.
+# Removido: POST /unidades/{id}/medicoes. Use /cameras/medicoes.

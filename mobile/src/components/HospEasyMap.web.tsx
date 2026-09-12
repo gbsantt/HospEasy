@@ -31,12 +31,13 @@ export default function HospEasyMap({ unidades, localizacaoUsuario, onSelecionar
         centralizouUsuario.current = false;
         let instancia: Map;
         try {
-            setWorkerUrl(new URL("/maplibre/maplibre-gl-worker.mjs", window.location.origin).href);
+            const base = (process.env.EXPO_PUBLIC_BASE_PATH || "").replace(/\/$/, "");
+            setWorkerUrl(new URL(`${base}/maplibre/maplibre-gl-worker.mjs`, window.location.origin).href);
             instancia = new Map({
                 container: container.current,
                 style: "https://tiles.openfreemap.org/styles/liberty",
-                center: [-46.6333, -23.5505],
-                zoom: 11,
+                center: [0, 0],
+                zoom: 1,
             });
         } catch {
             setErro(true);
@@ -53,7 +54,6 @@ export default function HospEasyMap({ unidades, localizacaoUsuario, onSelecionar
             setErro(false);
         });
         instancia.on("error", (event) => {
-            console.warn("HospEasy: falha no mapa", event.error.message);
             setErro(true);
         });
         instancia.on("idle", () => { if (carregou && instancia.areTilesLoaded()) setErro(false); });

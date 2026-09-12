@@ -1,263 +1,50 @@
 package com.hospeasy.backend.config;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.*;
 import org.springframework.http.HttpMethod;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
-
-
+import org.springframework.web.cors.*;
+import java.util.*;
 @Configuration
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter
-    ) {
-
-        this.jwtAuthenticationFilter =
-                jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwt;
+    private final RequestRateLimitFilter limiter;
+    private final List<String> origins;
+    public SecurityConfig(JwtAuthenticationFilter jwt,RequestRateLimitFilter limiter,@Value("${app.cors.origins}") String origins) {
+        this.jwt=jwt; this.limiter=limiter;
+        this.origins=Arrays.stream(origins.split(",")).map(String::trim).filter(s->!s.isEmpty()).toList();
+        if(this.origins.contains("*")) throw new IllegalArgumentException("Configure origens CORS explícitas");
     }
-
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
-
-        http
-                .csrf(csrf ->
-                        csrf.disable()
-                )
-
-                .cors(cors ->
-                        cors.configurationSource(
-                                corsConfigurationSource()
-                        )
-                )
-
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
-
-                .authorizeHttpRequests(auth -> auth
-
-                        /*
-                         * ROTAS PÚBLICAS DE USUÁRIO
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/usuarios/login",
-                                "/usuarios/cadastro",
-                                "/usuarios/esqueci-senha",
-                                "/usuarios/verificar-codigo",
-                                "/usuarios/redefinir-senha"
-                        ).permitAll()
-
-
-                        /*
-                         * CONSULTAR UNIDADES
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/unidades",
-                                "/unidades/**"
-                        ).permitAll()
-
-
-                        /*
-                         * CRIAR AVALIAÇÃO
-                         *
-                         * Exige usuário autenticado
-                         * para vincular a avaliação
-                         * à conta.
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/unidades/*/avaliacoes"
-                        ).authenticated()
-
-                        /*
-                         * FAVORITOS DO USUÁRIO LOGADO
-                         */
-                        .requestMatchers(
-                                "/usuarios/me/favoritos",
-                                "/usuarios/me/favoritos/**"
-                        ).authenticated()
-
-                        /*
-                         * AVALIAÇÕES DO USUÁRIO LOGADO
-                         */
-                        .requestMatchers(
-                                "/usuarios/me/avaliacoes",
-                                "/usuarios/me/avaliacoes/**"
-                        ).authenticated()
-
-                        /*
-                         * ADMIN - LISTAR USUÁRIOS
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/usuarios"
-                        ).hasRole("ADMIN")
-
-
-                        /*
-                         * ADMIN - BUSCAR USUÁRIO
-                         */
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/usuarios/*"
-                        ).hasRole("ADMIN")
-
-
-                        /*
-                         * ADMIN - CADASTRAR USUÁRIO
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/usuarios"
-                        ).hasRole("ADMIN")
-
-
-                        /*
-                         * ADMIN - ATUALIZAR USUÁRIO
-                         */
-                        .requestMatchers(
-                                HttpMethod.PUT,
-                                "/usuarios/*"
-                        ).hasRole("ADMIN")
-
-
-                        /*
-                         * ADMIN - ATUALIZAR OCUPAÇÃO
-                         */
-                        .requestMatchers(
-                                HttpMethod.PATCH,
-                                "/unidades/*/ocupacao"
-                        ).hasRole("ADMIN")
-
-
-                        /*
-                         * ADMIN - CADASTRAR UNIDADE
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/unidades"
-                        ).hasRole("ADMIN")
-
-
-                        /*
-                         * ADMIN - EXCLUIR UNIDADE
-                         */
-                        .requestMatchers(
-                                HttpMethod.DELETE,
-                                "/unidades/*"
-                        ).hasRole("ADMIN")
-
-
-                        /*
-                         * RECEBER MEDIÇÕES DA CÂMERA
-                         */
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/unidades/*/medicoes"
-                        ).permitAll()
-
-
-                        /*
-                         * ERROS DO SPRING
-                         */
-                        .requestMatchers(
-                                "/error"
-                        ).permitAll()
-
-
-                        /*
-                         * QUALQUER OUTRA ROTA
-                         * EXIGE AUTENTICAÇÃO
-                         *
-                         * SEMPRE DEVE SER O ÚLTIMO.
-                         */
-                        .anyRequest()
-                        .authenticated()
-                )
-
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
-
-
-        return http.build();
+    @Bean SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http.csrf(c->c.disable()).cors(c->c.configurationSource(corsConfigurationSource()))
+            .sessionManagement(c->c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(c->c
+                .authenticationEntryPoint((req,res,e)->SecurityErrors.write(res,401,"SESSAO_INVALIDA","Entre novamente para continuar."))
+                .accessDeniedHandler((req,res,e)->SecurityErrors.write(res,403,"ACESSO_NEGADO","Você não possui permissão.")))
+            .authorizeHttpRequests(a->a
+                .requestMatchers(HttpMethod.POST,"/usuarios/login","/usuarios/cadastro","/usuarios/esqueci-senha","/usuarios/verificar-codigo","/usuarios/redefinir-senha").permitAll()
+                .requestMatchers("/usuarios/me","/usuarios/me/**").authenticated()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,"/unidades","/unidades/**").permitAll()
+                .requestMatchers(HttpMethod.POST,"/unidades/*/avaliacoes").authenticated()
+                .requestMatchers("/usuarios","/usuarios/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/unidades").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,"/unidades/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE,"/unidades/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH,"/unidades/*/ocupacao").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/cameras/medicoes").permitAll()
+                .requestMatchers("/error").permitAll().anyRequest().denyAll())
+            .addFilterBefore(jwt,UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(limiter,JwtAuthenticationFilter.class).build();
     }
-
-
-    @Bean
-    public CorsConfigurationSource
-    corsConfigurationSource() {
-
-        CorsConfiguration configuration =
-                new CorsConfiguration();
-
-
-        configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:8081",
-                        "http://localhost:8082",
-                        "http://127.0.0.1:8081",
-                        "http://127.0.0.1:8082"
-                )
-        );
-
-
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PATCH",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
-                )
-        );
-
-
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
-
-
-        configuration.setAllowCredentials(
-                true
-        );
-
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
-
-
-        return source;
+    @Bean CorsConfigurationSource corsConfigurationSource() {
+        var c=new CorsConfiguration(); c.setAllowedOrigins(origins);
+        c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        c.setAllowedHeaders(List.of("Authorization","Content-Type","X-Camera-Key"));
+        c.setExposedHeaders(List.of("Retry-After")); c.setAllowCredentials(false);
+        var s=new UrlBasedCorsConfigurationSource(); s.registerCorsConfiguration("/**",c); return s;
     }
 }

@@ -7,7 +7,8 @@ public record MedicaoCameraRequestDTO(
 
         @NotNull(message = "A quantidade de pessoas é obrigatória")
         @Min(value = 0, message = "A quantidade de pessoas não pode ser negativa")
-        Integer quantidadePessoas
+        Integer quantidadePessoas,
+        java.util.UUID medicaoId
 
 ) {
 }

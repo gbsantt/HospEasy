@@ -50,16 +50,16 @@ export default function UnitMapCard({
             </Text>
 
             <Text style={styles.info}>
-                {statusCamera === "OFFLINE" || statusCamera === "DESATIVADA" || (statusMedicao && statusMedicao !== "ATUALIZADA")
+                {statusCamera !== "ONLINE" || statusMedicao !== "ATUALIZADA"
                     ? "Ocupação: sem dados atuais" : `Ocupação: ${percentual.toFixed(1)}%`}
             </Text>
 
             <Text style={styles.info}>
-                Nível: {nivelOcupacao}
+                Nível: {statusCamera === "ONLINE" && statusMedicao === "ATUALIZADA" ? nivelOcupacao : "Indisponível"}
             </Text>
 
             <Text style={styles.info}>
-                Movimento: {tendencia}
+                Movimento: {statusCamera === "ONLINE" && statusMedicao === "ATUALIZADA" ? tendencia : "Indisponível"}
             </Text>
 
             <Text style={styles.atualizacao}>

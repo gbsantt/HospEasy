@@ -81,6 +81,10 @@ def enableMinifyInReleaseBuilds = (findProperty('android.enableMinifyInReleaseBu
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+def signingNames = ['HOSPEASY_KEYSTORE_PATH','HOSPEASY_KEYSTORE_PASSWORD','HOSPEASY_KEY_ALIAS','HOSPEASY_KEY_PASSWORD']
+def signingValues = signingNames.collect { System.getenv(it) }
+if (signingValues.any { it } && !signingValues.every { it }) throw new GradleException('Configure todas as quatro variáveis de assinatura de release.')
+def hasReleaseSigning = signingValues.every { it }
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -105,14 +109,23 @@ android {
             keyPassword 'android'
         }
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(signingValues[0])
+                storePassword signingValues[1]
+                keyAlias signingValues[2]
+                keyPassword signingValues[3]
+            }
+        }
+    }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Without production credentials, emit an unsigned release artifact.
+            if (hasReleaseSigning) signingConfig signingConfigs.release
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds

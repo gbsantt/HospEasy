@@ -1,86 +1,30 @@
 package com.hospeasy.backend.service;
-
 import com.hospeasy.backend.entity.Usuario;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-
 @Service
 public class JwtService {
-
     private final SecretKey chave;
     private final long expiracao;
-
-    public JwtService(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration}") long expiracao
-    ) {
-        this.chave = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-        );
-
-        this.expiracao = expiracao;
+    public JwtService(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expiracao) {
+        chave=Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)); this.expiracao=expiracao;
     }
-
     public String gerarToken(Usuario usuario) {
-
-        Date agora = new Date();
-        Date validade = new Date(
-                agora.getTime() + expiracao
-        );
-
-        return Jwts.builder()
-                .subject(usuario.getEmail())
-                .claim("usuarioId", usuario.getId())
-                .claim(
-                        "tipo",
-                        usuario.getTipo().name()
-                )
-                .issuedAt(agora)
-                .expiration(validade)
-                .signWith(chave)
-                .compact();
+        var agora=new Date();
+        return Jwts.builder().issuer("hospeasy").subject(usuario.getId().toString()).claim("formato",2)
+            .claim("versao",usuario.getAuthVersion()).issuedAt(agora)
+            .expiration(new Date(agora.getTime()+expiracao)).signWith(chave).compact();
     }
-
-    public String extrairEmail(String token) {
-        return extrairClaims(token).getSubject();
+    public Identidade validar(String token) {
+        Claims c=Jwts.parser().verifyWith(chave).requireIssuer("hospeasy").build().parseSignedClaims(token).getPayload();
+        if(!Integer.valueOf(2).equals(c.get("formato",Integer.class)) || c.getExpiration()==null)
+            throw new IllegalArgumentException("Formato de sessão inválido");
+        return new Identidade(Long.parseLong(c.getSubject()),c.get("versao",Number.class).longValue());
     }
-
-    public Long extrairUsuarioId(String token) {
-
-        Number usuarioId = extrairClaims(token)
-                .get("usuarioId", Number.class);
-
-        return usuarioId.longValue();
-    }
-
-    public boolean tokenValido(String token) {
-
-        try {
-
-            Claims claims = extrairClaims(token);
-
-            return claims.getExpiration()
-                    .after(new Date());
-
-        } catch (Exception e) {
-
-            return false;
-        }
-    }
-
-    private Claims extrairClaims(String token) {
-
-        return Jwts.parser()
-                .verifyWith(chave)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
+    public record Identidade(Long usuarioId,long versao) {}
 }

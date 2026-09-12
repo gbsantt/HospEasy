@@ -18,4 +18,5 @@ public record CadastroUnidadeResponseDTO(
         String chaveApi
 
 ) {
+    @Override public String toString() { return "CadastroUnidadeResponseDTO[credencial omitida]"; }
 }

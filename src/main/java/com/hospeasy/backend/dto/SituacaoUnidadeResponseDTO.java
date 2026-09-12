@@ -26,7 +26,8 @@ public record SituacaoUnidadeResponseDTO(
         LocalDateTime ultimaAtualizacao,
         StatusMedicao statusMedicao,
         StatusCamera statusCamera,
-        RitmoOcupacao ritmoOcupacao
+        RitmoOcupacao ritmoOcupacao,
+        com.hospeasy.backend.entity.TipoUnidade tipo
 
 ) {
 }

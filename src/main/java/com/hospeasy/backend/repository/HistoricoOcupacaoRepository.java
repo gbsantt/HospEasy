@@ -1,37 +1,12 @@
 package com.hospeasy.backend.repository;
-
-import com.hospeasy.backend.entity.HistoricoOcupacao;
-import com.hospeasy.backend.entity.OrigemMedicao;
-import org.springframework.data.jpa.repository.JpaRepository;
-
+import com.hospeasy.backend.entity.*;
+import org.springframework.data.jpa.repository.*;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-public interface HistoricoOcupacaoRepository
-        extends JpaRepository<HistoricoOcupacao, Long> {
-
-    List<HistoricoOcupacao> findByUnidadeAtendimentoIdOrderByRegistradoEmDesc(
-            Long unidadeAtendimentoId
-    );
-
-    List<HistoricoOcupacao> findTop10ByUnidadeAtendimentoIdAndOrigemOrderByRegistradoEmDesc(
-            Long unidadeAtendimentoId,
-            OrigemMedicao origem
-    );
-
-    List<HistoricoOcupacao> findByUnidadeAtendimentoIdAndOrigemAndRegistradoEmAfterOrderByRegistradoEmDesc(
-            Long unidadeAtendimentoId,
-            OrigemMedicao origem,
-            LocalDateTime registradoEm
-    );
-
-    Optional<HistoricoOcupacao> findFirstByUnidadeAtendimentoIdAndOrigemOrderByRegistradoEmDesc(
-            Long unidadeAtendimentoId,
-            OrigemMedicao origem
-    );
-
-    void deleteByUnidadeAtendimentoId(
-            Long unidadeAtendimentoId
-    );
+import java.util.*;
+public interface HistoricoOcupacaoRepository extends JpaRepository<HistoricoOcupacao,Long> {
+    boolean existsByDispositivoIdAndMedicaoId(Long dispositivoId,java.util.UUID medicaoId);
+    List<HistoricoOcupacao> findTop100ByUnidadeAtendimentoIdOrderByRegistradoEmDesc(Long id);
+    @Query("select h from HistoricoOcupacao h where h.unidadeAtendimento.id in :ids and h.origem=com.hospeasy.backend.entity.OrigemMedicao.CAMERA and h.registradoEm>=:inicio order by h.registradoEm desc")
+    List<HistoricoOcupacao> janela(Collection<Long> ids,LocalDateTime inicio);
+    void deleteByUnidadeAtendimentoId(Long id);
 }

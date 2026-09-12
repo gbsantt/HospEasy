@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View, ScrollView, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import DynamicIsland from "../components/DynamicIsland";
 import HospEasyMap from "../components/HospEasyMap";
@@ -30,7 +30,7 @@ export default function HomeScreen() {
     const desktop = web && width >= 900;
     const selecionada = unidades.find((u) => u.unidadeId === selecionadaId);
 
-    useEffect(() => {
+    useFocusEffect(useCallback(() => {
         let ativo = true;
         let timer: ReturnType<typeof setTimeout>;
         const controller = new AbortController();
@@ -48,23 +48,25 @@ export default function HomeScreen() {
             } finally {
                 if (ativo) {
                     setCarregando(false);
-                    timer = setTimeout(carregar, 5000);
+                    timer = setTimeout(carregar, 15000);
                 }
             }
         }
         carregar();
         return () => { ativo = false; clearTimeout(timer); controller.abort(); };
-    }, [tentativa]);
+    }, [tentativa]));
 
     function abrirUnidade(unidade: Unidade) {
         setSelecionadaId(null);
-        navigation.navigate("Unit", { unidade });
+        navigation.navigate("Unit", { unidadeId: unidade.unidadeId });
     }
 
+    const Content=web&&!desktop?ScrollView:View;
     return <View style={styles.container}>
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 12) }]}>
             <MapBrand />
             {desktop && <Text style={styles.headerLabel}>Mapa de unidades de saúde</Text>}
+            {web && <Pressable accessibilityRole="button" onPress={()=>navigation.navigate(autenticado?"Suporte":"Login")}><Text style={styles.accountText}>Suporte</Text></Pressable>}
             <Pressable accessibilityRole="button" accessibilityLabel={autenticado ? "Abrir meu perfil" : "Entrar"} onPress={() => navigation.navigate(autenticado ? "Profile" : "Access")} style={[styles.account, autenticado && styles.avatar]}>
                 <Text style={[styles.accountText, autenticado && styles.avatarText]}>{autenticado ? usuario?.nome.trim().charAt(0).toUpperCase() : "Entrar"}</Text>
             </Pressable>
@@ -79,18 +81,18 @@ export default function HomeScreen() {
             <Text style={styles.noticeText}>{carregando ? "Buscando unidades…" : erro}</Text>
             {erro && <Pressable accessibilityRole="button" onPress={() => setTentativa((value) => value + 1)}><Text style={styles.retry}>Tentar novamente</Text></Pressable>}
         </View>}
-        <View style={[styles.content, desktop && styles.row]}>
+        <Content style={[styles.content, desktop && styles.row]} {...(web&&!desktop?{contentContainerStyle:{flexGrow:1,flexDirection:"column-reverse" as const}}:{})}>
             {web && <View style={desktop ? styles.sidebar : styles.mobilePanel}>
                 <WebUnitsPanel unidades={unidades} localizacao={localizacao} erroLocalizacao={erroLocalizacao} onAbrirUnidade={abrirUnidade} />
             </View>}
-            <View style={styles.mapArea}>
+            <View style={[styles.mapArea,web&&!desktop&&{minHeight:280}]}>
                 <HospEasyMap unidades={unidades} localizacaoUsuario={localizacao} onSelecionarUnidade={(u) => setSelecionadaId(u.unidadeId)} />
                 {selecionada && <UnitMapCard nome={selecionada.nome} percentual={selecionada.percentualOcupacao} tendencia={selecionada.tendencia}
                     nivelOcupacao={selecionada.nivelOcupacao} statusCamera={selecionada.statusCamera} statusMedicao={erro ? "DESATUALIZADA" : selecionada.statusMedicao}
                     onPress={() => abrirUnidade(selecionada)} onClose={() => setSelecionadaId(null)} />}
                 {!web && <DynamicIsland unidades={unidades} localizacaoUsuario={localizacao} erroLocalizacao={erroLocalizacao} onAbrirUnidade={abrirUnidade} />}
             </View>
-        </View>
+        </Content>
     </View>;
 }
 
@@ -113,6 +115,6 @@ const styles = StyleSheet.create({
     content: { flex: 1, minHeight: 0, flexDirection: "column-reverse" },
     row: { flexDirection: "row" },
     sidebar: { width: 360, borderRightWidth: 1, borderColor: colors.border },
-    mobilePanel: { height: "42%", minHeight: 210, borderTopWidth: 1, borderColor: colors.border },
+    mobilePanel: { height: 320, minHeight: 240, borderTopWidth: 1, borderColor: colors.border },
     mapArea: { flex: 1, minHeight: 180, overflow: "hidden" },
 });

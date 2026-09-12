@@ -12,12 +12,14 @@ public interface AvaliacaoRepository
         extends JpaRepository<Avaliacao, Long> {
 
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths={"usuario","unidadeAtendimento"})
     List<Avaliacao>
     findByUnidadeAtendimentoIdOrderByCriadoEmDesc(
             Long unidadeId
     );
 
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths={"usuario","unidadeAtendimento"})
     List<Avaliacao>
     findByUsuarioIdOrderByCriadoEmDesc(
             Long usuarioId

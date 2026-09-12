@@ -1,123 +1,28 @@
 package com.hospeasy.backend.controller;
-
-import com.hospeasy.backend.dto.UnidadeAtendimentoRequestDTO;
-import com.hospeasy.backend.dto.CadastroUnidadeResponseDTO;
-import com.hospeasy.backend.dto.UnidadeAtendimentoResponseDTO;
+import com.hospeasy.backend.dto.*;
+import com.hospeasy.backend.entity.Usuario;
 import com.hospeasy.backend.service.UnidadeAtendimentoService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import com.hospeasy.backend.dto.AtualizarOcupacaoDTO;
-import com.hospeasy.backend.dto.AtualizarUnidadeRequestDTO;
-import com.hospeasy.backend.dto.HistoricoOcupacaoResponseDTO;
-import com.hospeasy.backend.entity.Usuario;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import com.hospeasy.backend.dto.MedicaoCameraRequestDTO;
-import com.hospeasy.backend.service.DispositivoCameraService;
-import com.hospeasy.backend.dto.SituacaoUnidadeResponseDTO;
-
+import org.springframework.http.*;
 import java.util.List;
-
-@RestController
-@RequestMapping("/unidades")
+@RestController @RequestMapping("/unidades")
 public class UnidadeAtendimentoController {
-
-    private final UnidadeAtendimentoService unidadeAtendimentoService;
-    private final DispositivoCameraService dispositivoCameraService;
-
-    public UnidadeAtendimentoController(
-            UnidadeAtendimentoService unidadeAtendimentoService,
-            DispositivoCameraService dispositivoCameraService
-    ) {
-        this.unidadeAtendimentoService = unidadeAtendimentoService;
-        this.dispositivoCameraService = dispositivoCameraService;
+    private final UnidadeAtendimentoService unidades;
+    public UnidadeAtendimentoController(UnidadeAtendimentoService unidades) { this.unidades=unidades; }
+    @GetMapping public List<UnidadeAtendimentoResponseDTO> listar() { return unidades.listarUnidades(); }
+    @GetMapping("/{id}") public UnidadeAtendimentoResponseDTO buscar(@PathVariable Long id) { return unidades.buscarPorId(id); }
+    @PostMapping public ResponseEntity<CadastroUnidadeResponseDTO> criar(@Valid @RequestBody UnidadeAtendimentoRequestDTO dto) {
+        return ResponseEntity.status(201).cacheControl(CacheControl.noStore()).body(unidades.cadastrarUnidades(dto));
     }
-
-    @GetMapping
-    public List<UnidadeAtendimentoResponseDTO> listarUnidades() {
-        return unidadeAtendimentoService.listarUnidades();
+    @PutMapping("/{id}") public UnidadeAtendimentoResponseDTO atualizar(@PathVariable Long id,@Valid @RequestBody AtualizarUnidadeRequestDTO dto) { return unidades.atualizarUnidade(id,dto); }
+    @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT) public void excluir(@PathVariable Long id) { unidades.excluirUnidade(id); }
+    @PatchMapping("/{id}/ocupacao") public UnidadeAtendimentoResponseDTO ocupacao(@PathVariable Long id,@Valid @RequestBody AtualizarOcupacaoDTO dto,@AuthenticationPrincipal Usuario usuario) {
+        return unidades.atualizarOcupacao(id,dto,usuario);
     }
-
-    @GetMapping("/{id}")
-    public UnidadeAtendimentoResponseDTO buscarUnidadePorId(@PathVariable Long id) {
-        return unidadeAtendimentoService.buscarPorId(id);
-    }
-
-    @PostMapping
-    public CadastroUnidadeResponseDTO cadastrarUnidades(
-            @Valid @RequestBody UnidadeAtendimentoRequestDTO dto
-    ) {
-        return unidadeAtendimentoService.cadastrarUnidades(dto);
-    }
-
-    @GetMapping("/{id}/historico")
-    public List<HistoricoOcupacaoResponseDTO> buscarHistorico(
-            @PathVariable Long id
-    ) {
-        return unidadeAtendimentoService.buscarHistorico(id);
-    }
-
-    @PatchMapping("/{id}/ocupacao")
-    public UnidadeAtendimentoResponseDTO atualizarOcupacao(
-            @PathVariable Long id,
-            @Valid @RequestBody AtualizarOcupacaoDTO dto,
-            @AuthenticationPrincipal Usuario usuario
-    ) {
-        return unidadeAtendimentoService.atualizarOcupacao(id, dto, usuario);
-    }
-
-    @PostMapping("/{id}/medicoes")
-    public UnidadeAtendimentoResponseDTO registrarMedicaoCamera(
-            @PathVariable Long id,
-            @RequestHeader("X-API-Key") String chaveApi,
-            @Valid @RequestBody MedicaoCameraRequestDTO dto
-    ) {
-
-        dispositivoCameraService.validarDispositivo(
-                chaveApi,
-                id
-        );
-
-        return unidadeAtendimentoService.registrarMedicaoCamera(
-                id,
-                dto
-        );
-    }
-
-    @GetMapping("/{id}/situacao")
-    public SituacaoUnidadeResponseDTO buscarSituacaoAtual(
-            @PathVariable Long id
-    ) {
-        return unidadeAtendimentoService.buscarSituacaoAtual(id);
-    }
-
-    @GetMapping("/situacoes")
-    public List<SituacaoUnidadeResponseDTO> listarSituacoes() {
-        return unidadeAtendimentoService.listarSituacoes();
-    }
-
-    @GetMapping("/situacoes/ordenadas")
-    public List<SituacaoUnidadeResponseDTO> listarSituacoesOrdenadas() {
-        return unidadeAtendimentoService.listarSituacoesOrdenadasPorOcupacao();
-    }
-    @PutMapping("/{id}")
-    public UnidadeAtendimentoResponseDTO atualizarUnidade(
-            @PathVariable Long id,
-            @Valid @RequestBody AtualizarUnidadeRequestDTO dto
-    ) {
-
-        return unidadeAtendimentoService.atualizarUnidade(
-                id,
-                dto
-        );
-    }
-
-    @DeleteMapping("/{id}")
-    public void excluirUnidade(
-            @PathVariable Long id
-    ) {
-
-        unidadeAtendimentoService.excluirUnidade(
-                id
-        );
-    }
+    @GetMapping("/{id}/historico") public List<HistoricoOcupacaoResponseDTO> historico(@PathVariable Long id) { return unidades.buscarHistorico(id); }
+    @GetMapping("/{id}/situacao") public SituacaoUnidadeResponseDTO situacao(@PathVariable Long id) { return unidades.buscarSituacaoAtual(id); }
+    @GetMapping("/situacoes") public List<SituacaoUnidadeResponseDTO> situacoes() { return unidades.listarSituacoes(); }
+    @GetMapping("/situacoes/ordenadas") public List<SituacaoUnidadeResponseDTO> ordenadas() { return unidades.listarSituacoesOrdenadasPorOcupacao(); }
 }

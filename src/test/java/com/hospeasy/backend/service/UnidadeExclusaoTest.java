@@ -15,12 +15,12 @@ class UnidadeExclusaoTest {
     private final FavoritoRepository favoritos = mock(FavoritoRepository.class);
     private final DispositivoCameraRepository cameras = mock(DispositivoCameraRepository.class);
     private final UnidadeAtendimentoService service = new UnidadeAtendimentoService(unidades, historico,
-            mock(DispositivoCameraService.class), mock(GeocodificacaoService.class), avaliacoes, favoritos, cameras);
+            mock(DispositivoCameraService.class), mock(GeocodificacaoService.class), avaliacoes, favoritos, cameras, mock(SituacaoUnidadeService.class));
 
     @Test
     void removeDependenciasAntesDaUnidade() {
         var unidade = new UnidadeAtendimento();
-        when(unidades.findById(1L)).thenReturn(Optional.of(unidade));
+        when(unidades.bloquear(1L)).thenReturn(Optional.of(unidade));
         service.excluirUnidade(1L);
         var ordem = inOrder(historico, avaliacoes, favoritos, cameras, unidades);
         ordem.verify(historico).deleteByUnidadeAtendimentoId(1L);
@@ -33,18 +33,18 @@ class UnidadeExclusaoTest {
 
     @Test
     void unidadeInexistenteNaoRemoveDependencias() {
-        when(unidades.findById(9L)).thenReturn(Optional.empty());
+        when(unidades.bloquear(9L)).thenReturn(Optional.empty());
         assertThrows(UnidadeNaoEncontradaException.class, () -> service.excluirUnidade(9L));
-        verifyNoInteractions(historico, avaliacoes, favoritos, cameras);
+        verifyNoInteractions(historico, avaliacoes, favoritos, cameras, mock(SituacaoUnidadeService.class));
         verify(unidades, never()).delete(any());
     }
 
     @Test
     void falhaEmDependenciaNaoProssegueComExclusao() {
-        when(unidades.findById(1L)).thenReturn(Optional.of(new UnidadeAtendimento()));
+        when(unidades.bloquear(1L)).thenReturn(Optional.of(new UnidadeAtendimento()));
         doThrow(new IllegalStateException("Falha de banco")).when(historico).deleteByUnidadeAtendimentoId(1L);
         assertThrows(IllegalStateException.class, () -> service.excluirUnidade(1L));
-        verifyNoInteractions(avaliacoes, favoritos, cameras);
+        verifyNoInteractions(avaliacoes, favoritos, cameras, mock(SituacaoUnidadeService.class));
         verify(unidades, never()).delete(any());
     }
 }

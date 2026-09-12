@@ -12,6 +12,7 @@ public interface FavoritoRepository
         extends JpaRepository<Favorito, Long> {
 
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "unidade")
     List<Favorito>
     findByUsuarioIdOrderByIdDesc(
             Long usuarioId

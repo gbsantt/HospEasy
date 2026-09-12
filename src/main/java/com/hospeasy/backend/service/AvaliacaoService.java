@@ -20,6 +20,7 @@ import java.util.List;
 
 
 @Service
+@Transactional(readOnly = true)
 public class AvaliacaoService {
 
     private final AvaliacaoRepository
@@ -150,7 +151,7 @@ public class AvaliacaoService {
                                 usuario.getId()
                         )
                         .orElseThrow(
-                                () -> new IllegalArgumentException(
+                                () -> new com.hospeasy.backend.exception.ApiException(404, "AVALIACAO_NAO_ENCONTRADA",
                                         "Avaliação não encontrada."
                                 )
                         );
@@ -191,7 +192,7 @@ public class AvaliacaoService {
                                 usuario.getId()
                         )
                         .orElseThrow(
-                                () -> new IllegalArgumentException(
+                                () -> new com.hospeasy.backend.exception.ApiException(404, "AVALIACAO_NAO_ENCONTRADA",
                                         "Avaliação não encontrada."
                                 )
                         );

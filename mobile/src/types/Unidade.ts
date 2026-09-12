@@ -3,6 +3,13 @@ export type TipoUnidade =
     | "PRONTO_ATENDIMENTO"
     | "PRONTO_SOCORRO";
 
+export type UnidadeCadastro = {
+    id: number; nome: string; endereco: string; telefone: string | null;
+    capacidadeAreaMonitorada: number; ocupacaoAtual: number; percentualOcupacao: number;
+    nivelOcupacao: string; latitude: number | null; longitude: number | null;
+    ultimaAtualizacao: string | null; tipo: TipoUnidade;
+};
+
 
 export type Unidade = {
 

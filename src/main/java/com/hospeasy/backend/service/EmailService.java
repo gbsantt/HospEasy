@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    @org.springframework.beans.factory.annotation.Value("${app.mail.from}")
+    private String remetente;
 
 
     public EmailService(
@@ -27,6 +29,7 @@ public class EmailService {
 
         SimpleMailMessage mensagem =
                 new SimpleMailMessage();
+        if (!remetente.isBlank()) mensagem.setFrom(remetente);
 
 
         mensagem.setTo(

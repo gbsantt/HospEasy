@@ -13,6 +13,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class Usuario {
+    @Column(nullable = false)
+    private long authVersion = 0;
 
     @Id
     @GeneratedValue(

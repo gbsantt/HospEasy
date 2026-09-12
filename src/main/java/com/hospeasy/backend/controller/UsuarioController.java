@@ -25,6 +25,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController {
+    @GetMapping("/me")
+    public com.hospeasy.backend.dto.UsuarioResponseDTO me(@AuthenticationPrincipal Usuario usuario) {
+        return usuarioService.buscarUsuarioPorId(usuario.getId());
+    }
 
     private final UsuarioService usuarioService;
 

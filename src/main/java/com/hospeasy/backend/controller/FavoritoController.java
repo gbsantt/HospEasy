@@ -1,6 +1,6 @@
 package com.hospeasy.backend.controller;
 
-import com.hospeasy.backend.dto.FavoritoResponseDTO;
+import com.hospeasy.backend.dto.SituacaoUnidadeResponseDTO;
 
 import com.hospeasy.backend.entity.Usuario;
 
@@ -32,7 +32,7 @@ public class FavoritoController {
 
 
     @GetMapping
-    public List<FavoritoResponseDTO> listar(
+    public List<SituacaoUnidadeResponseDTO> listar(
             @AuthenticationPrincipal
             Usuario usuario
     ) {
@@ -44,7 +44,7 @@ public class FavoritoController {
 
 
     @PostMapping("/{unidadeId}")
-    public FavoritoResponseDTO adicionar(
+    public SituacaoUnidadeResponseDTO adicionar(
             @AuthenticationPrincipal
             Usuario usuario,
 

@@ -1,361 +1,107 @@
 package com.hospeasy.backend.service;
-
-import com.hospeasy.backend.entity.DispositivoCamera;
-import com.hospeasy.backend.entity.StatusCamera;
-import com.hospeasy.backend.entity.UnidadeAtendimento;
-
-import com.hospeasy.backend.exception.DispositivoNaoAutorizadoException;
-
-import com.hospeasy.backend.repository.DispositivoCameraRepository;
-
+import com.hospeasy.backend.entity.*;
+import com.hospeasy.backend.dto.*;
+import com.hospeasy.backend.repository.*;
+import com.hospeasy.backend.exception.*;
 import org.springframework.stereotype.Service;
-
-import java.security.SecureRandom;
-
-import java.time.LocalDateTime;
-
-import java.util.Base64;
-
-
+import org.springframework.transaction.annotation.Transactional;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.time.*;
+import java.util.*;
 @Service
+@Transactional
 public class DispositivoCameraService {
-
-    /*
-     * 32 bytes = 256 bits de aleatoriedade.
-     *
-     * A chave é convertida para Base64 URL-safe, sem "="
-     * no final, ficando apropriada para HTTP headers.
-     */
-    private static final int TAMANHO_CHAVE_BYTES =
-            32;
-
-
-    private final DispositivoCameraRepository
-            dispositivoCameraRepository;
-
-
-    private final SecureRandom secureRandom =
-            new SecureRandom();
-
-
-    public DispositivoCameraService(
-            DispositivoCameraRepository
-                    dispositivoCameraRepository
-    ) {
-
-        this.dispositivoCameraRepository =
-                dispositivoCameraRepository;
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+    private final DispositivoCameraRepository dispositivos;
+    private final UnidadeAtendimentoRepository unidades;
+    private final HistoricoOcupacaoRepository historico;
+    private final SecureRandom random=new SecureRandom();
+    public DispositivoCameraService(DispositivoCameraRepository dispositivos,UnidadeAtendimentoRepository unidades,HistoricoOcupacaoRepository historico) {
+        this.dispositivos=dispositivos; this.unidades=unidades; this.historico=historico;
     }
-
-
-    /*
-     * Cria uma câmera já ligada a uma unidade.
-     *
-     * A chave NÃO vem do aplicativo:
-     * o backend gera uma chave imprevisível.
-     */
-    public DispositivoCamera cadastrarDispositivo(
-            String nome,
-            UnidadeAtendimento unidadeAtendimento
-    ) {
-
-        if (
-                nome == null ||
-                        nome.isBlank()
-        ) {
-
-            throw new IllegalArgumentException(
-                    "O nome da câmera é obrigatório"
-            );
-        }
-
-
-        if (
-                unidadeAtendimento == null ||
-                        unidadeAtendimento.getId() == null
-        ) {
-
-            throw new IllegalArgumentException(
-                    "A câmera precisa estar vinculada a uma unidade válida"
-            );
-        }
-
-
-        DispositivoCamera dispositivo =
-                new DispositivoCamera();
-
-
-        dispositivo.setNome(
-                nome.trim()
-        );
-
-
-        dispositivo.setChaveApi(
-                gerarChaveApiUnica()
-        );
-
-
-        dispositivo.setUnidadeAtendimento(
-                unidadeAtendimento
-        );
-
-
-        dispositivo.setAtivo(
-                true
-        );
-
-
-        /*
-         * Continua null até a câmera física realmente
-         * enviar sua primeira medição.
-         */
-        dispositivo.setUltimaComunicacao(
-                null
-        );
-
-
-        return dispositivoCameraRepository.save(
-                dispositivo
-        );
+    public CredencialCameraResponseDTO cadastrar(Long unidadeId,CriarDispositivoRequestDTO dto) {
+        var unidade=unidadeBloqueada(unidadeId);
+        verificarAtiva(unidadeId,-1L,dto.ativo());
+        var d=new DispositivoCamera(); d.setNome(dto.nome().trim()); d.setUnidadeAtendimento(unidade); d.setAtivo(dto.ativo());
+        String key=novaChave(); d.setChaveHash(hash(key)); d.setChaveGeradaEm(Instant.now());
+        dispositivos.saveAndFlush(d);
+        return new CredencialCameraResponseDTO(resposta(d),key);
     }
-
-
-    private String gerarChaveApiUnica() {
-
-        String chave;
-
-
-        do {
-
-            byte[] bytes =
-                    new byte[
-                            TAMANHO_CHAVE_BYTES
-                            ];
-
-
-            secureRandom.nextBytes(
-                    bytes
-            );
-
-
-            chave =
-                    Base64
-                            .getUrlEncoder()
-                            .withoutPadding()
-                            .encodeToString(
-                                    bytes
-                            );
-
-        } while (
-                dispositivoCameraRepository
-                        .existsByChaveApi(
-                                chave
-                        )
-        );
-
-
-        return chave;
+    @Transactional(readOnly=true) public List<DispositivoResponseDTO> listar(Long unidadeId) {
+        if(!unidades.existsById(unidadeId)) throw new UnidadeNaoEncontradaException();
+        return dispositivos.findByUnidadeAtendimentoIdOrderById(unidadeId).stream().map(this::resposta).toList();
     }
-
-
-    /*
-     * REMOVE O(S) DISPOSITIVO(S) DE CÂMERA
-     * VINCULADO(S) A UMA UNIDADE.
-     *
-     * Usado antes de excluir a própria unidade,
-     * já que não existe cascade configurado.
-     */
-    public void excluirPorUnidade(
-            Long unidadeId
-    ) {
-
-        dispositivoCameraRepository
-                .deleteByUnidadeAtendimentoId(
-                        unidadeId
-                );
+    public DispositivoResponseDTO atualizar(Long id,AtualizarDispositivoRequestDTO dto) {
+        var d=bloquearDispositivo(id);
+        if(d.getVersion()!=dto.version()) throw new ApiException(409,"DISPOSITIVO_ALTERADO","O dispositivo foi alterado. Atualize a lista.");
+        if(dto.ativo() && d.getChaveRevogadaEm()!=null) throw new ApiException(409,"CHAVE_REVOGADA","Gere uma nova chave antes de ativar.");
+        verificarAtiva(d.getUnidadeAtendimento().getId(),id,dto.ativo());
+        d.setNome(dto.nome().trim()); d.setAtivo(dto.ativo()); dispositivos.flush(); return resposta(d);
     }
-
-
-    public boolean unidadePossuiCamera(
-            Long unidadeId
-    ) {
-
-        if (
-                unidadeId == null
-        ) {
-
-            return false;
-        }
-
-
-        return dispositivoCameraRepository
-                .existsByUnidadeAtendimentoId(
-                        unidadeId
-                );
+    public DispositivoResponseDTO revogar(Long id) {
+        var d=bloquearDispositivo(id); d.setChaveRevogadaEm(Instant.now()); d.setAtivo(false);
+        dispositivos.flush(); return resposta(d);
     }
-
-
-    public DispositivoCamera validarDispositivo(
-            String chaveApi,
-            Long unidadeId
-    ) {
-
-        if (
-                chaveApi == null ||
-                        chaveApi.isBlank()
-        ) {
-
-            throw new DispositivoNaoAutorizadoException(
-                    "Chave da câmera não informada"
-            );
-        }
-
-
-        DispositivoCamera dispositivo =
-                dispositivoCameraRepository
-                        .findByChaveApi(
-                                chaveApi
-                        )
-                        .orElseThrow(
-                                () ->
-                                        new DispositivoNaoAutorizadoException(
-                                                "Chave da câmera inválida"
-                                        )
-                        );
-
-
-        if (
-                !Boolean.TRUE.equals(
-                        dispositivo.getAtivo()
-                )
-        ) {
-
-            throw new DispositivoNaoAutorizadoException(
-                    "Dispositivo da câmera está desativado"
-            );
-        }
-
-
-        if (
-                !dispositivo
-                        .getUnidadeAtendimento()
-                        .getId()
-                        .equals(
-                                unidadeId
-                        )
-        ) {
-
-            throw new DispositivoNaoAutorizadoException(
-                    "Dispositivo não pertence a esta unidade"
-            );
-        }
-
-
-        dispositivo.setUltimaComunicacao(
-                LocalDateTime.now()
-        );
-
-
-        dispositivoCameraRepository.save(
-                dispositivo
-        );
-
-
-        return dispositivo;
+    public CredencialCameraResponseDTO regenerar(Long id) {
+        var d=bloquearDispositivo(id); String key=novaChave();
+        d.setChaveHash(hash(key)); d.setChaveRevogadaEm(null); d.setChaveGeradaEm(Instant.now());
+        d.setUltimaComunicacao(null); dispositivos.flush(); return new CredencialCameraResponseDTO(resposta(d),key);
     }
-
-
-    public StatusCamera calcularStatusCamera(
-            DispositivoCamera dispositivo
-    ) {
-
-        if (
-                !Boolean.TRUE.equals(
-                        dispositivo.getAtivo()
-                )
-        ) {
-
-            return StatusCamera.DESATIVADA;
-        }
-
-
-        if (
-                dispositivo.getUltimaComunicacao()
-                        == null
-        ) {
-
-            return StatusCamera.OFFLINE;
-        }
-
-
-        LocalDateTime agora =
-                LocalDateTime.now();
-
-
-        LocalDateTime limiteOnline =
-                agora.minusMinutes(
-                        6
-                );
-
-
-        LocalDateTime limiteAtrasada =
-                agora.minusMinutes(
-                        15
-                );
-
-
-        if (
-                dispositivo
-                        .getUltimaComunicacao()
-                        .isAfter(
-                                limiteOnline
-                        )
-        ) {
-
-            return StatusCamera.ONLINE;
-        }
-
-
-        if (
-                dispositivo
-                        .getUltimaComunicacao()
-                        .isAfter(
-                                limiteAtrasada
-                        )
-        ) {
-
-            return StatusCamera.ATRASADA;
-        }
-
-
-        return StatusCamera.OFFLINE;
+    public void registrarMedicao(String key,MedicaoCameraRequestDTO dto) {
+        if(key==null || key.isBlank() || key.length()>256) throw naoAutorizado();
+        String digest=hash(key);
+        var encontrado=dispositivos.findByChaveHash(digest).orElseThrow(this::naoAutorizado);
+        if(encontrado.getUnidadeAtendimento()==null) throw naoAutorizado();
+        var unidade=unidadeBloqueada(encontrado.getUnidadeAtendimento().getId());
+        var d=dispositivos.bloquear(encontrado.getId()).orElseThrow(this::naoAutorizado);
+        entityManager.refresh(d,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        if(!MessageDigest.isEqual(digest.getBytes(StandardCharsets.US_ASCII),d.getChaveHash().getBytes(StandardCharsets.US_ASCII))
+            || !Boolean.TRUE.equals(d.getAtivo()) || d.getChaveRevogadaEm()!=null) throw naoAutorizado();
+        int quantidade=dto.quantidadePessoas();
+        if(dto.medicaoId()!=null && historico.existsByDispositivoIdAndMedicaoId(d.getId(),dto.medicaoId())) return;
+        if(quantidade<0 || quantidade>unidade.getCapacidadeAreaMonitorada())
+            throw new ApiException(400,"OCUPACAO_INVALIDA","A quantidade deve estar entre zero e a capacidade da área monitorada.");
+        var now=LocalDateTime.now();
+        unidade.setOcupacaoAtual(quantidade); unidade.setUltimaAtualizacao(now);
+        var h=new HistoricoOcupacao(); h.setUnidadeAtendimento(unidade); h.setDispositivo(d);
+        h.setMedicaoId(dto.medicaoId());
+        h.setQuantidadePessoas(quantidade); h.setPercentualOcupacao(quantidade*100.0/unidade.getCapacidadeAreaMonitorada());
+        h.setRegistradoEm(now); h.setOrigem(OrigemMedicao.CAMERA); historico.save(h);
+        d.setUltimaComunicacao(now);
+        // All changes commit together; callers never see an accepted response before commit.
+        historico.flush();
     }
-
-
-    public StatusCamera buscarStatusPorUnidade(
-            Long unidadeId
-    ) {
-
-        DispositivoCamera dispositivo =
-                dispositivoCameraRepository
-                        .findFirstByUnidadeAtendimentoId(
-                                unidadeId
-                        )
-                        .orElse(
-                                null
-                        );
-
-
-        if (
-                dispositivo == null
-        ) {
-
-            return StatusCamera.OFFLINE;
-        }
-
-
-        return calcularStatusCamera(
-                dispositivo
-        );
+    private DispositivoCamera bloquearDispositivo(Long id) {
+        var d=dispositivos.findById(id).orElseThrow(()->new ApiException(404,"DISPOSITIVO_NAO_ENCONTRADO","Dispositivo não encontrado."));
+        unidadeBloqueada(d.getUnidadeAtendimento().getId());
+        d=dispositivos.bloquear(id).orElseThrow(()->new ApiException(404,"DISPOSITIVO_NAO_ENCONTRADO","Dispositivo não encontrado."));
+        entityManager.refresh(d,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        return d;
+    }
+    private UnidadeAtendimento unidadeBloqueada(Long id) { return unidades.bloquear(id).orElseThrow(UnidadeNaoEncontradaException::new); }
+    private void verificarAtiva(Long unidadeId,Long id,boolean ativo) {
+        if(ativo && dispositivos.existsByUnidadeAtendimentoIdAndAtivoTrueAndIdNot(unidadeId,id))
+            throw new ApiException(409,"CAMERA_ATIVA_EXISTENTE","Desative a câmera atual antes de ativar outra nesta unidade.");
+    }
+    private ApiException naoAutorizado() { return new ApiException(401,"CAMERA_NAO_AUTORIZADA","Credencial de câmera inválida ou indisponível."); }
+    private String novaChave() { byte[] bytes=new byte[32]; random.nextBytes(bytes); return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }
+    public static String hash(String key) {
+        try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8))); }
+        catch(NoSuchAlgorithmException e) { throw new IllegalStateException("Hash indisponível"); }
+    }
+    public static StatusCamera status(DispositivoCamera d) {
+        if(d==null) return StatusCamera.SEM_CAMERA;
+        if(!Boolean.TRUE.equals(d.getAtivo()) || d.getChaveRevogadaEm()!=null) return StatusCamera.DESATIVADA;
+        var last=d.getUltimaComunicacao();
+        if(last==null || last.isBefore(LocalDateTime.now().minusMinutes(15))) return StatusCamera.OFFLINE;
+        if(last.isBefore(LocalDateTime.now().minusMinutes(6))) return StatusCamera.ATRASADA;
+        return StatusCamera.ONLINE;
+    }
+    private DispositivoResponseDTO resposta(DispositivoCamera d) {
+        return new DispositivoResponseDTO(d.getId(),d.getNome(),d.getUnidadeAtendimento().getId(),
+            Boolean.TRUE.equals(d.getAtivo()),d.getChaveRevogadaEm()!=null,status(d),d.getUltimaComunicacao(),
+            d.getChaveGeradaEm(),d.getCreatedAt(),d.getUpdatedAt(),d.getVersion());
     }
 }
