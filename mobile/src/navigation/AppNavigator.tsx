@@ -64,7 +64,7 @@ export default function AppNavigator(){
     if(carregandoSessao)return <ScreenLayout title="HospEasy"><Text>Validando sessão…</Text></ScreenLayout>;
     if(erroSessao)return <ScreenLayout title="Validar sessão"><ErrorNotice message={erroSessao}/>
         <Button title="Tentar novamente" onPress={()=>void revalidar()}/><Button title="Sair da conta" secondary onPress={()=>void logout()}/></ScreenLayout>;
-    return <NavigationContainer key={`${usuario?.id??"anon"}:${usuario?.tipo??""}`} linking={linking} documentTitle={{formatter:()=>"HospEasy — Unidades de saúde"}}>
+    return <NavigationContainer linking={linking} documentTitle={{formatter:()=>"HospEasy — Unidades de saúde"}}>
         <Stack.Navigator screenOptions={{headerShown:false}}>
             <Stack.Screen name="Home" component={HomeScreen}/><Stack.Screen name="Unit" component={UnitScreen}/>
             <Stack.Screen name="Review" component={ReviewScreen}/><Stack.Screen name="Access" component={AccessScreen}/>
