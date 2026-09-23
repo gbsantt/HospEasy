@@ -306,7 +306,7 @@ export default function UnidadeAdminForm({
 
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?${params.toString()}`,
-                { headers: { Accept: "application/json" } }
+                {headers: {Accept: "application/json"}}
             );
 
             if (!response.ok) {

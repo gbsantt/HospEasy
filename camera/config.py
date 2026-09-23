@@ -14,7 +14,7 @@ INTERVALO_MEDICAO = float(os.getenv("HOSPEASY_INTERVAL_SECONDS", "180"))
 QUANTIDADE_AMOSTRAS = int(os.getenv("HOSPEASY_SAMPLES", "5"))
 INTERVALO_AMOSTRAS = float(os.getenv("HOSPEASY_SAMPLE_INTERVAL_SECONDS", "0.5"))
 ARQUIVO_LOG = str(BASE_DIR / "hospeasy_camera.log")
-MODELO_PATH = Path(os.getenv("HOSPEASY_MODEL_PATH", "yolov8n.pt"))
+MODELO_PATH = Path(os.getenv("HOSPEASY_MODEL_PATH", "yolov8n.onnx"))
 MODELO_PATH = (MODELO_PATH if MODELO_PATH.is_absolute() else BASE_DIR / MODELO_PATH).resolve()
 
 def validar_detector():

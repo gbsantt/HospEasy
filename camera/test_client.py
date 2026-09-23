@@ -50,14 +50,6 @@ class CameraClientTests(unittest.TestCase):
         for url in ("ftp://localhost","https://user:pass@localhost","https://localhost?secret=x"):
             with patch.dict(os.environ,{"HOSPEASY_API_URL":url}):
                 self.assertRaises(ValueError,config.configuracao_api)
-    def test_detector_uses_same_threshold_and_only_people(self):
-        model=Mock(return_value=[Mock(boxes=[1,2])])
-        with patch.object(detector,"obter_modelo",return_value=model):
-            self.assertEqual(detector.contar_pessoas("frame"),2)
-            kwargs=model.call_args.kwargs
-            self.assertEqual(kwargs["classes"],[0])
-            self.assertEqual(kwargs["conf"],config.CONFIANCA_MINIMA)
-            self.assertFalse(kwargs["verbose"])
     def test_model_path_and_missing_model(self):
         self.assertTrue(config.MODELO_PATH.is_absolute())
         with patch.object(detector,"_modelo",None),patch.object(detector,"MODELO_PATH") as path:

@@ -1,28 +1,54 @@
-"""Local visual test; does not send measurements or require API credentials."""
-from config import CAMERA_INDEX, LARGURA_CAMERA, ALTURA_CAMERA, validar_detector
-from detector import contar_pessoas
+"""Teste local de detecção, sem credenciais ou envio à API."""
+import argparse
+import time
+from statistics import median
+from config import validar_detector
+from detector import contar_pessoas, obter_modelo
+from main import coletar_contagens
+
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--imagem', help='Testar uma foto em vez da webcam')
+    parser.add_argument('--mostrar', action='store_true', help='Abrir janela (requer OpenCV com GUI)')
+    parser.add_argument('--salvar', help='Salvar última imagem com as detecções neste caminho')
+    args = parser.parse_args()
     import cv2
     validar_detector()
-    camera = cv2.VideoCapture(CAMERA_INDEX)
-    try:
-        if not camera.isOpened():
-            raise RuntimeError("Não foi possível abrir a webcam.")
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, LARGURA_CAMERA)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, ALTURA_CAMERA)
-        while True:
-            ok, frame = camera.read()
-            if not ok:
-                raise RuntimeError("Não foi possível capturar imagem.")
-            quantidade, imagem = contar_pessoas(frame, mostrar=True)
-            cv2.putText(imagem, f"Pessoas: {quantidade}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv2.imshow("HospEasy - teste local - Q para sair", imagem)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-    finally:
-        camera.release()
-        cv2.destroyAllWindows()
+    obter_modelo()
+    desenhar = args.mostrar or bool(args.salvar)
 
-if __name__ == "__main__":
-    main()
+    def exibir(quantidade, imagem, segundos):
+        print(f'Pessoas: {quantidade} | inferência: {segundos:.2f}s', flush=True)
+        if args.salvar and not cv2.imwrite(args.salvar, imagem):
+            raise RuntimeError('Não foi possível salvar a imagem de teste.')
+        if args.mostrar:
+            cv2.imshow('HospEasy - teste local', imagem)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                raise KeyboardInterrupt
+
+    try:
+        if args.imagem:
+            frame = cv2.imread(args.imagem)
+            if frame is None:
+                raise ValueError('Não foi possível ler a imagem de teste.')
+            inicio = time.perf_counter()
+            resultado = contar_pessoas(frame, mostrar=desenhar)
+            quantidade, imagem = resultado if desenhar else (resultado, frame)
+            exibir(quantidade, imagem, time.perf_counter() - inicio)
+        else:
+            contagens = coletar_contagens(mostrar=desenhar, ao_detectar=exibir)
+            print(f'Amostras: {contagens} | mediana: {int(median(contagens))}')
+        if args.mostrar:
+            print('Pressione uma tecla na janela para encerrar.')
+            cv2.waitKey(0)
+    finally:
+        if args.mostrar:
+            cv2.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

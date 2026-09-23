@@ -14,7 +14,7 @@ def configurar_logs():
         handlers=[RotatingFileHandler(ARQUIVO_LOG, maxBytes=2_000_000, backupCount=3, encoding="utf-8"),
                   logging.StreamHandler()])
 
-def realizar_medicao():
+def coletar_contagens(*, mostrar=False, ao_detectar=None):
     import cv2
     camera = cv2.VideoCapture(CAMERA_INDEX)
     try:
@@ -22,19 +22,34 @@ def realizar_medicao():
             raise RuntimeError("Não foi possível abrir a webcam.")
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, LARGURA_CAMERA)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, ALTURA_CAMERA)
+        camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         for _ in range(10):
             if not camera.read()[0]:
                 raise RuntimeError("Não foi possível inicializar a webcam.")
         contagens = []
         for numero in range(QUANTIDADE_AMOSTRAS):
+            # V4L2 may ignore BUFFERSIZE; discard queued frames after inference.
+            for _ in range(5):
+                if not camera.grab():
+                    raise RuntimeError("Não foi possível atualizar a imagem da webcam.")
             sucesso, frame = camera.read()
             if not sucesso:
                 raise RuntimeError("Não foi possível capturar imagem.")
-            contagens.append(contar_pessoas(frame))
+            inicio = time.perf_counter()
+            resultado = contar_pessoas(frame, mostrar=mostrar)
+            quantidade, imagem = resultado if mostrar else (resultado, frame)
+            contagens.append(quantidade)
+            if ao_detectar is not None:
+                ao_detectar(quantidade, imagem, time.perf_counter() - inicio)
             if numero + 1 < QUANTIDADE_AMOSTRAS:
                 time.sleep(INTERVALO_AMOSTRAS)
     finally:
         camera.release()
+    return contagens
+
+
+def realizar_medicao():
+    contagens = coletar_contagens()
     enviar_medicao(int(median(contagens)))
     logger.info("Medição aceita pelo backend.")
 

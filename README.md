@@ -8,7 +8,7 @@ Aplicativo Android/Web para consulta de unidades de saúde, ocupação de áreas
 - PostgreSQL 15 ou superior; validação realizada com PostgreSQL 18.
 - Node.js >=22.13 (validado com 24.19), npm e Expo SDK 57.
 - Android Studio, SDK/NDK indicados pelo Gradle e `ANDROID_HOME`; Expo Go não inclui o MapLibre nativo: use development build.
-- Python com as dependências de camera/requirements.txt (testes do cliente validados em Python 3.14.5). A execução YOLO depende de wheels compatíveis de PyTorch e de webcam; os testes do cliente não precisam de webcam.
+- Python com as dependências de camera/requirements.txt. A câmera usa YOLOv8n ONNX via OpenCV, sem PyTorch no Raspberry; veja camera/README.md.
 
 ## Backend
 
@@ -122,16 +122,16 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Instale o modelo YOLO `yolov8n.pt` autorizado para seu uso na pasta camera ou configure HOSPEASY_MODEL_PATH. O cliente não baixa modelos silenciosamente. Caminhos relativos são resolvidos em relação à pasta camera.
+Use o modelo `yolov8n.onnx` incluído na pasta camera ou configure HOSPEASY_MODEL_PATH com um ONNX compatível. O cliente não baixa modelos. Caminhos relativos são resolvidos em relação à pasta camera. Instalação no Raspberry Pi OS 64 bits, exportação no PC e teste sem monitor: [guia da câmera](camera/README.md).
 
 1. No painel ADMIN, abra Unidades → Dispositivos.
 2. Crie um dispositivo, copie a chave exibida **uma única vez** e guarde-a somente no dispositivo autorizado.
 3. Configure `camera/.env` a partir do exemplo com HOSPEASY_API_URL e HOSPEASY_CAMERA_KEY. Não há UNIDADE_ID, CAMERA_ID ou outro ID de banco.
 4. Há no máximo uma câmera ativa por unidade. Desative a antiga antes de ativar a substituta. Dispositivo sem unidade é impedido por FK.
-5. Execute `python teste_camera.py` (detecção local), `python CameraPreview.py` (prévia) ou `python main.py` (serviço de medição). Q encerra a prévia.
+5. Execute `python teste_camera.py` (teste local pelo terminal), `python teste_camera.py --salvar deteccao.jpg` (imagem marcada) ou `python main.py` (serviço de medição). `--mostrar` requer OpenCV com interface gráfica.
 6. Confirme última comunicação no painel. Chave revogada/inativa é recusada; regenerar invalida imediatamente a anterior. Após regenerar, atualize .env e reinicie o cliente; um dispositivo revogado continua inativo até ser ativado.
 
-Configuração padrão: classe pessoa, confiança 0.5, 1280×720, mediana de 5 amostras a cada 180 s. Ajustes opcionais estão em camera/.env.example. Produção, prévia e teste usam o mesmo detector. O cliente envia apenas quantidade + UUID aleatório por medição; retries reutilizam esse UUID. Timeout de conexão/leitura: 5/10 s; até 3 tentativas para rede, 429 e 5xx, com espera. 401/403 encerram o serviço para correção administrativa. Redirecionamentos HTTP não encaminham a chave.
+Configuração padrão: classe pessoa, confiança 0.5, 1280×720, mediana de 5 amostras a cada 180 s. Ajustes opcionais estão em camera/.env.example. Produção e teste usam o mesmo detector e a mesma coleta de amostras. O cliente envia apenas quantidade + UUID aleatório por medição; retries reutilizam esse UUID. Timeout de conexão/leitura: 5/10 s; até 3 tentativas para rede, 429 e 5xx, com espera. 401/403 encerram o serviço para correção administrativa. Redirecionamentos HTTP não encaminham a chave.
 
 Nenhuma imagem é enviada ao backend. Logs rotativos registram eventos sem chave/senha/resposta bruta. Valide o enquadramento e a contagem no ambiente físico antes de apresentar resultados reais.
 
@@ -145,7 +145,7 @@ Câmera: ONLINE até 6 min sem comunicação; ATRASADA entre 6 e 15 min; OFFLINE
 
 ```sh
 ./mvnw test
-python -m unittest discover -s camera -p test_client.py -v
+python -m unittest discover -s camera -p "test_*.py" -v
 python -m compileall -q camera
 cd mobile
 npm run typecheck
