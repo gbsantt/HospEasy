@@ -3,12 +3,14 @@ import { Text,View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { useAuth } from "../context/AuthContext";
 import { listarUnidadesAdmin,excluirUnidadeAdmin } from "../service/api";
 import { Unidade } from "../types/Unidade";
 import { Alert } from "../utils/alert";
 export default function UnidadesAdminScreen({navigation}:NativeStackScreenProps<RootStackParamList,"UnidadesAdmin">){
+    const ui=useUI();
+
     const {usuario}=useAuth();const [items,setItems]=useState<Unidade[]>([]),[error,setError]=useState(""),[busy,setBusy]=useState(false),[busca,setBusca]=useState(""),[retry,setRetry]=useState(0);
     useFocusEffect(useCallback(()=>{if(!usuario||usuario.tipo!=="ADMIN")return;const c=new AbortController();setBusy(true);setError("");
         listarUnidadesAdmin(usuario.token,c.signal).then(d=>{if(!c.signal.aborted)setItems(d);}).catch(e=>{if(!c.signal.aborted)setError(e.message);}).finally(()=>{if(!c.signal.aborted)setBusy(false);});

@@ -2,7 +2,7 @@ import { createContext,ReactNode,useCallback,useContext,useEffect,useRef,useStat
 import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ApiError,cadastrarUsuario,fazerLogin,LoginResponse,onInvalidSession,usuarioAtual } from "../service/api";
-import { readToken,writeToken,clearToken } from "../service/sessionStorage";
+import { readToken,writeToken,clearToken,onStoredSessionChange } from "../service/sessionStorage";
 type Auth = { usuario:LoginResponse|null; carregandoSessao:boolean; erroSessao:string|null; autenticado:boolean;
     login:(email:string,senha:string)=>Promise<void>; cadastro:(nome:string,email:string,senha:string)=>Promise<void>;
     logout:()=>Promise<void>; revalidar:()=>Promise<void> };
@@ -26,12 +26,15 @@ export function AuthProvider({children}:{children:ReactNode}) {
         if(validating.current)return; validating.current=true;
         const epoch=generation.current;
         try {
-            const token=current.current?.token ?? await readToken();
-            if(!token || epoch!==generation.current) return;
+            const token=await readToken();
+            if(epoch!==generation.current) return;
+            if(!token) {if(current.current)await logout();return;}
             const data=await usuarioAtual(token);
             if(epoch!==generation.current) return;
             const session={id:data.id,nome:data.nome,email:data.email,tipo:data.tipo,token};
-            current.current=session; setUsuario(session); setError(null);
+            current.current=session;
+            setUsuario(previous=>previous?.token===token && previous.nome===session.nome && previous.email===session.email && previous.tipo===session.tipo ? previous : session);
+            setError(null);
         } catch(error) {
             if(epoch!==generation.current) return;
             if(error instanceof ApiError && error.status===401) await logout();
@@ -43,8 +46,9 @@ export function AuthProvider({children}:{children:ReactNode}) {
         void AsyncStorage.removeItem("@hospeasy:sessao").catch(()=>{});
         void revalidar();
         const listener=AppState.addEventListener("change",state=>{if(state==="active") void revalidar();});
-        const timer=setInterval(()=>{if(current.current) void revalidar();},60000);
-        return ()=>{unsubscribe();listener.remove();clearInterval(timer);};
+        const unsubscribeStorage=onStoredSessionChange(()=>void revalidar());
+        const timer=setInterval(()=>{if(current.current && AppState.currentState==="active") void revalidar();},60000);
+        return ()=>{unsubscribe();unsubscribeStorage();listener.remove();clearInterval(timer);};
     },[revalidar,logout]);
     async function save(session:LoginResponse,epoch:number) {
         if(epoch!==generation.current) return;

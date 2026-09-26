@@ -6,8 +6,10 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 import { useAuth } from "../context/AuthContext";
 import { buscarSuporte,buscarSuporteAdmin,atualizarStatusSuporte } from "../service/api";
 import { SolicitacaoSuporte,SuporteAdmin,StatusSuporte,statusSuporte } from "../types/Suporte";
-import { ScreenLayout,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 export function SupportDetail({navigation,id,admin=false}:{navigation:any;id:number;admin?:boolean}) {
+    const ui=useUI();
+
     const {usuario}=useAuth();const [data,setData]=useState<SolicitacaoSuporte>(),[owner,setOwner]=useState<SuporteAdmin>();
     const [error,setError]=useState(""),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
     useFocusEffect(useCallback(()=>{
@@ -21,7 +23,7 @@ export function SupportDetail({navigation,id,admin=false}:{navigation:any;id:num
     async function atualizar(status:StatusSuporte){if(!data||!usuario)return;setBusy(true);setError("");
         try{const d=await atualizarStatusSuporte(id,status,data.version,usuario.token);setData(d.solicitacao);}
         catch(e){setError(e instanceof Error?e.message:"Não foi possível atualizar.");}finally{setBusy(false);}}
-    if(!usuario || (admin && usuario.tipo!=="ADMIN")) return <ScreenLayout title="Suporte" onBack={()=>navigation.goBack()}><Text>Acesso restrito à conta autorizada.</Text></ScreenLayout>;
+    if(!usuario || (admin && usuario.tipo!=="ADMIN")) return <ScreenLayout title="Suporte" onBack={()=>navigation.goBack()}><Text style={ui.text}>Acesso restrito à conta autorizada.</Text></ScreenLayout>;
     return <ScreenLayout title="Solicitação de suporte" onBack={()=>navigation.goBack()}>
         <ErrorNotice message={error}/>{error&&<Button title="Atualizar" onPress={()=>setRetry(x=>x+1)}/>}
         {!usuario&&<Button title="Entrar" onPress={()=>navigation.navigate("Login")}/>}

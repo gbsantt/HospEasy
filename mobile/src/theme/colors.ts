@@ -27,3 +27,22 @@ export const colors = {
 
     disabled: "#CFCFCF",
 };
+
+export type Palette = typeof colors;
+export const darkColors: Palette = {
+    ...colors,
+    primary: "#438F0B",
+    primaryDark: "#A0DC77",
+    primaryLight: "#263E20",
+    glassLight: "rgba(25, 34, 26, 0.94)",
+    glassBorder: "rgba(160, 180, 155, 0.25)",
+    background: "#101710",
+    surface: "#1C261D",
+    text: "#F0F4EE",
+    textSecondary: "#B0BCAF",
+    border: "#3C4B3B",
+    success: "#8DCE60",
+    danger: "#FF7E8A",
+    offline: "#B0B0B0",
+    disabled: "#596454",
+};

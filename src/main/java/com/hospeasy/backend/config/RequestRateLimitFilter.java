@@ -21,10 +21,12 @@ public class RequestRateLimitFilter extends OncePerRequestFilter {
         throws IOException,ServletException {
         String path=req.getServletPath();
         boolean auth=Set.of("/usuarios/login","/usuarios/cadastro","/usuarios/esqueci-senha","/usuarios/verificar-codigo","/usuarios/redefinir-senha").contains(path);
-        if("POST".equals(req.getMethod()) && (auth || path.equals("/cameras/medicoes"))) {
+        boolean geocoding="GET".equals(req.getMethod()) && path.equals("/admin/geocodificacao");
+        boolean report="GET".equals(req.getMethod()) && path.matches("/unidades/[0-9]+/relatorio\\.pdf");
+        if(("POST".equals(req.getMethod()) && (auth || path.equals("/cameras/medicoes"))) || geocoding || report) {
             // Forwarded addresses must only be supplied by a trusted proxy configured at deployment.
-            int limit=path.equals("/usuarios/esqueci-senha")?5:(auth?20:120);
-            if(!allow(req.getRemoteAddr()+":"+path,limit)) {
+            int limit=geocoding||report?10:path.equals("/usuarios/esqueci-senha")?5:(auth?20:120);
+            if(!allow(req.getRemoteAddr()+":"+(report?"relatorios":path),limit)) {
                 res.setHeader("Retry-After","60");
                 SecurityErrors.write(res,429,"LIMITE_REQUISICOES","Muitas tentativas. Aguarde antes de tentar novamente."); return;
             }

@@ -3,10 +3,12 @@ import { Text,View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { useAuth } from "../context/AuthContext";
 import { listarUsuariosAdmin,UsuarioAdmin } from "../service/api";
 export default function UsuariosAdminScreen({navigation}:NativeStackScreenProps<RootStackParamList,"UsuariosAdmin">){
+    const ui=useUI();
+
     const {usuario}=useAuth();const [items,setItems]=useState<UsuarioAdmin[]>([]),[error,setError]=useState(""),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0),[search,setSearch]=useState("");
     useFocusEffect(useCallback(()=>{if(!usuario||usuario.tipo!=="ADMIN")return;let active=true;setBusy(true);setError("");
         listarUsuariosAdmin(usuario.token).then(d=>{if(active)setItems(d);}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setBusy(false);});return ()=>{active=false;};

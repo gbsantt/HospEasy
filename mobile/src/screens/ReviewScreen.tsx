@@ -2,11 +2,13 @@ import { useEffect,useState } from "react";
 import { Text,View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { useAuth } from "../context/AuthContext";
 import { buscarMinhasAvaliacoes,buscarSituacaoUnidade,atualizarAvaliacao,criarAvaliacao } from "../service/api";
 import { Alert } from "../utils/alert";
 export default function ReviewScreen({navigation,route}:NativeStackScreenProps<RootStackParamList,"Review">){
+    const ui=useUI();
+
     const {usuario}=useAuth();const params=route.params??{};
     const avaliacaoId=params.avaliacaoId??params.avaliacao?.id;
     const [unidadeId,setUnidadeId]=useState(params.unidadeId??params.unidade?.unidadeId??params.avaliacao?.unidadeId);

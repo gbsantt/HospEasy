@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Text } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { solicitarRecuperacaoSenha } from "../service/api";
 export default function ForgotPasswordScreen({navigation}:NativeStackScreenProps<RootStackParamList,"ForgotPassword">){
+    const ui=useUI();
+
     const [email,setEmail]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false);
     async function enviar(){if(!email.trim()){setError("Informe seu e-mail.");return;}setBusy(true);setError("");
         try{await solicitarRecuperacaoSenha(email.trim().toLowerCase());navigation.navigate("VerifyCode",{email:email.trim().toLowerCase()});}

@@ -6,8 +6,10 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 import { useAuth } from "../context/AuthContext";
 import { listarSuporte } from "../service/api";
 import { categorias,statusSuporte,CategoriaSuporte,StatusSuporte,Pagina,ResumoSuporte } from "../types/Suporte";
-import { ScreenLayout,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 export function SupportList({navigation,admin=false}:{navigation:any;admin?:boolean}) {
+    const ui=useUI();
+
     const {usuario}=useAuth();
     const [page,setPage]=useState(0),[status,setStatus]=useState<StatusSuporte>(),[categoria,setCategoria]=useState<CategoriaSuporte>();
     const [data,setData]=useState<Pagina<ResumoSuporte>>(),[error,setError]=useState(""),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);

@@ -5,8 +5,10 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 import { useAuth } from "../context/AuthContext";
 import { criarSuporte } from "../service/api";
 import { categorias,CategoriaSuporte } from "../types/Suporte";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 export default function NovaSolicitacaoSuporteScreen({navigation}:NativeStackScreenProps<RootStackParamList,"NovaSolicitacaoSuporte">){
+    const ui=useUI();
+
     const {usuario}=useAuth();const [assunto,setAssunto]=useState(""),[descricao,setDescricao]=useState("");
     const [categoria,setCategoria]=useState<CategoriaSuporte>("APLICATIVO"),[error,setError]=useState(""),[busy,setBusy]=useState(false);
     async function enviar(){if(!usuario)return;if(!assunto.trim()||!descricao.trim()){setError("Preencha assunto e descrição.");return;}

@@ -94,7 +94,11 @@ node scripts/serve-web.mjs
 
 Abra /hospeasy/. React Navigation continua responsável pelo linking; não foi introduzido Expo Router. URLs usam apenas IDs; códigos de recuperação e objetos de usuário não são serializados em links. Refresh da recuperação reinicia o fluxo, por segurança.
 
-A sessão nativa guarda somente o JWT no SecureStore. Na Web usa sessionStorage da aba, com revalidação no servidor; não é cookie HttpOnly e continua sujeita a XSS. Não introduza HTML não sanitizado nem scripts de terceiros não confiáveis. Favoritos e telas são descartados na troca de conta. Erro 401 encerra sessão; 403 informa falta de permissão.
+A sessão nativa guarda somente o JWT no SecureStore. Na Web, somente o token é persistido em localStorage, com migração automática do sessionStorage anterior e revalidação no servidor. Tokens vencidos são removidos; a persistência não renova sua validade. O logout remove ambos os armazenamentos e é sincronizado entre abas. Não é cookie HttpOnly e continua sujeito a XSS: não introduza HTML não sanitizado nem scripts de terceiros não confiáveis. Favoritos são descartados na troca de conta. Erro 401 encerra sessão; 403 informa falta de permissão. Indisponibilidade temporária não remove o token nem desmonta a navegação de uma sessão já validada.
+
+**Mantenha JWT_SECRET estável entre reinícios e réplicas**, fora do repositório. Trocar essa chave invalida os tokens existentes. Reiniciar o backend ou frontend não renova a validade configurada em JWT_EXPIRATION_MS (padrão: 24 horas). No navegador, mantenha a mesma origem (protocolo, hostname e porta) para acessar a sessão salva.
+
+As melhorias de desempenho, relatório PDF, pesquisa no mapa e tema escuro estão descritas em [Melhorias de setembro de 2026](docs/MELHORIAS_2026_09.md), incluindo dependências, migration e verificações.
 
 ### Release Android
 

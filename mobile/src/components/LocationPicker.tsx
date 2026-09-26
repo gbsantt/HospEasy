@@ -1,481 +1,50 @@
-import {
-    useEffect,
-    useRef,
-} from "react";
-
-import {
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
-
-import {
-    Map,
-    Marker,
-    NavigationControl,
-} from "maplibre-gl";
-
+import { useEffect, useRef, useMemo as useThemeMemo } from "react";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Map, Marker, NavigationControl, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-
-import {
-    colors,
-} from "../theme/colors";
-
-
-type Coordenada = {
-    latitude: number;
-    longitude: number;
-};
-
-
-type Props = {
-    visible: boolean;
-    coordenada: Coordenada | null;
-
-    onChange: (
-        coordenada: Coordenada
-    ) => void;
-
-    onConfirm: () => void;
-    onClose: () => void;
-};
-
-
-export default function LocationPicker({
-                                           visible,
-                                           coordenada,
-                                           onChange,
-                                           onConfirm,
-                                           onClose,
-                                       }: Props) {
-
-    const mapContainerRef =
-        useRef<HTMLDivElement | null>(
-            null
-        );
-
-    const mapRef =
-        useRef<Map | null>(
-            null
-        );
-
-    const markerRef =
-        useRef<Marker | null>(
-            null
-        );
-
-
-    useEffect(() => {
-
-        if (
-            !visible ||
-            !mapContainerRef.current
-        ) {
-            return;
-        }
-
-
-        const centro:
-            [number, number] =
-            coordenada
-                ? [
-                    coordenada.longitude,
-                    coordenada.latitude,
-                ]
-                : [
-                    -46.6333,
-                    -23.5505,
-                ];
-
-
-        const map =
-            new Map({
-
-                container:
-                mapContainerRef.current,
-
-                style:
-                    "https://tiles.openfreemap.org/styles/liberty",
-
-                center:
-                centro,
-
-                zoom:
-                    coordenada
-                        ? 16
-                        : 10,
-
-            });
-
-
-        mapRef.current =
-            map;
-
-
-        map.addControl(
-            new (
-                require("maplibre-gl")
-                    .NavigationControl
-            )(),
-            "top-right"
-        );
-
-
-        function criarMarcador(
-            longitude: number,
-            latitude: number
-        ) {
-
-            if (
-                markerRef.current
-            ) {
-
-                markerRef.current
-                    .setLngLat([
-                        longitude,
-                        latitude,
-                    ]);
-
-                return;
-            }
-
-
-            markerRef.current =
-                new Marker({
-                    color:
-                        "#61B723",
-                })
-                    .setLngLat([
-                        longitude,
-                        latitude,
-                    ])
-                    .addTo(
-                        map
-                    );
-
-        }
-
-
-        if (
-            coordenada
-        ) {
-
-            criarMarcador(
-                coordenada.longitude,
-                coordenada.latitude
-            );
-
-        }
-
-
-        map.on(
-            "click",
-            (
-                event
-            ) => {
-
-                const longitude =
-                    event.lngLat.lng;
-
-                const latitude =
-                    event.lngLat.lat;
-
-
-                criarMarcador(
-                    longitude,
-                    latitude
-                );
-
-
-                onChange({
-                    latitude,
-                    longitude,
-                });
-
-            }
-        );
-
-
-        /*
-         * O modal pode terminar de calcular
-         * o tamanho depois que o MapLibre
-         * inicializa.
-         */
-        const resizeTimer =
-            window.setTimeout(
-                () => {
-
-                    map.resize();
-
-                },
-                150
-            );
-
-
-        return () => {
-
-            window.clearTimeout(
-                resizeTimer
-            );
-
-            markerRef.current
-                ?.remove();
-
-            markerRef.current =
-                null;
-
-            map.remove();
-
-            mapRef.current =
-                null;
-
-        };
-
-    }, [
-        visible,
-    ]);
-
-
-    return (
-
-        <Modal
-            visible={
-                visible
-            }
-
-            transparent
-
-            animationType="fade"
-
-            onRequestClose={
-                onClose
-            }
-        >
-
-            <View
-                style={
-                    styles.overlay
-                }
-            >
-
-                <View
-                    style={
-                        styles.modal
-                    }
-                >
-
-                    <View
-                        style={
-                            styles.header
-                        }
-                    >
-
-                        <View>
-
-                            <Text
-                                style={
-                                    styles.title
-                                }
-                            >
-                                Localização da unidade
-                            </Text>
-
-
-                            <Text
-                                style={
-                                    styles.subtitle
-                                }
-                            >
-                                Clique no mapa para marcar a posição exata.
-                            </Text>
-
-                        </View>
-
-
-                        <Pressable
-                            onPress={
-                                onClose
-                            }
-
-                            style={
-                                styles.closeButton
-                            }
-                        >
-
-                            <Text
-                                style={
-                                    styles.closeText
-                                }
-                            >
-                                ✕
-                            </Text>
-
-                        </Pressable>
-
-                    </View>
-
-
-                    <View
-                        style={
-                            styles.mapWrapper
-                        }
-                    >
-
-                        <div
-                            ref={
-                                mapContainerRef
-                            }
-
-                            style={{
-                                width:
-                                    "100%",
-
-                                height:
-                                    "100%",
-                            }}
-                        />
-
-                    </View>
-
-
-                    <View
-                        style={
-                            styles.footer
-                        }
-                    >
-
-                        <View
-                            style={
-                                styles.locationInfo
-                            }
-                        >
-
-                            {
-                                coordenada ? (
-
-                                    <>
-
-                                        <Text
-                                            style={
-                                                styles.locationTitle
-                                            }
-                                        >
-                                            Posição selecionada
-                                        </Text>
-
-
-                                        <Text
-                                            style={
-                                                styles.coordinates
-                                            }
-                                        >
-                                            {
-                                                coordenada.latitude
-                                                    .toFixed(
-                                                        6
-                                                    )
-                                            }
-
-                                            {"  •  "}
-
-                                            {
-                                                coordenada.longitude
-                                                    .toFixed(
-                                                        6
-                                                    )
-                                            }
-                                        </Text>
-
-                                    </>
-
-                                ) : (
-
-                                    <Text
-                                        style={
-                                            styles.noLocation
-                                        }
-                                    >
-                                        Nenhum ponto selecionado.
-                                    </Text>
-
-                                )
-                            }
-
-                        </View>
-
-
-                        <View
-                            style={
-                                styles.actions
-                            }
-                        >
-
-                            <Pressable
-                                style={
-                                    styles.cancelButton
-                                }
-
-                                onPress={
-                                    onClose
-                                }
-                            >
-
-                                <Text
-                                    style={
-                                        styles.cancelText
-                                    }
-                                >
-                                    Cancelar
-                                </Text>
-
-                            </Pressable>
-
-
-                            <Pressable
-                                disabled={
-                                    !coordenada
-                                }
-
-                                style={[
-                                    styles.confirmButton,
-
-                                    !coordenada &&
-                                    styles.disabledButton,
-                                ]}
-
-                                onPress={
-                                    onConfirm
-                                }
-                            >
-
-                                <Text
-                                    style={
-                                        styles.confirmText
-                                    }
-                                >
-                                    Confirmar localização
-                                </Text>
-
-                            </Pressable>
-
-                        </View>
-
-                    </View>
-
-                </View>
-
-            </View>
-
-        </Modal>
-
-    );
+import "./map.web.css";
+import { Palette } from "../theme/colors";
+import { useTheme } from "../context/ThemeContext";
+import AddressSearch from "./AddressSearch";
+type Coordenada={latitude:number;longitude:number};
+type Props={visible:boolean;coordenada:Coordenada|null;onChange:(point:Coordenada)=>void;onConfirm:()=>void;onClose:()=>void};
+export default function LocationPicker({visible,coordenada,onChange,onConfirm,onClose}:Props){
+    const styles=useStyles();const {mode}=useTheme();
+    const container=useRef<HTMLDivElement|null>(null),map=useRef<Map|null>(null),marker=useRef<Marker|null>(null);
+    const change=useRef(onChange);change.current=onChange;
+    const initial=useRef(coordenada);initial.current=coordenada;
+    useEffect(()=>{
+        if(!visible||!container.current)return;
+        const base=(process.env.EXPO_PUBLIC_BASE_PATH||"").replace(/\/$/,"");
+        setWorkerUrl(new URL(base+"/maplibre/maplibre-gl-worker.mjs",window.location.origin).href);
+        const point=initial.current;
+        const instance=new Map({container:container.current,style:"https://tiles.openfreemap.org/styles/"+(mode==="dark"?"dark":"liberty"),center:point?[point.longitude,point.latitude]:[-46.6333,-23.5505],zoom:point?16:10});
+        map.current=instance;instance.addControl(new NavigationControl(),"top-right");
+        if(point)marker.current=new Marker({color:"#61B723"}).setLngLat([point.longitude,point.latitude]).addTo(instance);
+        instance.on("click",event=>change.current({latitude:event.lngLat.lat,longitude:event.lngLat.lng}));
+        const observer=new ResizeObserver(()=>instance.resize());observer.observe(container.current);
+        return()=>{observer.disconnect();marker.current?.remove();marker.current=null;instance.remove();map.current=null;};
+    },[visible]);
+    useEffect(()=>{map.current?.setStyle("https://tiles.openfreemap.org/styles/"+(mode==="dark"?"dark":"liberty"));},[mode]);
+    useEffect(()=>{
+        if(!coordenada||!map.current)return;
+        const point:[number,number]=[coordenada.longitude,coordenada.latitude];
+        if(marker.current)marker.current.setLngLat(point);
+        else marker.current=new Marker({color:"#61B723"}).setLngLat(point).addTo(map.current);
+    },[coordenada]);
+    return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <View style={styles.overlay}><View style={styles.modal}>
+            <View style={styles.header}><View><Text style={styles.title}>Localização da unidade</Text><Text style={styles.subtitle}>Clique no mapa para marcar a posição exata.</Text></View>
+            <Pressable accessibilityRole="button" accessibilityLabel="Fechar mapa" onPress={onClose} style={styles.closeButton}><Text style={styles.closeText}>✕</Text></Pressable></View>
+            {visible&&<AddressSearch onFound={point=>{onChange(point);map.current?.flyTo({center:[point.longitude,point.latitude],zoom:16});}}/>}
+            <View style={styles.mapWrapper}><div ref={container} style={{width:"100%",height:"100%"}}/></View>
+            <View style={styles.footer}><Text style={styles.coordinates}>{coordenada?coordenada.latitude.toFixed(6)+" • "+coordenada.longitude.toFixed(6):"Nenhum ponto selecionado."}</Text>
+            <View style={styles.actions}><Pressable accessibilityRole="button" style={[styles.cancelButton,{flex:1,alignItems:"center",justifyContent:"center"}]} onPress={onClose}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
+            <Pressable accessibilityRole="button" disabled={!coordenada} style={[styles.confirmButton,{flex:1,alignItems:"center",justifyContent:"center"},!coordenada&&styles.disabledButton]} onPress={onConfirm}><Text style={[styles.confirmText,{textAlign:"center"}]}>Confirmar localização</Text></Pressable></View></View>
+        </View></View>
+    </Modal>;
 }
-
-
-const styles =
-    StyleSheet.create({
+const createStyles = (colors: Palette) => StyleSheet.create({
 
         overlay: {
 
@@ -490,7 +59,7 @@ const styles =
             justifyContent:
                 "center",
 
-            padding: 24,
+            padding: 12,
 
         },
 
@@ -504,7 +73,7 @@ const styles =
                 1000,
 
             height:
-                "85%",
+                "92%",
 
             maxHeight:
                 750,
@@ -611,8 +180,7 @@ const styles =
             flex:
                 1,
 
-            minHeight:
-                350,
+            minHeight: 100,
 
         },
 
@@ -765,3 +333,4 @@ const styles =
         },
 
     });
+function useStyles() { const {colors}=useTheme(); return useThemeMemo(()=>createStyles(colors),[colors]); }

@@ -1,6 +1,9 @@
+import { useTheme } from "../context/ThemeContext";
+import { useMemo as useThemeMemo } from "react";
+import { Palette } from "../theme/colors";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { colors } from "../theme/colors";
+
 import { Unidade } from "../types/Unidade";
 import { statusNoMapa, temCoordenadas } from "../utils/mapStatus";
 import { useFavorites } from "../context/FavoritesContext";
@@ -14,6 +17,9 @@ type Props = {
 };
 
 export default function WebUnitsPanel({ unidades, localizacao, erroLocalizacao, onAbrirUnidade }: Props) {
+    const {colors}=useTheme();
+    const styles=useStyles();
+
     const [busca, setBusca] = useState("");
     const [somenteFavoritos, setSomenteFavoritos] = useState(false);
     const { favoritos } = useFavorites();
@@ -59,7 +65,7 @@ export default function WebUnitsPanel({ unidades, localizacao, erroLocalizacao, 
     </View>;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Palette) => StyleSheet.create({
     panel: { flex: 1, backgroundColor: colors.surface, padding: 20, minHeight: 0 },
     title: { fontSize: 22, fontWeight: "800", color: colors.text, marginBottom: 14 },
     search: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, fontSize: 16, color: colors.text, backgroundColor: colors.background },
@@ -79,3 +85,5 @@ const styles = StyleSheet.create({
     details: { fontSize: 14, fontWeight: "700", color: colors.primaryDark },
     note: { fontSize: 14, lineHeight: 20, color: colors.textSecondary, paddingVertical: 8 },
 });
+
+function useStyles() { const {colors}=useTheme(); return useThemeMemo(()=>createStyles(colors),[colors]); }

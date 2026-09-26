@@ -77,6 +77,22 @@ class HospEasyIntegrationTest {
   var r=HttpClient.newHttpClient().send(b.POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body))).build(),HttpResponse.BodyHandlers.ofString());
   return new Result(r.statusCode(),r.body().isBlank()?null:json.readTree(r.body()),r.body());
  }
+ @Test void reportRequiresAuthenticationAndUsesStoredHistory()throws Exception{
+  long id=unit();
+  ok("GET","/unidades/"+id+"/relatorio.pdf",null,null,401);
+  ok("GET","/unidades/"+id+"/relatorio.pdf",new JwtService(SECRET,-1000).gerarToken(u),null,401);
+  ok("PATCH","/unidades/"+id+"/ocupacao",admin,Map.of("quantidadePessoas",25),200);
+  var req=HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/unidades/"+id+"/relatorio.pdf")).header("Authorization","Bearer "+common).GET().build();
+  var response=HttpClient.newHttpClient().send(req,HttpResponse.BodyHandlers.ofByteArray());
+  assertEquals(200,response.statusCode());assertEquals("application/pdf",response.headers().firstValue("Content-Type").orElseThrow());
+  assertTrue(response.headers().firstValue("Cache-Control").orElseThrow().contains("no-store"));
+  try(var doc=org.apache.pdfbox.Loader.loadPDF(response.body())) {
+   var text=new org.apache.pdfbox.text.PDFTextStripper().getText(doc);assertTrue(text.contains("25,0%"));assertTrue(text.contains("MANUAL"));
+  }
+  ok("GET","/unidades/999999/relatorio.pdf",common,null,404);
+  ok("GET","/admin/geocodificacao?endereco=Rua",common,null,403);
+  ok("GET","/admin/geocodificacao?endereco=Rua",admin,null,400);
+ }
  @Test void authenticationAndImmutableIdentity()throws Exception{
   ok("POST","/usuarios/login",null,Map.of("email",u.getEmail(),"senha","SenhaTeste123"),200);
   ok("POST","/usuarios/login",null,Map.of("email",u.getEmail(),"senha","incorreta"),401);

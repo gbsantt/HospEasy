@@ -29,7 +29,7 @@ import {
     Field,
     Button,
     ErrorNotice,
-    ui,
+    useUI,
 } from "./ScreenLayout";
 
 import {
@@ -52,6 +52,8 @@ export default function UnidadeAdminForm({
     navigation: any;
     unidadeId?: number;
 }) {
+    const ui=useUI();
+
 
     const {
         usuario,

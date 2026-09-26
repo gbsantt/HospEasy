@@ -11,8 +11,10 @@ import java.util.Date;
 public class JwtService {
     private final SecretKey chave;
     private final long expiracao;
+    private final JwtParser parser;
     public JwtService(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expiracao) {
         chave=Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)); this.expiracao=expiracao;
+        parser=Jwts.parser().verifyWith(chave).requireIssuer("hospeasy").build();
     }
     public String gerarToken(Usuario usuario) {
         var agora=new Date();
@@ -21,7 +23,7 @@ public class JwtService {
             .expiration(new Date(agora.getTime()+expiracao)).signWith(chave).compact();
     }
     public Identidade validar(String token) {
-        Claims c=Jwts.parser().verifyWith(chave).requireIssuer("hospeasy").build().parseSignedClaims(token).getPayload();
+        Claims c=parser.parseSignedClaims(token).getPayload();
         if(!Integer.valueOf(2).equals(c.get("formato",Integer.class)) || c.getExpiration()==null)
             throw new IllegalArgumentException("Formato de sessão inválido");
         return new Identidade(Long.parseLong(c.getSubject()),c.get("versao",Number.class).longValue());

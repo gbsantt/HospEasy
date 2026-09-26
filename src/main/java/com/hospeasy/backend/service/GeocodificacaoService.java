@@ -13,6 +13,12 @@ public class GeocodificacaoService {
     private final ObjectMapper json=new ObjectMapper();
     private long ultima;
     public Coordenadas geocodificar(String endereco) {
+        return buscar(endereco,true);
+    }
+    public Coordenadas pesquisar(String endereco) {
+        return buscar(endereco,false);
+    }
+    private Coordenadas buscar(String endereco,boolean exigirPrecisao) {
         try {
             limitar();
             var uri=URI.create("https://nominatim.openstreetmap.org/search?q="+URLEncoder.encode(endereco.trim(),StandardCharsets.UTF_8)
@@ -27,7 +33,7 @@ public class GeocodificacaoService {
             var r=results.get(0);
             String type=r.path("type").asText();
             boolean preciso=r.path("address").has("house_number") || java.util.Set.of("hospital","clinic","doctors","house","building").contains(type);
-            if(!preciso) throw new ApiException(400,"LOCALIZACAO_APROXIMADA","A busca retornou apenas uma área aproximada. Confirme latitude e longitude da unidade antes de salvar.");
+            if(exigirPrecisao && !preciso) throw new ApiException(400,"LOCALIZACAO_APROXIMADA","A busca retornou apenas uma área aproximada. Confirme latitude e longitude da unidade antes de salvar.");
             double lat=Double.parseDouble(r.path("lat").asText()), lon=Double.parseDouble(r.path("lon").asText());
             if(!Double.isFinite(lat)||!Double.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180) throw unavailable("Coordenadas inválidas recebidas do serviço.");
             return new Coordenadas(lat,lon);
@@ -36,8 +42,10 @@ public class GeocodificacaoService {
         catch(IOException | NumberFormatException e) { throw unavailable("Falha de comunicação com o serviço de localização."); }
     }
     private ApiException unavailable(String msg) { return new ApiException(503,"GEOCODIFICACAO_INDISPONIVEL",msg); }
-    private synchronized void limitar() throws InterruptedException {
-        long wait=1100-(System.currentTimeMillis()-ultima); if(wait>0) Thread.sleep(wait); ultima=System.currentTimeMillis();
+    private synchronized void limitar() {
+        long now=System.currentTimeMillis();
+        if(now-ultima<1100) throw new ApiException(429,"GEOCODIFICACAO_LIMITE","Aguarde um instante antes de pesquisar outro endereço.");
+        ultima=now;
     }
     public record Coordenadas(double latitude,double longitude) {}
 }

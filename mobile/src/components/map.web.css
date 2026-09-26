@@ -7,3 +7,12 @@
 .hospeasy-location:disabled { color: #7a7a7a; cursor: default; }
 .hospeasy-map-message { position: absolute; top: 12px; left: 12px; right: 62px; max-width: 430px; background: white; border-radius: 12px; padding: 12px; color: #171717; font: 14px/1.5 system-ui; box-shadow: 0 2px 8px #0002; }
 .hospeasy-map-message button { display: block; margin-top: 8px; background: #438f0b; color: white; border: 0; padding: 8px 12px; border-radius: 8px; cursor: pointer; font: inherit; }
+[data-theme="dark"] .hospeasy-map-shell { background: #101710; }
+[data-theme="dark"] .hospeasy-map-message,
+[data-theme="dark"] .hospeasy-location,
+[data-theme="dark"] .maplibregl-ctrl-group,
+[data-theme="dark"] .maplibregl-ctrl-attrib { background: #1c261d; color: #f0f4ee; border-color: #3c4b3b; }
+[data-theme="dark"] .maplibregl-ctrl-attrib a { color: #b0bcaf; }
+[data-theme="dark"] .maplibregl-ctrl-icon { filter: invert(1); }
+[data-theme="dark"] .hospeasy-marker:focus-visible,
+[data-theme="dark"] .hospeasy-location:focus-visible { outline-color: #f0f4ee; }

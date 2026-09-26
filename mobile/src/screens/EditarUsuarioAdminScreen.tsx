@@ -2,10 +2,12 @@ import { useEffect,useState } from "react";
 import { Text,View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { useAuth } from "../context/AuthContext";
 import { buscarUsuarioAdmin,atualizarUsuarioAdmin,UsuarioAdmin,TipoUsuario } from "../service/api";
 export default function EditarUsuarioAdminScreen({navigation,route}:NativeStackScreenProps<RootStackParamList,"EditarUsuarioAdmin">){
+    const ui=useUI();
+
     const {usuario,revalidar}=useAuth();const [data,setData]=useState<UsuarioAdmin>(),[error,setError]=useState(""),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
     useEffect(()=>{if(!usuario||usuario.tipo!=="ADMIN")return;const c=new AbortController();setError("");
         buscarUsuarioAdmin(route.params.usuarioId,usuario.token,c.signal).then(d=>{if(!c.signal.aborted)setData(d);}).catch(e=>{if(!c.signal.aborted)setError(e.message);});return ()=>c.abort();

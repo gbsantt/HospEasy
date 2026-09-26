@@ -21,7 +21,7 @@ function baseUrl() {
     if (__DEV__) return "http://10.0.2.2:8080";
     throw new ApiError(0,"CONFIGURACAO","Configure EXPO_PUBLIC_API_URL para o aplicativo.");
 }
-type Options = { method?: string; data?: unknown; token?: string; signal?: AbortSignal };
+type Options = { method?: string; data?: unknown; token?: string; signal?: AbortSignal; binary?: boolean };
 export async function request<T>(path: string, options: Options = {}): Promise<T> {
     const controller = new AbortController();
     const abort = () => controller.abort();
@@ -35,6 +35,7 @@ export async function request<T>(path: string, options: Options = {}): Promise<T
                 ...(options.token ? { Authorization:`Bearer ${options.token}` } : {}) },
             ...(options.data !== undefined ? { body: JSON.stringify(options.data) } : {}),
         });
+        if(response.ok && options.binary) return await response.arrayBuffer() as T;
         const text = await response.text();
         let body: any;
         try { body = text ? JSON.parse(text) : undefined; } catch { body = text; }
@@ -55,6 +56,8 @@ export async function request<T>(path: string, options: Options = {}): Promise<T
     }
 }
 export type TipoUsuario = "ADMIN" | "USUARIO";
+export const pesquisarEndereco = (endereco:string,token:string,signal?:AbortSignal) => request<{latitude:number;longitude:number}>(`/admin/geocodificacao?${new URLSearchParams({endereco})}`,{token,signal});
+export const buscarRelatorioPDF = (id:number,token:string) => request<ArrayBuffer>(`/unidades/${id}/relatorio.pdf`,{token,binary:true});
 export type UsuarioAdmin = { id:number; nome:string; email:string; tipo:TipoUsuario; ativo:boolean };
 export type LoginResponse = Omit<UsuarioAdmin,"ativo"> & { token:string };
 export type CadastroUsuarioPayload = { nome:string; email:string; senha:string };

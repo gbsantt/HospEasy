@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Text,View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { useAuth } from "../context/AuthContext";
 import { criarUsuarioAdmin,TipoUsuario } from "../service/api";
 export default function CriarUsuarioAdminScreen({navigation}:NativeStackScreenProps<RootStackParamList,"CriarUsuarioAdmin">){
+    const ui=useUI();
+
     const {usuario}=useAuth();const [nome,setNome]=useState(""),[email,setEmail]=useState(""),[senha,setSenha]=useState(""),[confirm,setConfirm]=useState("");
     const [tipo,setTipo]=useState<TipoUsuario>("USUARIO"),[error,setError]=useState(""),[busy,setBusy]=useState(false);
     async function save(){if(!usuario)return;if(!nome.trim()||!email.trim()||senha.length<6||senha!==confirm){setError("Preencha os dados e confirme a senha (mínimo 6 caracteres).");return;}

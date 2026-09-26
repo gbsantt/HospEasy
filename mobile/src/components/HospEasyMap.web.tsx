@@ -5,6 +5,7 @@ import "./map.web.css";
 import { Unidade } from "../types/Unidade";
 import { Coordenada } from "../utils/location";
 import { statusNoMapa, temCoordenadas } from "../utils/mapStatus";
+import { useTheme } from "../context/ThemeContext";
 
 type Props = {
     unidades: Unidade[];
@@ -13,8 +14,10 @@ type Props = {
 };
 
 export default function HospEasyMap({ unidades, localizacaoUsuario, onSelecionarUnidade }: Props) {
+    const {mode}=useTheme();
     const container = useRef<HTMLDivElement>(null);
     const mapa = useRef<Map | null>(null);
+    const markers=useRef(new globalThis.Map<number,{marker:Marker;button:HTMLButtonElement;unit:Unidade}>());
     const centralizouUnidades = useRef(false);
     const centralizouUsuario = useRef(false);
     const selecionar = useRef(onSelecionarUnidade);
@@ -35,7 +38,7 @@ export default function HospEasyMap({ unidades, localizacaoUsuario, onSelecionar
             setWorkerUrl(new URL(`${base}/maplibre/maplibre-gl-worker.mjs`, window.location.origin).href);
             instancia = new Map({
                 container: container.current,
-                style: "https://tiles.openfreemap.org/styles/liberty",
+                style: "https://tiles.openfreemap.org/styles/"+(mode==="dark"?"dark":"liberty"),
                 center: [0, 0],
                 zoom: 1,
             });
@@ -62,17 +65,32 @@ export default function HospEasyMap({ unidades, localizacaoUsuario, onSelecionar
         return () => {
             clearTimeout(timeout);
             observer.disconnect();
+            markers.current.forEach(value=>value.marker.remove());
+            markers.current.clear();
             instancia.remove();
             mapa.current = null;
         };
     }, [tentativa]);
 
+    useEffect(()=>{mapa.current?.setStyle("https://tiles.openfreemap.org/styles/"+(mode==="dark"?"dark":"liberty"));},[mode]);
+
     useEffect(() => {
         const instancia = mapa.current;
         if (!instancia || !pronto) return;
         const localizadas = unidades.filter(temCoordenadas);
-        const marcadores = localizadas.map((unidade) => {
+        const ids=new Set(localizadas.map(u=>u.unidadeId));
+        markers.current.forEach((value,id)=>{if(!ids.has(id)){value.marker.remove();markers.current.delete(id);}});
+        localizadas.forEach((unidade) => {
             const status = statusNoMapa(unidade);
+            const existing=markers.current.get(unidade.unidadeId);
+            if(existing){
+                existing.unit=unidade;
+                existing.marker.setLngLat([unidade.longitude,unidade.latitude]);
+                existing.button.style.backgroundColor=status.color;
+                existing.button.title=`${unidade.nome} — ${status.text}`;
+                existing.button.setAttribute("aria-label",existing.button.title);
+                return;
+            }
             const button = document.createElement("button");
             button.type = "button";
             button.className = "hospeasy-marker";
@@ -80,9 +98,11 @@ export default function HospEasyMap({ unidades, localizacaoUsuario, onSelecionar
             button.textContent = "H";
             button.title = `${unidade.nome} — ${status.text}`;
             button.setAttribute("aria-label", button.title);
-            button.addEventListener("click", () => selecionar.current(unidade));
-            return new Marker({ element: button })
+            const marker=new Marker({ element: button })
                 .setLngLat([unidade.longitude, unidade.latitude]).addTo(instancia);
+            const entry={marker,button,unit:unidade};
+            button.addEventListener("click", () => selecionar.current(entry.unit));
+            markers.current.set(unidade.unidadeId,entry);
         });
         if (localizadas.length && !centralizouUnidades.current && !centralizouUsuario.current) {
             const bounds = new LngLatBounds();
@@ -90,7 +110,6 @@ export default function HospEasyMap({ unidades, localizacaoUsuario, onSelecionar
             instancia.fitBounds(bounds, { padding: 70, maxZoom: 14, duration: 0 });
             centralizouUnidades.current = true;
         }
-        return () => marcadores.forEach((marker) => marker.remove());
     }, [unidades, pronto]);
 
     useEffect(() => {

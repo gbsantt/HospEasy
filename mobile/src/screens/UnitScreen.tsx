@@ -3,13 +3,28 @@ import { Text,View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { ApiError,Avaliacao,buscarAvaliacoes,buscarSituacaoUnidade } from "../service/api";
 import { Unidade } from "../types/Unidade";
 import { useFavorites } from "../context/FavoritesContext";
 import { statusNoMapa } from "../utils/mapStatus";
+import { useAuth } from "../context/AuthContext";
+import { downloadReport } from "../service/downloadReport";
+import { appIsActive } from "../utils/activity";
+import { useTheme } from "../context/ThemeContext";
 export default function UnitScreen({navigation,route}:NativeStackScreenProps<RootStackParamList,"Unit">){
+    const ui=useUI();
+    const {colors}=useTheme();
+
     const id=route.params.unidadeId;
+    const {usuario}=useAuth();
+    const [reportBusy,setReportBusy]=useState(false),[reportError,setReportError]=useState("");
+    async function baixarRelatorio(){
+        if(!usuario || reportBusy)return;
+        setReportBusy(true);setReportError("");
+        try{await downloadReport(id,usuario.token);}catch(e){setReportError(e instanceof Error?e.message:"Não foi possível baixar o relatório.");}
+        finally{setReportBusy(false);}
+    }
     const [unidade,setUnidade]=useState<Unidade>(),[avaliacoes,setAvaliacoes]=useState<Avaliacao[]>([]);
     const [error,setError]=useState(""),[reviewError,setReviewError]=useState(""),[missing,setMissing]=useState(false),[retry,setRetry]=useState(0);
     const {alternarFavorito,estaFavoritado}=useFavorites();
@@ -17,7 +32,7 @@ export default function UnitScreen({navigation,route}:NativeStackScreenProps<Roo
         const c=new AbortController();let timer:ReturnType<typeof setTimeout>;let deleted=false;
         setMissing(false);setError("");setUnidade(undefined);setAvaliacoes([]);setReviewError("");
         async function load(){
-            try{const data=await buscarSituacaoUnidade(id,c.signal);if(!c.signal.aborted){setUnidade(data);setError("");}}
+            try{if(!appIsActive())return;const data=await buscarSituacaoUnidade(id,c.signal);if(!c.signal.aborted){setUnidade(data);setError("");}}
             catch(e){if(!c.signal.aborted){
                 if(e instanceof ApiError&&e.status===404){setMissing(true);setUnidade(undefined);deleted=true;}
                 else{setError("Não foi possível atualizar. A ocupação pode estar desatualizada.");setUnidade(u=>u?{...u,statusMedicao:"DESATUALIZADA"}:u);}
@@ -28,7 +43,7 @@ export default function UnitScreen({navigation,route}:NativeStackScreenProps<Roo
             .catch(e=>{if(!c.signal.aborted)setReviewError(e.message);});
         return ()=>{c.abort();clearTimeout(timer);};
     },[id,retry]));
-    const status=unidade?statusNoMapa(unidade):undefined;
+    const status=unidade?statusNoMapa(unidade,colors):undefined;
     const media=avaliacoes.length?avaliacoes.reduce((sum,a)=>sum+a.nota,0)/avaliacoes.length:0;
     return <ScreenLayout title={unidade?.nome??"Unidade de atendimento"} onBack={()=>navigation.canGoBack()?navigation.goBack():navigation.navigate("Home")}>
         {missing?<Text style={ui.text}>Esta unidade não está mais disponível.</Text>:<>
@@ -52,6 +67,12 @@ export default function UnitScreen({navigation,route}:NativeStackScreenProps<Roo
                 <Text style={ui.text}>{a.usuarioNome||"Usuário"} · {new Date(a.criadoEm).toLocaleDateString("pt-BR")}</Text>
                 <Text style={ui.text}>{a.comentario||"Sem comentário"}</Text></View>)}
             {!avaliacoes.length&&!reviewError&&<Text style={ui.text}>Esta unidade ainda não possui avaliações.</Text>}
+            {usuario&&<View style={ui.card}>
+                <Text style={ui.title}>Relatório de ocupação</Text>
+                <Text style={ui.text}>Baixe os últimos 100 registros disponíveis, com datas, contagens, percentuais e origem das medições, para estudos e análises.</Text>
+                <ErrorNotice message={reportError}/>
+                <Button title="Baixar relatório em PDF" busy={reportBusy} onPress={()=>void baixarRelatorio()}/>
+            </View>}
         </>}</>}
     </ScreenLayout>;
 }

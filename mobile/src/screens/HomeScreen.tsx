@@ -1,3 +1,6 @@
+import { useTheme } from "../context/ThemeContext";
+import { useMemo as useThemeMemo } from "react";
+import { Palette } from "../theme/colors";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View, ScrollView, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,11 +14,15 @@ import WebUnitsPanel from "../components/WebUnitsPanel";
 import { buscarSituacoesUnidades } from "../service/api";
 import { Unidade } from "../types/Unidade";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { colors } from "../theme/colors";
+
 import { useUserLocation } from "../hooks/useUserLocation";
 import { useAuth } from "../context/AuthContext";
+import { appIsActive } from "../utils/activity";
 
 export default function HomeScreen() {
+    const {colors}=useTheme();
+    const styles=useStyles();
+
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const [unidades, setUnidades] = useState<Unidade[]>([]);
     const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
@@ -36,6 +43,7 @@ export default function HomeScreen() {
         const controller = new AbortController();
         async function carregar() {
             try {
+                if(!appIsActive())return;
                 const dados = await buscarSituacoesUnidades(controller.signal);
                 if (!ativo) return;
                 setUnidades(dados);
@@ -96,7 +104,7 @@ export default function HomeScreen() {
     </View>;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Palette) => StyleSheet.create({
     avatar: { width: 44, height: 44, borderRadius: 22, paddingHorizontal: 0, paddingVertical: 0, alignItems: "center", justifyContent: "center" },
     avatarText: { fontSize: 20, fontWeight: "800" },
     container: { flex: 1, backgroundColor: colors.background },
@@ -118,3 +126,5 @@ const styles = StyleSheet.create({
     mobilePanel: { height: 320, minHeight: 240, borderTopWidth: 1, borderColor: colors.border },
     mapArea: { flex: 1, minHeight: 180, overflow: "hidden" },
 });
+
+function useStyles() { const {colors}=useTheme(); return useThemeMemo(()=>createStyles(colors),[colors]); }

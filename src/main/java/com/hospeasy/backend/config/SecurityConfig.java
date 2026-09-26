@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/usuarios/login","/usuarios/cadastro","/usuarios/esqueci-senha","/usuarios/verificar-codigo","/usuarios/redefinir-senha").permitAll()
                 .requestMatchers("/usuarios/me","/usuarios/me/**").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,"/unidades/*/relatorio.pdf").authenticated()
                 .requestMatchers(HttpMethod.GET,"/unidades","/unidades/**").permitAll()
                 .requestMatchers(HttpMethod.POST,"/unidades/*/avaliacoes").authenticated()
                 .requestMatchers("/usuarios","/usuarios/*").hasRole("ADMIN")

@@ -3,12 +3,17 @@ import { Text,View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { useAuth } from "../context/AuthContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { Avaliacao,buscarMinhasAvaliacoes,excluirAvaliacao } from "../service/api";
 import { Alert } from "../utils/alert";
+import { useTheme } from "../context/ThemeContext";
 export default function ProfileScreen({navigation}:NativeStackScreenProps<RootStackParamList,"Profile">){
+    const ui=useUI();
+    const {mode,setMode}=useTheme();
+    const [themeError,setThemeError]=useState("");
+
     const {usuario,logout}=useAuth();const {favoritos,desfavoritar,erroFavoritos}=useFavorites();
     const [reviews,setReviews]=useState<Avaliacao[]>([]),[error,setError]=useState(""),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
     useFocusEffect(useCallback(()=>{if(!usuario)return;const c=new AbortController();setBusy(true);setError("");setReviews([]);
@@ -17,6 +22,12 @@ export default function ProfileScreen({navigation}:NativeStackScreenProps<RootSt
     async function remove(id:number){if(!usuario)return;try{await excluirAvaliacao(id,usuario.token);setRetry(x=>x+1);}
         catch(e){setError(e instanceof Error?e.message:"Não foi possível excluir.");}}
     return <ScreenLayout title="Meu perfil" onBack={()=>navigation.goBack()}>
+        <View style={ui.card}><Text style={ui.label}>Aparência</Text>
+            <Text style={ui.text}>Tema atual: {mode==="dark"?"escuro":"claro"}. A preferência fica salva neste dispositivo.</Text>
+            <View style={ui.row}>{(["light","dark"] as const).map(value=><Button key={value} secondary={mode!==value} disabled={mode===value}
+                title={value==="dark"?"Tema escuro":"Tema claro"} onPress={()=>{setThemeError("");void setMode(value).catch(()=>setThemeError("Não foi possível salvar o tema. Tente novamente."));}}/>)}</View>
+            <ErrorNotice message={themeError}/>
+        </View>
         {!usuario?<Button title="Entrar na conta" onPress={()=>navigation.navigate("Login")}/>:<>
         <View style={ui.card}><Text style={ui.title}>{usuario.nome}</Text><Text style={ui.text}>{usuario.email}</Text><Text style={ui.text}>{usuario.tipo==="ADMIN"?"Administrador":"Usuário"}</Text></View>
         <Button title="Minhas solicitações de suporte" onPress={()=>navigation.navigate("Suporte")}/>

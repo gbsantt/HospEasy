@@ -1,3 +1,9 @@
+import { useRef } from "react";
+import { CameraRef } from "@maplibre/maplibre-react-native";
+import AddressSearch from "./AddressSearch";
+import { useTheme } from "../context/ThemeContext";
+import { useMemo as useThemeMemo } from "react";
+import { Palette } from "../theme/colors";
 import {
     Modal,
     Pressable,
@@ -12,9 +18,7 @@ import {
     Marker,
 } from "@maplibre/maplibre-react-native";
 
-import {
-    colors,
-} from "../theme/colors";
+
 
 
 type Coordenada = {
@@ -46,6 +50,10 @@ export default function LocationPicker({
                                            onConfirm,
                                            onClose,
                                        }: Props) {
+    const styles=useStyles();
+    const camera=useRef<CameraRef>(null);
+    const {mode}=useTheme();
+
 
     const centroInicial:
         [number, number] =
@@ -146,6 +154,7 @@ export default function LocationPicker({
                 </View>
 
 
+                {visible&&<AddressSearch onFound={point=>{onChange(point);camera.current?.flyTo({center:[point.longitude,point.latitude],zoom:16,duration:500});}}/>}
                 <View
                     style={
                         styles.mapContainer
@@ -157,8 +166,7 @@ export default function LocationPicker({
                             styles.map
                         }
 
-                        mapStyle=
-                            "https://tiles.openfreemap.org/styles/liberty"
+                        mapStyle={"https://tiles.openfreemap.org/styles/"+(mode==="dark"?"dark":"liberty")}
 
                         onPress={(
                             event: any
@@ -192,7 +200,7 @@ export default function LocationPicker({
                         }}
                     >
 
-                        <Camera
+                        <Camera ref={camera}
                             initialViewState={{
                                 center:
                                 centroInicial,
@@ -313,8 +321,7 @@ export default function LocationPicker({
 }
 
 
-const styles =
-    StyleSheet.create({
+const createStyles = (colors: Palette) => StyleSheet.create({
 
         container: {
 
@@ -453,7 +460,7 @@ const styles =
                 18,
 
             backgroundColor:
-                "rgba(255,255,255,0.94)",
+                colors.glassLight,
 
             fontSize: 12,
 
@@ -549,3 +556,4 @@ const styles =
         },
 
     });
+function useStyles() { const {colors}=useTheme(); return useThemeMemo(()=>createStyles(colors),[colors]); }

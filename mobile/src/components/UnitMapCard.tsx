@@ -1,3 +1,6 @@
+import { useTheme } from "../context/ThemeContext";
+import { useMemo as useThemeMemo } from "react";
+import { Palette } from "../theme/colors";
 import {
     Platform,
     Pressable,
@@ -6,7 +9,7 @@ import {
     View,
 } from "react-native";
 
-import { colors } from "../theme/colors";
+
 
 
 type Props = {
@@ -32,6 +35,8 @@ export default function UnitMapCard({
                                         onPress,
                                         onClose,
                                     }: Props) {
+    const styles=useStyles();
+
     return (
         <View style={[styles.card, Platform.OS === "web" && styles.webCard]}>
             <Pressable
@@ -79,7 +84,7 @@ export default function UnitMapCard({
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Palette) => StyleSheet.create({
     webCard: { bottom: 34, maxWidth: 380, maxHeight: "90%", overflow: "scroll" },
     card: {
         position: "absolute",
@@ -178,3 +183,5 @@ const styles = StyleSheet.create({
         fontWeight: "800",
     },
 });
+
+function useStyles() { const {colors}=useTheme(); return useThemeMemo(()=>createStyles(colors),[colors]); }

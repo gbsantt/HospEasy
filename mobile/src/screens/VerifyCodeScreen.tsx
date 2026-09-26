@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Text } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { verificarCodigoRecuperacao } from "../service/api";
 export default function VerifyCodeScreen({navigation,route}:NativeStackScreenProps<RootStackParamList,"VerifyCode">){
+    const ui=useUI();
+
     const email=route.params?.email;const [codigo,setCodigo]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false);
     async function verificar(){if(!email||!/^\d{6}$/.test(codigo)){setError("Informe os seis dígitos do código.");return;}setBusy(true);setError("");
         try{await verificarCodigoRecuperacao(email,codigo);navigation.navigate("ResetPassword",{email,codigo});}

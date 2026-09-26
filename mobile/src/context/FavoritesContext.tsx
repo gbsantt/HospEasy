@@ -3,6 +3,7 @@ import { Unidade } from "../types/Unidade";
 import { adicionarFavorito,buscarFavoritos,removerFavorito } from "../service/api";
 import { useAuth } from "./AuthContext";
 import { Alert } from "../utils/alert";
+import { appIsActive } from "../utils/activity";
 type Favorites={favoritos:Unidade[];carregandoFavoritos:boolean;erroFavoritos:string|null;
     favoritar:(u:Unidade)=>Promise<void>;desfavoritar:(id:number)=>Promise<void>;alternarFavorito:(u:Unidade)=>Promise<void>;
     estaFavoritado:(id:number)=>boolean;recarregarFavoritos:()=>Promise<void>};
@@ -32,7 +33,7 @@ export function FavoritesProvider({children}:{children:ReactNode}) {
         if(!usuario){setLoading(false);return;}
         const controller=new AbortController();
         void recarregarFavoritos(controller.signal);
-        const timer=setInterval(()=>{if(!pending.current.size)void recarregarFavoritos(controller.signal);},15000);
+        const timer=setInterval(()=>{if(appIsActive()&&!pending.current.size)void recarregarFavoritos(controller.signal);},30000);
         return ()=>{controller.abort();clearInterval(timer);};
     },[usuario?.token,recarregarFavoritos]);
     async function mutate(id:number,unit?:Unidade) {

@@ -17,6 +17,15 @@ class GeocodificacaoTest {
   var result=service(200,"[{\"lat\":\"-23.5\",\"lon\":\"-46.6\",\"address\":{\"house_number\":\"123\"}}]").geocodificar("Rua completa, 123");
   assertEquals(-23.5,result.latitude());assertEquals(-46.6,result.longitude());
  }
+ @Test void mapSearchAllowsApproximatePointForManualConfirmation()throws Exception{
+  var result=service(200,"[{\"lat\":\"-23\",\"lon\":\"-46\",\"type\":\"city\"}]").pesquisar("São Paulo");
+  assertEquals(-23,result.latitude());assertEquals(-46,result.longitude());
+ }
+ @Test void frequentRequestsDoNotQueueThreads()throws Exception{
+  var service=service(200,"[{\"lat\":\"-23\",\"lon\":\"-46\",\"type\":\"city\"}]");
+  service.pesquisar("São Paulo");
+  assertEquals(429,assertThrows(ApiException.class,()->service.pesquisar("São Paulo")).getStatus());
+ }
  @Test void notFoundAndApproximateAreDifferent()throws Exception{
   var empty=service(200,"[]");assertEquals("ENDERECO_NAO_ENCONTRADO",assertThrows(ApiException.class,()->empty.geocodificar("Rua")).getCodigo());
   var approximate=service(200,"[{\"lat\":\"-23\",\"lon\":\"-46\",\"type\":\"city\"}]");

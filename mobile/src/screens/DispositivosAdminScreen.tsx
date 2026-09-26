@@ -7,9 +7,11 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 import { useAuth } from "../context/AuthContext";
 import { listarDispositivos,criarDispositivo,atualizarDispositivo,revogarDispositivo,regenerarDispositivo } from "../service/api";
 import { Dispositivo } from "../types/Suporte";
-import { ScreenLayout,Field,Button,ErrorNotice,ui } from "../components/ScreenLayout";
+import { ScreenLayout,Field,Button,ErrorNotice,useUI } from "../components/ScreenLayout";
 import { Alert } from "../utils/alert";
 export default function DispositivosAdminScreen({navigation,route}:NativeStackScreenProps<RootStackParamList,"DispositivosAdmin">){
+    const ui=useUI();
+
     const {usuario}=useAuth();const id=route.params.unidadeId;
     const [items,setItems]=useState<Dispositivo[]>([]),[nome,setNome]=useState(""),[key,setKey]=useState("");
     const [error,setError]=useState(""),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0);
@@ -44,6 +46,8 @@ export default function DispositivosAdminScreen({navigation,route}:NativeStackSc
     </ScreenLayout>;
 }
 function DeviceCard({device:d,busy,onSave,onToggle,onRevoke,onRotate}:{device:Dispositivo;busy:boolean;onSave:(name:string)=>void;onToggle:()=>void;onRevoke:()=>void;onRotate:()=>void}){
+    const ui=useUI();
+
     const [name,setName]=useState(d.nome);
     useEffect(()=>setName(d.nome),[d.nome]);
     return <View style={ui.card}><Field label="Nome do dispositivo" value={name} onChangeText={setName} maxLength={100}/>

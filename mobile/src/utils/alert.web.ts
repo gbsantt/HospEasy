@@ -9,7 +9,7 @@ export const Alert={
    const previous=document.activeElement as HTMLElement|null;
    const overlay=document.createElement("div"),dialog=document.createElement("div");
    overlay.style.cssText="position:fixed;inset:0;z-index:2147483647;background:#0007;display:flex;align-items:center;justify-content:center;padding:16px";
-   dialog.style.cssText="background:white;color:#18251a;border-radius:18px;padding:24px;max-width:440px;width:100%;max-height:90vh;overflow:auto;font:16px system-ui";
+   dialog.style.cssText="background:var(--he-surface,white);color:var(--he-text,#18251a);border-radius:18px;padding:24px;max-width:440px;width:100%;max-height:90vh;overflow:auto;font:16px system-ui";
    dialog.setAttribute("role","alertdialog");dialog.setAttribute("aria-modal","true");dialog.setAttribute("aria-label",title);
    const heading=document.createElement("h2");heading.textContent=title;heading.style.cssText="margin:0 0 16px;font-size:22px";
    dialog.append(heading);
@@ -26,7 +26,7 @@ export const Alert={
      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
    };
    actions.forEach(action=>{const button=document.createElement("button");button.type="button";button.textContent=action.text||"OK";
-    button.style.cssText="min-height:48px;padding:12px 18px;border:0;border-radius:12px;cursor:pointer;font:600 15px system-ui;background:"+(action.style==="cancel"?"#e7f1dd;color:#355623":"#4d8900;color:white");
+    button.style.cssText="min-height:48px;padding:12px 18px;border:0;border-radius:12px;cursor:pointer;font:600 15px system-ui;background:"+(action.style==="cancel"?"var(--he-primaryLight,#e7f1dd);color:var(--he-primaryDark,#355623)":"#4d8900;color:white");
     button.onclick=()=>finish(action);row.append(button);});
    dialog.append(row);overlay.append(dialog);document.body.append(overlay);document.addEventListener("keydown",keydown,true);
    (cancel?row.children[actions.indexOf(cancel)]:row.firstElementChild as HTMLElement)?.scrollIntoView({block:"nearest"});

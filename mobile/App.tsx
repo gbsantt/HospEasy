@@ -3,6 +3,7 @@ import {
 } from "react-native-gesture-handler";
 
 import AppNavigator from "./src/navigation/AppNavigator";
+import { ThemeProvider } from "./src/context/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
@@ -25,6 +26,7 @@ export default function App() {
         >
 
             <SafeAreaProvider>
+            <ThemeProvider>
             <AuthProvider>
 
                 <FavoritesProvider>
@@ -34,6 +36,7 @@ export default function App() {
                 </FavoritesProvider>
 
             </AuthProvider>
+            </ThemeProvider>
             </SafeAreaProvider>
 
         </GestureHandlerRootView>
