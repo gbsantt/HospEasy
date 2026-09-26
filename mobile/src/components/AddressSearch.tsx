@@ -17,9 +17,9 @@ export default function AddressSearch({onFound}:{onFound:(point:Point)=>void}) {
         finally{if(!request.signal.aborted)setBusy(false);}
     }
     return <View style={{padding:14,gap:8}}>
-        <Field label="Pesquisar endereço" placeholder="Rua, número, cidade e estado" value={address} maxLength={300} onChangeText={setAddress} onSubmitEditing={()=>void search()} returnKeyType="search"/>
+        <Field label="Pesquisar endereço ou CEP" placeholder="Endereço ou CEP (ex.: 01310-100)" value={address} maxLength={300} onChangeText={setAddress} onSubmitEditing={()=>void search()} returnKeyType="search"/>
         <Button title="Pesquisar no mapa" busy={busy} disabled={!usuario||address.trim().length<5} onPress={()=>void search()}/>
         <ErrorNotice message={error}/>
-        <Text style={[ui.text,{fontSize:12,lineHeight:18}]}>Busca por OpenStreetMap/Nominatim. Confira o ponto e ajuste no mapa antes de confirmar.</Text>
+        <Text style={[ui.text,{fontSize:12,lineHeight:18}]}>Busca por OpenStreetMap/Nominatim. O CEP localiza uma região; ajuste o ponto exato da unidade antes de confirmar.</Text>
     </View>;
 }

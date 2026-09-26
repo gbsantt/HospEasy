@@ -7,6 +7,27 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 class GeocodificacaoTest {
+ @Test void postalCodeUsesStructuredBrazilianSearch()throws Exception{
+  for(String cep:new String[]{"01310100","01310-100","CEP: 01310-100"}){
+   var service=service(200,"[{\"lat\":\"-23.5\",\"lon\":\"-46.6\",\"type\":\"postcode\"}]");
+   assertEquals(-23.5,service.pesquisar(cep).latitude());
+   var request=org.mockito.ArgumentCaptor.forClass(HttpRequest.class);
+   verify((HttpClient)ReflectionTestUtils.getField(service,"client")).send(request.capture(),any(HttpResponse.BodyHandler.class));
+   String query=request.getValue().uri().getQuery();
+   assertTrue(query.startsWith("postalcode=01310-100&"));assertTrue(query.contains("countrycodes=br"));assertFalse(query.contains("q="));
+  }
+ }
+ @Test void invalidPostalCodeDoesNotContactProvider()throws Exception{
+  var service=service(200,"[]");
+  assertEquals("CEP_INVALIDO",assertThrows(ApiException.class,()->service.pesquisar("01310-10")).getCodigo());
+  verifyNoInteractions(ReflectionTestUtils.getField(service,"client"));
+ }
+ @Test void postalCodeStillRequiresManualConfirmationForAutomaticRegistration()throws Exception{
+  var service=service(200,"[{\"lat\":\"-23\",\"lon\":\"-46\",\"type\":\"postcode\"}]");
+  assertEquals("LOCALIZACAO_APROXIMADA",assertThrows(ApiException.class,()->service.geocodificar("01310100")).getCodigo());
+  var empty=service(200,"[]");
+  assertTrue(assertThrows(ApiException.class,()->empty.pesquisar("01310100")).getMessage().contains("CEP não encontrado"));
+ }
  @SuppressWarnings("unchecked") private GeocodificacaoService service(int status,String body)throws Exception {
   var service=new GeocodificacaoService();var client=mock(HttpClient.class);var response=mock(HttpResponse.class);
   when(response.statusCode()).thenReturn(status);when(response.body()).thenReturn(body);

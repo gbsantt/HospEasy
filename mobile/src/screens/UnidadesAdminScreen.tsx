@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { listarUnidadesAdmin,excluirUnidadeAdmin } from "../service/api";
 import { Unidade } from "../types/Unidade";
 import { Alert } from "../utils/alert";
+import { correspondeBuscaUnidade } from "../utils/unitSearch";
 export default function UnidadesAdminScreen({navigation}:NativeStackScreenProps<RootStackParamList,"UnidadesAdmin">){
     const ui=useUI();
 
@@ -19,10 +20,10 @@ export default function UnidadesAdminScreen({navigation}:NativeStackScreenProps<
     return <ScreenLayout title="Administrar unidades" onBack={()=>navigation.goBack()}>
         {!usuario||usuario.tipo!=="ADMIN"?<Text style={ui.text}>Acesso exclusivo de administradores.</Text>:<>
         <Button title="Nova unidade" onPress={()=>navigation.navigate("CriarUnidadeAdmin")}/>
-        <Field label="Buscar unidade por nome ou endereço" value={busca} onChangeText={setBusca}/>
+        <Field label="Buscar unidade por nome, endereço ou CEP" value={busca} onChangeText={setBusca}/>
         <ErrorNotice message={error}/><Button title="Atualizar lista" secondary disabled={busy} onPress={()=>setRetry(x=>x+1)}/>
         <Text style={ui.text}>{busy?"Carregando…":`${items.length} unidades cadastradas`}</Text>
-        {items.filter(u=>`${u.nome} ${u.endereco}`.toLowerCase().includes(busca.toLowerCase())).map(u=><View key={u.unidadeId} style={ui.card}>
+        {items.filter(u=>correspondeBuscaUnidade(u,busca)).map(u=><View key={u.unidadeId} style={ui.card}>
             <Text style={ui.label}>{u.nome}</Text><Text style={ui.text}>{u.tipo.replaceAll("_"," ")} · {u.endereco}</Text>
             <Text style={ui.text}>Telefone: {u.telefone||"Não informado"} · Capacidade: {u.capacidadeAreaMonitorada}</Text>
             <Text style={ui.text}>Câmera: {u.statusCamera.replaceAll("_"," ")} · Medição: {u.statusMedicao.replaceAll("_"," ")}</Text>

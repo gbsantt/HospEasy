@@ -19,9 +19,16 @@ public class GeocodificacaoService {
         return buscar(endereco,false);
     }
     private Coordenadas buscar(String endereco,boolean exigirPrecisao) {
+        String texto=endereco.trim();
+        var cep=java.util.regex.Pattern.compile("(?i)^(?:cep\\s*:?\\s*)?(\\d{5})\\s*-?\\s*(\\d{3})$").matcher(texto);
+        boolean buscaCep=cep.matches();
+        if(!buscaCep && texto.matches("(?i)^(?:cep\\s*:?\\s*)?[\\d\\s-]+$"))
+            throw new ApiException(400,"CEP_INVALIDO","Informe um CEP com 8 dígitos, com ou sem hífen.");
+        String consulta=buscaCep ? "postalcode="+cep.group(1)+"-"+cep.group(2)
+            : "q="+URLEncoder.encode(texto,StandardCharsets.UTF_8);
         try {
             limitar();
-            var uri=URI.create("https://nominatim.openstreetmap.org/search?q="+URLEncoder.encode(endereco.trim(),StandardCharsets.UTF_8)
+            var uri=URI.create("https://nominatim.openstreetmap.org/search?"+consulta
                 +"&format=jsonv2&limit=1&countrycodes=br&addressdetails=1");
             var req=HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(10))
                 .header("User-Agent","HospEasy-TCC/1.0").header("Accept","application/json").GET().build();
@@ -29,7 +36,7 @@ public class GeocodificacaoService {
             if(res.statusCode()==429) throw new ApiException(429,"GEOCODIFICACAO_LIMITE","Serviço de localização ocupado. Aguarde ou confirme as coordenadas manualmente.");
             if(res.statusCode()!=200) throw unavailable("Serviço de localização indisponível. Confirme as coordenadas manualmente ou tente novamente.");
             var results=json.readTree(res.body());
-            if(!results.isArray() || results.isEmpty()) throw new ApiException(400,"ENDERECO_NAO_ENCONTRADO","Endereço não encontrado. Revise-o ou informe coordenadas confirmadas.");
+            if(!results.isArray() || results.isEmpty()) throw new ApiException(400,"ENDERECO_NAO_ENCONTRADO",buscaCep?"CEP não encontrado no mapa. Tente o endereço completo ou selecione o ponto manualmente.":"Endereço não encontrado. Revise-o ou informe coordenadas confirmadas.");
             var r=results.get(0);
             String type=r.path("type").asText();
             boolean preciso=r.path("address").has("house_number") || java.util.Set.of("hospital","clinic","doctors","house","building").contains(type);

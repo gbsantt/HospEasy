@@ -15,6 +15,7 @@ import { RootStackParamList } from "../navigation/AppNavigator";
 import { Unidade } from "../types/Unidade";
 import { Coordenada,calcularDistanciaKm } from "../utils/location";
 import { temCoordenadas,statusNoMapa,dadosAtuais } from "../utils/mapStatus";
+import { correspondeBuscaUnidade } from "../utils/unitSearch";
 
 type Props={unidades:Unidade[];localizacaoUsuario:Coordenada|null;erroLocalizacao?:string|null;onAbrirUnidade:(u:Unidade)=>void};
 export default function DynamicIsland({unidades,localizacaoUsuario,erroLocalizacao,onAbrirUnidade}:Props){
@@ -39,8 +40,8 @@ export default function DynamicIsland({unidades,localizacaoUsuario,erroLocalizac
         <BlurView intensity={45} tint={mode} style={StyleSheet.absoluteFill}/>
         <GestureDetector gesture={drag}><Pressable accessibilityRole="button" accessibilityLabel={open?"Recolher painel":"Expandir painel"} onPress={()=>toggle(!open)} style={styles.handle}><View style={styles.bar}/></Pressable></GestureDetector>
         {open?<ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-            <TextInput accessibilityLabel="Buscar unidade" value={search} onChangeText={setSearch} placeholder="Nome ou endereço" placeholderTextColor={colors.textSecondary} style={styles.input}/>
-            {search.trim()?<><Text style={styles.heading}>Resultados</Text>{unidades.filter(u=>`${u.nome} ${u.endereco}`.toLowerCase().includes(search.trim().toLowerCase())).map(u=>row(u))}</>:<>
+            <TextInput accessibilityLabel="Buscar unidade por nome, endereço ou CEP" value={search} onChangeText={setSearch} placeholder="Nome, endereço ou CEP" placeholderTextColor={colors.textSecondary} style={styles.input}/>
+            {search.trim()?<><Text style={styles.heading}>Resultados</Text>{unidades.filter(u=>correspondeBuscaUnidade(u,search)).map(u=>row(u))}</>:<>
                 <Text style={styles.heading}>Próximas de você</Text>{nearby.map(x=>row(x.u,`${x.km.toFixed(1)} km em linha reta`))}
                 {!nearby.length&&<Text style={styles.text}>{erroLocalizacao||"Sem localização disponível. Use a busca para consultar unidades."}</Text>}
                 <Text style={styles.heading}>Sugestões com dados atuais</Text>{suggestions.map(x=>row(x.u,`${x.km.toFixed(1)} km em linha reta`))}

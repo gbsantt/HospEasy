@@ -12,7 +12,7 @@ public class GeocodificacaoController {
     @GetMapping
     public GeocodificacaoService.Coordenadas pesquisar(@RequestParam String endereco) {
         if(endereco.trim().length()<5 || endereco.length()>300)
-            throw new ApiException(400,"ENDERECO_INVALIDO","Informe um endereço entre 5 e 300 caracteres.");
+            throw new ApiException(400,"ENDERECO_INVALIDO","Informe um endereço entre 5 e 300 caracteres ou um CEP com 8 dígitos.");
         return service.pesquisar(endereco);
     }
 }

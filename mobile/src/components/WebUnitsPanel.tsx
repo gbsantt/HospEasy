@@ -8,6 +8,7 @@ import { Unidade } from "../types/Unidade";
 import { statusNoMapa, temCoordenadas } from "../utils/mapStatus";
 import { useFavorites } from "../context/FavoritesContext";
 import { calcularDistanciaKm, Coordenada } from "../utils/location";
+import { correspondeBuscaUnidade } from "../utils/unitSearch";
 
 type Props = {
     unidades: Unidade[];
@@ -24,14 +25,13 @@ export default function WebUnitsPanel({ unidades, localizacao, erroLocalizacao, 
     const [somenteFavoritos, setSomenteFavoritos] = useState(false);
     const { favoritos } = useFavorites();
     const filtradas = useMemo(() => {
-        const texto = busca.trim().toLocaleLowerCase("pt-BR");
-        return unidades.filter((u) => `${u.nome} ${u.endereco}`.toLocaleLowerCase("pt-BR").includes(texto)
+        return unidades.filter((u) => correspondeBuscaUnidade(u,busca)
             && (!somenteFavoritos || favoritos.some((favorito) => favorito.unidadeId === u.unidadeId)));
     }, [unidades, busca, somenteFavoritos, favoritos]);
 
     return <View style={styles.panel}>
         <Text accessibilityRole="header" style={styles.title}>Encontre uma unidade</Text>
-        <TextInput accessibilityLabel="Buscar por nome ou endereço" placeholder="Nome da unidade ou endereço" placeholderTextColor={colors.textSecondary}
+        <TextInput accessibilityLabel="Buscar por nome, endereço ou CEP" placeholder="Nome, endereço ou CEP" placeholderTextColor={colors.textSecondary}
             value={busca} onChangeText={setBusca} style={styles.search} />
         <View style={styles.filters}>
             <Pressable accessibilityRole="button" accessibilityState={{ selected: !somenteFavoritos }} onPress={() => setSomenteFavoritos(false)} style={[styles.filter, !somenteFavoritos && styles.active]}>
