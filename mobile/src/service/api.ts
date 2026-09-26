@@ -21,13 +21,13 @@ function baseUrl() {
     if (__DEV__) return "http://10.0.2.2:8080";
     throw new ApiError(0,"CONFIGURACAO","Configure EXPO_PUBLIC_API_URL para o aplicativo.");
 }
-type Options = { method?: string; data?: unknown; token?: string; signal?: AbortSignal; binary?: boolean };
+type Options = { method?: string; data?: unknown; token?: string; signal?: AbortSignal; binary?: boolean; timeoutMs?: number };
 export async function request<T>(path: string, options: Options = {}): Promise<T> {
     const controller = new AbortController();
     const abort = () => controller.abort();
     options.signal?.addEventListener("abort", abort, { once: true });
     if (options.signal?.aborted) controller.abort();
-    const timer = setTimeout(abort, 15000);
+    const timer = setTimeout(abort, options.timeoutMs ?? 15000);
     try {
         const response = await fetch(baseUrl()+path, {
             method: options.method ?? "GET", signal: controller.signal,
@@ -57,6 +57,8 @@ export async function request<T>(path: string, options: Options = {}): Promise<T
 }
 export type TipoUsuario = "ADMIN" | "USUARIO";
 export const pesquisarEndereco = (endereco:string,token:string,signal?:AbortSignal) => request<{latitude:number;longitude:number}>(`/admin/geocodificacao?${new URLSearchParams({endereco})}`,{token,signal});
+export type SugestaoEndereco={latitude:number;longitude:number;endereco:string;fonte:string;aviso:string};
+export const pesquisarSugestoesEndereco = (endereco:string,token:string,signal?:AbortSignal) => request<{resultados:SugestaoEndereco[];aviso:string|null}>(`/admin/geocodificacao/sugestoes?${new URLSearchParams({endereco})}`,{token,signal,timeoutMs:30000});
 export const buscarRelatorioPDF = (id:number,token:string) => request<ArrayBuffer>(`/unidades/${id}/relatorio.pdf`,{token,binary:true});
 export type UsuarioAdmin = { id:number; nome:string; email:string; tipo:TipoUsuario; ativo:boolean };
 export type LoginResponse = Omit<UsuarioAdmin,"ativo"> & { token:string };
